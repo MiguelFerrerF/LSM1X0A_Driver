@@ -1,8 +1,12 @@
 #include "SerialDriver.h"
 
-SerialDriver::SerialDriver(HardwareSerial &port)
-    : _port(port), _taskHandle(NULL), _onReceiveCallback(nullptr),
-      _running(false), _msgIndex(0) {}
+SerialDriver::SerialDriver(HardwareSerial &port) : _port(port) {
+  _taskHandle = NULL;
+  _onReceiveCallback = nullptr;
+  _running = false;
+  _msgBuffer[0] = '\0';
+  _msgIndex = 0;
+}
 
 SerialDriver::~SerialDriver() { stop(); }
 
@@ -23,7 +27,7 @@ bool SerialDriver::init(unsigned long baudRate, int rxPin, int txPin,
   _running = true;
   xTaskCreatePinnedToCore(readTask,     // Task function
                           "LSM_Driver", // Task name
-                          2048,         // Stack size
+                          3072,         // Stack size
                           this,         // Pass 'this' as context
                           5, // Priority (medium-high to avoid data loss)
                           &_taskHandle,
