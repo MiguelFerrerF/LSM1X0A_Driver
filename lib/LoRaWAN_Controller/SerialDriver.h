@@ -55,13 +55,27 @@ public:
   /**
    * @brief Writes data to the serial port.
    *
-   * This function sends the specified buffer of data to the serial port.
+   * Sends the specified buffer of data to the serial port.
    *
    * @param buffer Pointer to the data buffer to send.
    * @param size Size of the data buffer in bytes.
-   * @return Number of bytes written.
+   * @return Number of bytes successfully written.
    */
   size_t write(const uint8_t *buffer, size_t size);
+
+  /**
+   * @brief Writes data to the serial port.
+   *
+   * Overloaded function to send a buffer of data (as a character array) to the
+   * serial port.
+   *
+   * @param buffer Pointer to the character array to send.
+   * @param size Size of the character array in bytes.
+   * @return Number of bytes successfully written.
+   */
+  size_t write(const char *buffer, size_t size) {
+    return write((const uint8_t *)buffer, size);
+  }
 
   /**
    * @brief Get the Task Handle object
