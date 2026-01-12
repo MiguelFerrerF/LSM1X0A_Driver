@@ -64,7 +64,7 @@ bool LoRaWANController::smartReset(char *outVersion, uint16_t verLen) {
   ATResult_t res = AT_RES_ERROR;
 
   const char *resetCmd = "ATZ\r\n";
-  _driver.write((const uint8_t *)resetCmd, strlen(resetCmd));
+  _driver.write(resetCmd, strlen(resetCmd));
 
   res = _waitForBoot(outVersion, verLen, 2000);
 
@@ -105,8 +105,8 @@ ATResult_t LoRaWANController::_waitForBoot(char *outVer, uint16_t len,
 ATResult_t LoRaWANController::_sendExec(const char *cmd, uint32_t timeoutMs) {
   _parser.setExpectation(AT_TYPE_EXEC);
 
-  _driver.write((const uint8_t *)cmd, strlen(cmd));
-  _driver.write((const uint8_t *)"\r\n", 2);
+  _driver.write(cmd, strlen(cmd));
+  _driver.write("\r\n", 2);
 
   if (xSemaphoreTake(_parser.getSemaphore(), pdMS_TO_TICKS(timeoutMs)) ==
       pdTRUE) {
@@ -120,8 +120,8 @@ ATResult_t LoRaWANController::_sendQuery(const char *cmd, char *outBuffer,
                                          uint16_t len, uint32_t timeoutMs) {
   _parser.setExpectation(AT_TYPE_QUERY, outBuffer, len);
 
-  _driver.write((const uint8_t *)cmd, strlen(cmd));
-  _driver.write((const uint8_t *)"\r\n", 2);
+  _driver.write(cmd, strlen(cmd));
+  _driver.write("\r\n", 2);
 
   if (xSemaphoreTake(_parser.getSemaphore(), pdMS_TO_TICKS(timeoutMs)) ==
       pdTRUE) {

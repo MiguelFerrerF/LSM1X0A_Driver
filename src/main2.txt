@@ -8,28 +8,36 @@
 #define UART_TX_PIN 33
 #define UART_RX_PIN 14
 #define BAUD_RATE 9600
+#define RESET_PIN 15
 
 HardwareSerial Serial_2(2); // Usamos UART2 para la comunicación con el módem
 // Instancia del driver de comunicación
 SerialDriver g_serial_driver(Serial_2);
 
 // La función de callback que pertenece a la Capa de Protocolo (ATParser)
-void handle_modem_response(const uint8_t *data, size_t len) {
+void handle_modem_response(const char *data, size_t len) {
   // Esta función sería el punto de entrada para el ATParser.cpp
-  printf("Capa Protocolo (ATParser): %s", (const char *)data);
+  // printf("Capa Protocolo (ATParser): %s", (const char *)data);
+  printf("%s", data);
 
   // Aquí se implementaría la lógica para parsear la respuesta (OK, ERROR,
   // +EVT:...)
 
   // Ejemplo de parsing directo:
-  if (strstr((const char *)data, "OK")) {
+  if (strstr(data, "OK")) {
     printf(" -> Respuesta OK detectada.\n");
+  } else if (strstr(data, "ERROR")) {
+    printf(" -> Respuesta ERROR detectada.\n");
+  } else if (strstr(data, "+EVT:")) {
+    printf(" -> Evento Asíncrono detectado: %s\n", data);
+  } else if (strstr(data, "BOOTALERT")) {
+    printf(" -> Modo BOOT detectado.\n");
   }
 }
 
 void sendCommand(const char *cmd) {
   printf("Enviando comando: %s", cmd);
-  g_serial_driver.write(reinterpret_cast<const uint8_t *>(cmd), strlen(cmd));
+  g_serial_driver.write(cmd, strlen(cmd));
   vTaskDelay(pdMS_TO_TICKS(2000));
 }
 
@@ -116,10 +124,22 @@ void custom_main(void) {
     return;
   }
 
+  // Configurar pin de reset del módem
+  pinMode(RESET_PIN, OUTPUT);
+  digitalWrite(RESET_PIN, HIGH); // Mantener inactivo
+  vTaskDelay(pdMS_TO_TICKS(100));
+
+  // 2. Resetear el módem por hardware
+  printf("Reseteando módem por hardware...\n");
+  digitalWrite(RESET_PIN, LOW); // Activar reset
+  vTaskDelay(pdMS_TO_TICKS(100));
+  digitalWrite(RESET_PIN, HIGH);   // Desactivar reset
+  vTaskDelay(pdMS_TO_TICKS(2000)); // Esperar a que el módem arranque
+
   // --- Simulación de Comandos AT ---
-  sendCommand("ATZ\r\n");       // Comando AT básico
-  sendCommand("AT+MODE=1\r\n"); // Set modo LoRaWAN
-  sendCommand("AT?\r\n");       // Comando AT de consulta
+  // sendCommand("ATZ\r\n");       // Comando AT básico
+  // sendCommand("AT+MODE=1\r\n"); // Set modo LoRaWAN
+  // sendCommand("AT?\r\n");       // Comando AT de consulta
 }
 
 void setup() {

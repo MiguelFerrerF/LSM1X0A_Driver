@@ -18,7 +18,7 @@
 
 // --- NUEVO: Constantes para Reset ---
 #define STR_AT_BOOT_ALERT "BOOTALERT"
-#define STR_AT_DEVICE_TAG "Device:" // Etiqueta para extraer versión (Doc3)
+#define STR_AT_DEVICE_TAG "Device:" // Etiqueta para extraer Modelo
 
 // Estados del resultado de una transacción AT
 typedef enum {

@@ -9,7 +9,7 @@
 #define INTERNAL_BUFFER_SIZE 256
 
 // Pointer to a function that handles received data
-using OnReceiveCallback = void (*)(const uint8_t *data, size_t len);
+using OnReceiveCallback = void (*)(const char *data, size_t len);
 
 class SerialDriver {
 public:
@@ -91,7 +91,7 @@ private:
   OnReceiveCallback _onReceiveCallback = nullptr;
   bool _running = false;
 
-  uint8_t _msgBuffer[INTERNAL_BUFFER_SIZE] = {0};
+  char _msgBuffer[INTERNAL_BUFFER_SIZE] = {0};
   size_t _msgIndex = 0;
 
   static void readTask(void *ctx);
