@@ -14,16 +14,31 @@
 enum class AtError
 {
   OK = 0,
-  GENERIC_ERROR,       // ERROR
+
+  // Errores específicos de AT
+  GENERIC_ERROR,       // AT_ERROR
   PARAM_ERROR,         // AT_PARAM_ERROR
-  BUSY,                // AT_BUSY_ERROR
-  TEST_PARAM_OVERFLOW, // AT_TEST_PARAM_OVERFLOW
-  NO_NET_JOINED,       // AT_NO_NETWORK_JOINED
+  BUSY,                // AT_BUSY_ERROR - Importante: Reintentar
+  TEST_PARAM_OVERFLOW, // "AT_TEST_PARAM_OVERFLOW"
+  NO_NET_JOINED,       // AT_NO_NETWORK_JOINED - Importante: Hacer Join
   RX_ERROR,            // AT_RX_ERROR
-  TIMEOUT,             // NO MODUKE RESPONSE
-  BUFFER_OVERFLOW,     // BUFFER_OVERFLOW
-  BOOT_ALERT,          // BOOT ALERT
+
+  // Errores de Parser
+  BOOT_ALERT, // "BOOTALERT" - Módulo reiniciado
+
+  // Errores locales del Driver/Parser
+  TIMEOUT,
+  BUFFER_OVERFLOW,
   UNKNOWN
 };
+
+// Tipos de Eventos Asíncronos que enviaremos al Callback
+namespace LsmEvent
+{
+const char JOIN[] = "JOIN";
+const char TX[]   = "TX";   // Confirmación de envío
+const char RX[]   = "RX";   // Dato recibido
+const char INFO[] = "INFO"; // Mensajes de estado (LinkCheck, etc)
+} // namespace LsmEvent
 
 #endif // LSM1X0A_TYPES_H

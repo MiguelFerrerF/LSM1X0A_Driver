@@ -7,16 +7,42 @@ LSM1x0A_AtParser lora;
 // Callback estático para eventos (sin String)
 void onLoRaEvent(const char* type, const char* payload, void* ctx)
 {
-  if (strcmp(type, "RX") == 0) {
-    // payload es un puntero directo al buffer interno del parser.
-    // Solo válido durante esta función. Si lo quieres guardar, cópialo.
-    Serial.printf("[EVENTO] Dato Recibido: %s\n", payload);
+  // 1. EVENTO DE RECEPCIÓN (Downlink)
+  if (strcmp(type, LsmEvent::RX) == 0) {
+    // payload viene como "2:04:AABBCCDD" (Port:Size:Data)
+    int  port, size;
+    char hexData[256];
+
+    // Parseamos la string formateada
+    // Usamos sscanf con precaución o strtok (aquí sscanf para legibilidad)
+    if (sscanf(payload, "%d:%d:%s", &port, &size, hexData) == 3) {
+      Serial.printf("[RX] Puerto: %d, Bytes: %d, Data: %s\n", port, size, hexData);
+
+      // Aquí podrías convertir hexData a bytes reales si necesitas
+      // controlRelay(hexData);
+    }
   }
-  else if (strcmp(type, "JOIN") == 0) {
-    Serial.println("[EVENTO] ¡Join Exitoso!");
+
+  // 2. EVENTO DE JOIN
+  else if (strcmp(type, LsmEvent::JOIN) == 0) {
+    if (strcmp(payload, "SUCCESS") == 0) {
+      Serial.println("[JOIN] ¡Conectado a la red LoRaWAN!");
+      // Encender LED verde
+    }
+    else {
+      Serial.println("[JOIN] Falló. Reintentando en 30s...");
+      // Activar timer de reintento
+    }
   }
-  else {
-    Serial.printf("[EVENTO] Tipo: %s, Payload: %s\n", type, payload);
+
+  // 3. EVENTO DE CONFIRMACIÓN DE UPLINK
+  else if (strcmp(type, LsmEvent::TX) == 0) {
+    if (strcmp(payload, "SUCCESS") == 0) {
+      Serial.println("[TX] El servidor recibió nuestro mensaje (ACK).");
+    }
+    else {
+      Serial.println("[TX] Mensaje enviado pero NO confirmado (NACK).");
+    }
   }
 }
 
@@ -30,9 +56,10 @@ void setup()
     while (1)
       ;
   }
+
   // Send ATZ to wake up
   AtError err;
-  err = lora.sendCommand("ATZ\r\n");
+  err = lora.sendCommand("ATZ\r\n", 1000);
   if (err != AtError::BOOT_ALERT) {
     Serial.printf("Error al reiniciar módem: %d, %s\n", (int)err, lora.atErrorToString(err));
   }
@@ -86,15 +113,6 @@ void setup()
   }
   else if (err == AtError::BUSY) {
     Serial.println("El módem está ocupado.");
-  }
-
-  // Intentar envíar otro comando, debería fallar con BUSY
-  err = lora.sendCommand("AT+DEUI=?\r\n");
-  if (err == AtError::BUSY) {
-    Serial.println("Correcto: Módem ocupado durante Join.");
-  }
-  else {
-    Serial.println("Error: Se esperaba BUSY durante Join.");
   }
 }
 

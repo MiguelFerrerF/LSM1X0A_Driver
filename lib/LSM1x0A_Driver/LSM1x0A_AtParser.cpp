@@ -94,16 +94,85 @@ void LSM1x0A_AtParser::eatBuffer(const uint8_t* data, size_t len)
 
 void LSM1x0A_AtParser::processLine(char* line)
 {
-  // 1. Detección de Respuesta a Comando Síncrono
+  // 1. LIMPIEZA
+  size_t len = strlen(line);
+  while (len > 0 && (line[len - 1] == '\r' || line[len - 1] == '\n'))
+    line[--len] = '\0';
+  if (len == 0)
+    return;
+
+  // 2. DETECCIÓN DE EVENTOS ASÍNCRONOS (+EVT)
+  // Basado en las funciones: AT_event_join, AT_event_receive, AT_event_confirm
+  if (strncmp(line, "+EVT:", 5) == 0) {
+    char* payload = line + 5; // Saltamos el prefijo "+EVT:"
+
+    if (_eventCallback) {
+      // CASO A: JOIN (+EVT:JOINED o +EVT:JOIN FAILED)
+      if (strncmp(payload, "JOINED", 6) == 0) {
+        _eventCallback(LsmEvent::JOIN, "SUCCESS", _eventCtx);
+      }
+      else if (strncmp(payload, "JOIN FAILED", 11) == 0) {
+        _eventCallback(LsmEvent::JOIN, "FAILED", _eventCtx);
+      }
+
+      // CASO B: TX CONFIRMATION (+EVT:SEND_CONFIRMED o +EVT:SEND_FAILED)
+      else if (strncmp(payload, "SEND_CONFIRMED", 14) == 0) {
+        _eventCallback(LsmEvent::TX, "SUCCESS", _eventCtx);
+      }
+      else if (strncmp(payload, "SEND_FAILED", 11) == 0) {
+        _eventCallback(LsmEvent::TX, "FAILED", _eventCtx);
+      }
+
+      // CASO C: RX DATA (+EVT:RECV_CONFIRMED:2:04:AABB...)
+      // Formato esperado: RECV_XXX:<PORT>:<SIZE>:<DATA>
+      else if (strncmp(payload, "RECV_", 5) == 0) {
+        // Buscamos el primer ':' después de RECV_XXX
+        char* ptr = strchr(payload, ':');
+        if (ptr) {
+          // ptr apunta a ":2:04:AABB..."
+          // Pasamos al usuario el resto de la cadena.
+          // Podríamos limpiar el SIZE (04) si es redundante,
+          // pero pasarlo crudo permite validación.
+          // Payload al usuario: "2:04:AABB..."
+          _eventCallback(LsmEvent::RX, ptr + 1, _eventCtx);
+        }
+      }
+
+      // CASO D: RX METADATA (+EVT:RX_1, PORT 2, DR 5...)
+      // Información extra del slot y calidad de señal
+      else if (strncmp(payload, "RX_", 3) == 0) {
+        _eventCallback(LsmEvent::INFO, payload, _eventCtx);
+      }
+    }
+    return; // Evento procesado, no seguimos buscando respuestas de comandos
+  }
+
+  // 3. FILTRADO DE RUIDO DE DEBUG
+  // Tu función AT_event_receive imprime "confirmed flag: X" sin +EVT. Lo ignoramos.
+  if (strstr(line, "confirmed flag:"))
+    return;
+  if (strncmp(line, "---", 3) == 0)
+    return; // Logs de boot
+
+  // 4. MAQUINA DE ESTADOS (Respuestas a Comandos Síncronos AT)
+  // Detección de BOOT
+  if (strstr(line, "BOOTALERT")) {
+    if (_eventCallback)
+      _eventCallback("SYS", "BOOT", _eventCtx);
+    if (_pendingCommand) {
+      _lastResultError = AtError::BOOT_ALERT;
+      xSemaphoreGive(_syncSem);
+    }
+    return;
+  }
+
   if (_pendingCommand) {
-    // ¿Es OK? Termina transacción con éxito
     if (strcmp(line, "OK") == 0) {
       _lastResultError = AtError::OK;
       xSemaphoreGive(_syncSem);
       return;
     }
 
-    // ¿Es un Error conocido? Termina transacción con fallo
     AtError err = parseErrorString(line);
     if (err != AtError::UNKNOWN) {
       _lastResultError = err;
@@ -111,57 +180,24 @@ void LSM1x0A_AtParser::processLine(char* line)
       return;
     }
 
-    // ¿Es el dato que esperábamos? (Ej: "DevEui: ...")
+    // Captura de datos (Getters)
     if (_userOutBuffer != nullptr) {
+      // Lógica de extracción de valor (igual que la versión anterior)
       const char* dataStart = line;
-      bool        match     = false;
+      bool        match     = (_expectedTag == nullptr);
 
-      // Opción A: Buscamos un tag específico (Ej "DevEui:")
-      if (_expectedTag != nullptr) {
-        size_t tagLen = strlen(_expectedTag);
-        if (strncmp(line, _expectedTag, tagLen) == 0) {
-          dataStart = line + tagLen; // Avanzar puntero después del tag
-          match     = true;
-        }
-      }
-      // Opción B: No hay tag, tomamos la línea entera (salvo si es OK/ERROR que ya filtramos arriba)
-      else {
-        match = true;
+      if (_expectedTag && strstr(line, _expectedTag)) {
+        dataStart = strstr(line, _expectedTag) + strlen(_expectedTag);
+        match     = true;
       }
 
       if (match) {
-        // Limpieza de espacios iniciales (trim left)
         while (*dataStart == ' ' || *dataStart == ':')
           dataStart++;
-
-        // Copia segura al buffer del usuario
-        size_t len = strlen(dataStart);
-        if (len < _userOutSize) {
-          strncpy(_userOutBuffer, dataStart, _userOutSize);
-          _userOutBuffer[len] = '\0'; // Asegurar null-termination
-        }
-        else {
-          // Si no cabe, copiamos lo que entre y marcamos error internamente si quisiéramos
-          strncpy(_userOutBuffer, dataStart, _userOutSize - 1);
-          _userOutBuffer[_userOutSize - 1] = '\0';
-        }
-        // No liberamos semáforo todavía, esperamos el "OK" final
+        strncpy(_userOutBuffer, dataStart, _userOutSize - 1);
+        _userOutBuffer[_userOutSize - 1] = '\0';
       }
     }
-  }
-
-  // 2. Detección de Eventos Asíncronos (URC)
-  // Lógica desacoplada: Siempre vigilando
-  if (_eventCallback) {
-    if (strncmp(line, "+EVT", 3) == 0 || strncmp(line, "RX", 2) == 0) {
-      // Pasamos el puntero al resto de la línea como payload
-      const char* payload = strchr(line, ':');
-      _eventCallback("RX", payload ? payload + 1 : line, _eventCtx);
-    }
-    else if (strstr(line, "JOINED")) {
-      _eventCallback("JOIN", "SUCCESS", _eventCtx);
-    }
-    // Puedes añadir más eventos aquí mirando lora_at.c
   }
 }
 
