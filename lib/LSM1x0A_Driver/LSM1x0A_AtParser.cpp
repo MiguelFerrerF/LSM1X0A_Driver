@@ -27,46 +27,23 @@ void LSM1x0A_AtParser::staticRxCallback(void* ctx, uint8_t* data, size_t len)
 // Basado en lora_command.c y lora_at.h
 AtError LSM1x0A_AtParser::parseErrorString(const char* line)
 {
+  if (strstr(line, "OK"))
+    return AtError::OK;
+  if (strstr(line, "AT_ERROR"))
+    return AtError::GENERIC_ERROR;
   if (strstr(line, "AT_PARAM_ERROR"))
     return AtError::PARAM_ERROR;
   if (strstr(line, "AT_BUSY_ERROR"))
     return AtError::BUSY;
+  if (strstr(line, "AT_TEST_PARAM_OVERFLOW"))
+    return AtError::TEST_PARAM_OVERFLOW;
   if (strstr(line, "AT_NO_NETWORK_JOINED"))
     return AtError::NO_NET_JOINED;
   if (strstr(line, "AT_RX_ERROR"))
     return AtError::RX_ERROR;
-  if (strstr(line, "AT_TEST_PARAM_OVERFLOW"))
-    return AtError::TEST_PARAM_OVERFLOW;
-  if (strstr(line, "AT_ERROR"))
-    return AtError::GENERIC_ERROR; // Error genérico fallback
   if (strstr(line, "BOOTALERT"))
     return AtError::BOOT_ALERT;
   return AtError::UNKNOWN;
-}
-
-const char* LSM1x0A_AtParser::atErrorToString(AtError err)
-{
-  if (err == AtError::OK)
-    return "OK";
-  if (err == AtError::GENERIC_ERROR)
-    return "AT_ERROR";
-  if (err == AtError::PARAM_ERROR)
-    return "AT_PARAM_ERROR";
-  if (err == AtError::BUSY)
-    return "AT_BUSY_ERROR";
-  if (err == AtError::TEST_PARAM_OVERFLOW)
-    return "AT_TEST_PARAM_OVERFLOW";
-  if (err == AtError::NO_NET_JOINED)
-    return "AT_NO_NETWORK_JOINED";
-  if (err == AtError::RX_ERROR)
-    return "AT_RX_ERROR";
-  if (err == AtError::TIMEOUT)
-    return "TIMEOUT";
-  if (err == AtError::BUFFER_OVERFLOW)
-    return "BUFFER_OVERFLOW";
-  if (err == AtError::BOOT_ALERT)
-    return "BOOTALERT";
-  return "UNKNOWN";
 }
 
 void LSM1x0A_AtParser::eatBuffer(const uint8_t* data, size_t len)
@@ -92,6 +69,9 @@ void LSM1x0A_AtParser::eatBuffer(const uint8_t* data, size_t len)
   }
 }
 
+// -----------------------------------------------------------
+// PARSER PRINCIPAL DE EVENTOS
+// -----------------------------------------------------------
 void LSM1x0A_AtParser::processLine(char* line)
 {
   // 1. LIMPIEZA
@@ -103,11 +83,12 @@ void LSM1x0A_AtParser::processLine(char* line)
 
   // 2. DETECCIÓN DE EVENTOS ASÍNCRONOS (+EVT)
   // Basado en las funciones: AT_event_join, AT_event_receive, AT_event_confirm
-  if (strncmp(line, "+EVT:", 5) == 0) {
-    char* payload = line + 5; // Saltamos el prefijo "+EVT:"
+  char* evtPtr = strstr(line, "+EVT:");
 
+  if (evtPtr != NULL) {
+    char* payload = evtPtr + 5; // Saltamos el prefijo "+EVT:"
     if (_eventCallback) {
-      // CASO A: JOIN (+EVT:JOINED o +EVT:JOIN FAILED)
+      // --- A. JOIN ---
       if (strncmp(payload, "JOINED", 6) == 0) {
         _eventCallback(LsmEvent::JOIN, "SUCCESS", _eventCtx);
       }
@@ -115,7 +96,26 @@ void LSM1x0A_AtParser::processLine(char* line)
         _eventCallback(LsmEvent::JOIN, "FAILED", _eventCtx);
       }
 
-      // CASO B: TX CONFIRMATION (+EVT:SEND_CONFIRMED o +EVT:SEND_FAILED)
+      // --- B. RECEPCIÓN DE DATOS (RECV) ---
+      // Formato: RECV_CONFIRMED:PORT:SIZE:DATA...
+      else if (strncmp(payload, "RECV_", 5) == 0) {
+        // Buscamos el primer ':' para saltar CONFIRMED/UNCONFIRMED
+        char* ptr = strchr(payload, ':');
+        if (ptr) {
+          // Pasamos "PORT:SIZE:DATA" limpio al usuario
+          _eventCallback(LsmEvent::RX_DATA, ptr + 1, _eventCtx);
+        }
+      }
+
+      // --- C. METADATOS DE RECEPCIÓN (RX_) ---
+      // Formato: RX_1, PORT 2, DR 5, RSSI -90, SNR 10...
+      // OJO: No confundir con RECV_. Comprobamos RX_
+      else if (strncmp(payload, "RX_", 3) == 0) {
+        // Pasamos todo el string de metadatos para que el helper lo parsee
+        _eventCallback(LsmEvent::RX_META, payload, _eventCtx);
+      }
+
+      // --- D. CONFIRMACIÓN DE ENVÍO (TX) ---
       else if (strncmp(payload, "SEND_CONFIRMED", 14) == 0) {
         _eventCallback(LsmEvent::TX, "SUCCESS", _eventCtx);
       }
@@ -123,42 +123,46 @@ void LSM1x0A_AtParser::processLine(char* line)
         _eventCallback(LsmEvent::TX, "FAILED", _eventCtx);
       }
 
-      // CASO C: RX DATA (+EVT:RECV_CONFIRMED:2:04:AABB...)
-      // Formato esperado: RECV_XXX:<PORT>:<SIZE>:<DATA>
-      else if (strncmp(payload, "RECV_", 5) == 0) {
-        // Buscamos el primer ':' después de RECV_XXX
-        char* ptr = strchr(payload, ':');
-        if (ptr) {
-          // ptr apunta a ":2:04:AABB..."
-          // Pasamos al usuario el resto de la cadena.
-          // Podríamos limpiar el SIZE (04) si es redundante,
-          // pero pasarlo crudo permite validación.
-          // Payload al usuario: "2:04:AABB..."
-          _eventCallback(LsmEvent::RX, ptr + 1, _eventCtx);
-        }
+      // --- E. CAMBIO DE CLASE ---
+      else if (strncmp(payload, "SWITCH_TO_CLASS_", 16) == 0) {
+        // Payload será "SWITCH_TO_CLASS_C", pasamos "C"
+        _eventCallback(LsmEvent::CLASS, payload + 16, _eventCtx);
       }
 
-      // CASO D: RX METADATA (+EVT:RX_1, PORT 2, DR 5...)
-      // Información extra del slot y calidad de señal
-      else if (strncmp(payload, "RX_", 3) == 0) {
-        _eventCallback(LsmEvent::INFO, payload, _eventCtx);
+      // --- F. BEACONS ---
+      else if (strncmp(payload, "BEACON_LOST", 11) == 0) {
+        _eventCallback(LsmEvent::BEACON, "LOST", _eventCtx);
+      }
+      else if (strncmp(payload, "RX_BC", 5) == 0) {
+        // Beacon recibido con info
+        _eventCallback(LsmEvent::BEACON, payload, _eventCtx);
       }
     }
     return; // Evento procesado, no seguimos buscando respuestas de comandos
   }
 
-  // 3. FILTRADO DE RUIDO DE DEBUG
-  // Tu función AT_event_receive imprime "confirmed flag: X" sin +EVT. Lo ignoramos.
-  if (strstr(line, "confirmed flag:"))
+  // 3. CASOS ESPECIALES SIN PREFIJO +EVT
+  if (strncmp(line, "NVM DATA", 8) == 0) {
+    if (_eventCallback)
+      _eventCallback(LsmEvent::NVM, line, _eventCtx);
+    return;
+  }
+
+  // 4. Ignorar líneas irrelevantes
+  // Si llegamos aquí, la línea NO tenía +EVT, así que si empieza por "confirmed flag",
+  // es basura aislada y la descartamos.
+  if (strncmp(line, "confirmed flag:", 15) == 0)
     return;
   if (strncmp(line, "---", 3) == 0)
     return; // Logs de boot
+  if (strncmp(line, "+EVT:Prepare Frame", 18) == 0)
+    return;
 
-  // 4. MAQUINA DE ESTADOS (Respuestas a Comandos Síncronos AT)
+  // 5. MAQUINA DE ESTADOS (Respuestas a Comandos Síncronos AT)
   // Detección de BOOT
   if (strstr(line, "BOOTALERT")) {
     if (_eventCallback)
-      _eventCallback("SYS", "BOOT", _eventCtx);
+      _eventCallback(LsmEvent::INFO, "BOOT", _eventCtx);
     if (_pendingCommand) {
       _lastResultError = AtError::BOOT_ALERT;
       xSemaphoreGive(_syncSem);
@@ -201,6 +205,62 @@ void LSM1x0A_AtParser::processLine(char* line)
   }
 }
 
+// -----------------------------------------------------------
+// HELPER PARA PARSEAR METADATOS DE COBERTURA
+// -----------------------------------------------------------
+bool LSM1x0A_AtParser::parseRxMetadata(const char* payload, LsmRxMetadata* out)
+{
+  // Ejemplo: "RX_1, PORT 2, DR 5, RSSI -90, SNR 10, DMODM 10, GWN 2"
+  if (!payload || !out)
+    return false;
+
+  // Inicializar defaults
+  memset(out, 0, sizeof(LsmRxMetadata));
+  out->hasLinkCheck = false;
+
+  // 1. Extraer Slot (RX_1, RX_C, etc)
+  // El payload empieza por "RX_"
+  const char* pStart = payload + 3; // Saltar "RX_"
+  const char* pComma = strchr(pStart, ',');
+  if (pComma) {
+    int len = pComma - pStart;
+    if (len < sizeof(out->slot)) {
+      strncpy(out->slot, pStart, len);
+      out->slot[len] = '\0';
+    }
+  }
+  else
+    return false; // Formato inválido
+
+  // 2. Extraer campos numéricos estándar
+  // Buscamos substrings clave
+  const char* pPort = strstr(payload, "PORT ");
+  const char* pDr   = strstr(payload, "DR ");
+  const char* pRssi = strstr(payload, "RSSI ");
+  const char* pSnr  = strstr(payload, "SNR ");
+
+  if (pPort)
+    out->port = atoi(pPort + 5);
+  if (pDr)
+    out->dataRate = atoi(pDr + 3);
+  if (pRssi)
+    out->rssi = atoi(pRssi + 5);
+  if (pSnr)
+    out->snr = atoi(pSnr + 4);
+
+  // 3. Extraer LinkCheck (Opcional)
+  const char* pDmodm = strstr(payload, "DMODM ");
+  const char* pGwn   = strstr(payload, "GWN ");
+
+  if (pDmodm && pGwn) {
+    out->hasLinkCheck = true;
+    out->demodMargin  = atoi(pDmodm + 6);
+    out->nbGateways   = atoi(pGwn + 4);
+  }
+
+  return true;
+}
+
 AtError LSM1x0A_AtParser::sendCommand(const char* cmd, uint32_t timeoutMs)
 {
   return sendCommandWithResponse(cmd, nullptr, nullptr, 0, timeoutMs);
@@ -228,6 +288,7 @@ AtError LSM1x0A_AtParser::sendCommandWithResponse(const char* cmd, const char* e
 
   // 3. Enviar Comando por UART
   _driver->sendData(cmd, strlen(cmd));
+  _driver->sendData("\r\n", 2);
 
   // 4. Bloquear esperando respuesta
   if (xSemaphoreTake(_syncSem, pdMS_TO_TICKS(timeoutMs)) != pdTRUE) {
@@ -239,4 +300,29 @@ AtError LSM1x0A_AtParser::sendCommandWithResponse(const char* cmd, const char* e
   _userOutBuffer  = nullptr; // Desvincular buffer por seguridad
 
   return _lastResultError;
+}
+
+const char* LSM1x0A_AtParser::atErrorToString(AtError err)
+{
+  if (err == AtError::OK)
+    return "OK";
+  if (err == AtError::GENERIC_ERROR)
+    return "AT_ERROR";
+  if (err == AtError::PARAM_ERROR)
+    return "AT_PARAM_ERROR";
+  if (err == AtError::BUSY)
+    return "AT_BUSY_ERROR";
+  if (err == AtError::TEST_PARAM_OVERFLOW)
+    return "AT_TEST_PARAM_OVERFLOW";
+  if (err == AtError::NO_NET_JOINED)
+    return "AT_NO_NETWORK_JOINED";
+  if (err == AtError::RX_ERROR)
+    return "AT_RX_ERROR";
+  if (err == AtError::TIMEOUT)
+    return "TIMEOUT";
+  if (err == AtError::BUFFER_OVERFLOW)
+    return "BUFFER_OVERFLOW";
+  if (err == AtError::BOOT_ALERT)
+    return "BOOTALERT";
+  return "UNKNOWN";
 }

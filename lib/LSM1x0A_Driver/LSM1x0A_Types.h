@@ -1,6 +1,11 @@
 #ifndef LSM1X0A_TYPES_H
 #define LSM1X0A_TYPES_H
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+
 // Baudrate común para módulos LSM1x0A
 #define LSM1X0A_BAUDRATE 9600
 // RX/TX pins comunes para módulos LSM1x0A
@@ -32,13 +37,30 @@ enum class AtError
   UNKNOWN
 };
 
+// Estructura para almacenar datos de calidad de señal (Coverage Analysis)
+struct LsmRxMetadata
+{
+  char slot[8]; // "1", "2", "C", "P_MC", etc.
+  int  port;
+  int  dataRate;
+  int  rssi;
+  int  snr;
+  bool hasLinkCheck; // true si el servidor mandó info de gateways
+  int  demodMargin;  // Solo válido si hasLinkCheck = true
+  int  nbGateways;   // Solo válido si hasLinkCheck = true
+};
+
 // Tipos de Eventos Asíncronos que enviaremos al Callback
 namespace LsmEvent
 {
-const char JOIN[] = "JOIN";
-const char TX[]   = "TX";   // Confirmación de envío
-const char RX[]   = "RX";   // Dato recibido
-const char INFO[] = "INFO"; // Mensajes de estado (LinkCheck, etc)
+const char JOIN[]    = "JOIN";
+const char TX[]      = "TX";
+const char RX_DATA[] = "RX_DATA"; // El payload útil (Hex)
+const char RX_META[] = "RX_META"; // Metadatos (RSSI, SNR, DR)
+const char CLASS[]   = "CLASS";   // Cambio de Clase A/B/C
+const char BEACON[]  = "BEACON";  // Info de Beacon
+const char NVM[]     = "NVM";     // Guardado en Flash interna
+const char INFO[]    = "INFO";    // Otros
 } // namespace LsmEvent
 
 #endif // LSM1X0A_TYPES_H

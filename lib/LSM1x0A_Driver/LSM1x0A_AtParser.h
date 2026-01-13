@@ -6,8 +6,6 @@
 #include "freertos/semphr.h"
 #include <cstdio>
 #include <cstring>
-#include <stddef.h>
-#include <stdint.h>
 
 // Callback para eventos asíncronos (URC)
 // type: "RX", "JOIN", etc.
@@ -19,6 +17,7 @@ class LSM1x0A_AtParser
 {
 public:
   LSM1x0A_AtParser();
+  ~LSM1x0A_AtParser() = default;
 
   // Inicialización
   bool init(UartDriver* driver, AtEventCallback onEvent = nullptr, void* eventCtx = nullptr);
@@ -44,6 +43,12 @@ public:
 
   // Metodo público para descripción de errores
   const char* atErrorToString(AtError err);
+
+  /**
+   * @brief Helper estático para convertir el string de metadatos en una struct usable.
+   * Parsear: "+EVT:RX_1, PORT 2, DR 5, RSSI -90, SNR 10, DMODM 10, GWN 2"
+   */
+  static bool parseRxMetadata(const char* payload, LsmRxMetadata* outMeta);
 
 private:
   UartDriver*     _driver;
