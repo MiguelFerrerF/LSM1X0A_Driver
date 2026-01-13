@@ -5,7 +5,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 // Baudrate común para módulos LSM1x0A
 #define LSM1X0A_BAUDRATE 9600
 // RX/TX pins comunes para módulos LSM1x0A
@@ -50,6 +49,16 @@ struct LsmRxMetadata
   int  nbGateways;   // Solo válido si hasLinkCheck = true
 };
 
+// Niveles de Log (Jerarquía estándar)
+enum class LsmLogLevel
+{
+  NONE = 0, // Silencio total
+  ERROR,    // Solo fallos críticos (Hardware, Timeouts)
+  INFO,     // Estado de alto nivel (Join Success, Packet Sent)
+  DEBUG,    // Tráfico de comandos AT (TX: AT+... / RX: OK)
+  VERBOSE   // Todo (incluyendo dumps internos si los hubiera)
+};
+
 // Tipos de Eventos Asíncronos que enviaremos al Callback
 namespace LsmEvent
 {
@@ -61,6 +70,8 @@ const char CLASS[]   = "CLASS";   // Cambio de Clase A/B/C
 const char BEACON[]  = "BEACON";  // Info de Beacon
 const char NVM[]     = "NVM";     // Guardado en Flash interna
 const char INFO[]    = "INFO";    // Otros
+const char LOG[]     = "LOG";     // Mensajes de Log
+const char VERBOSE[] = "VERBOSE";
 } // namespace LsmEvent
 
 #endif // LSM1X0A_TYPES_H

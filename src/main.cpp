@@ -1,66 +1,45 @@
-#include "LSM1x0A_AtParser.h"
+#include "LSM1x0A_Controller.h"
+#include "UartDriver.h"
 #include <Arduino.h>
 
-UartDriver       driver;
-LSM1x0A_AtParser lora;
+UartDriver         driver;
+LSM1x0A_Controller modem;
 
-// Callback estático para eventos (sin String)
-void onLoRaEvent(const char* type, const char* payload, void* ctx)
+// Credenciales (Ejemplo)
+const char* APP_EUI = "0000000000000000";
+const char* APP_KEY = "11223344556677881122334455667788";
+
+// --- Callback de Aplicación ---
+// Aquí recibimos los eventos limpios del controlador
+void onModemEvent(const char* type, const char* payload)
 {
-  // -------------------------------------------------
-  // CASO 1: METADATOS DE COBERTURA (RSSI, SNR...)
-  // -------------------------------------------------
-  if (strcmp(type, LsmEvent::RX_META) == 0) {
-    LsmRxMetadata meta;
-
-    // Usamos el Helper estático para parsear el string complejo
-    if (LSM1x0A_AtParser::parseRxMetadata(payload, &meta)) {
-      Serial.println("\n>>> [COBERTURA] Datos de Señal Recibidos <<<");
-      Serial.printf("    Slot: RX_%s\n", meta.slot);
-      Serial.printf("    RSSI: %d dBm\n", meta.rssi);
-      Serial.printf("    SNR:  %d dB\n", meta.snr);
-      Serial.printf("    DR:   %d\n", meta.dataRate);
-
-      if (meta.hasLinkCheck) {
-        Serial.printf("    [LinkCheck] Gateways: %d, Margin: %dB\n", meta.nbGateways, meta.demodMargin);
-      }
-
-      // AQUÍ: Guardar estos datos en tarjeta SD, enviarlos por WiFi, etc.
-      // saveToLog(meta);
+  if (strcmp(type, LsmEvent::LOG) == 0) {
+    // payload contiene el mensaje formateado desde el controlador
+    // Le ponemos una etiqueta para distinguirlo en la consola
+    Serial.printf("[LSM-LOG] %s\n", payload);
+    return;
+  }
+  if (strcmp(type, LsmEvent::JOIN) == 0) {
+    if (strcmp(payload, "SUCCESS") == 0) {
+      Serial.println(">>> APP: ¡Conectado a la Red!");
     }
     else {
-      Serial.printf("[ERROR] No se pudo parsear metadata: %s\n", payload);
+      Serial.println(">>> APP: Error al unir. Reintentando...");
+      // Aquí podrías activar un timer para reintentar modem.join()
     }
-  }
-
-  // -------------------------------------------------
-  // CASO 2: PAYLOAD DE DATOS (Lo que envió el servidor)
-  // -------------------------------------------------
-  else if (strcmp(type, LsmEvent::RX_DATA) == 0) {
-    // payload formato: "PORT:SIZE:HEXDATA" (ej "2:4:AABBCCDD")
-    int  port, size;
-    char hexData[256];
-
-    // Parseo simple con sscanf
-    if (sscanf(payload, "%d:%d:%s", &port, &size, hexData) == 3) {
-      Serial.printf("[RX DATA] Port: %d, Len: %d, Payload: %s\n", port, size, hexData);
-    }
-  }
-
-  // -------------------------------------------------
-  // OTROS EVENTOS
-  // -------------------------------------------------
-  else if (strcmp(type, LsmEvent::JOIN) == 0) {
-    Serial.printf("[JOIN] %s\n", payload);
   }
   else if (strcmp(type, LsmEvent::TX) == 0) {
-    Serial.printf("[TX STATUS] %s\n", payload);
+    Serial.printf(">>> APP: Transmisión finalizada (%s)\n", payload);
   }
-  else if (strcmp(type, LsmEvent::CLASS) == 0) {
-    Serial.printf("[CLASE] Cambiado a Clase %s\n", payload);
+  else if (strcmp(type, LsmEvent::RX_DATA) == 0) {
+    Serial.printf(">>> APP: Datos recibidos: %s\n", payload);
   }
-  else if (strcmp(type, LsmEvent::NVM) == 0) {
-    Serial.println("[NVM] Datos guardados en Flash interna del módulo.");
+  else if (strcmp(type, LsmEvent::RX_META) == 0) {
+    // Usamos el helper estático que ya teníamos para decodificar
+    LsmRxMetadata meta;
+    if (LSM1x0A_AtParser::parseRxMetadata(payload, &meta)) {
+      Serial.printf(">>> APP: Calidad Señal -> RSSI: %d, SNR: %d\n", meta.rssi, meta.snr);
+    }
   }
 }
 
@@ -68,82 +47,57 @@ void setup()
 {
   Serial.begin(115200);
   delay(1000);
+  Serial.println("Iniciando Sistema...");
 
-  // Inicializar Parser + Driver
-  if (!lora.init(&driver, onLoRaEvent)) {
-    Serial.println("Fallo HW");
+  modem.setLogLevel(LsmLogLevel::VERBOSE); // Nivel máximo de logs
+
+  // 1. Iniciar Controlador
+  // Esto inicializa driver, parser y sincroniza el 'AT' ping
+  if (!modem.begin(&driver, 15, onModemEvent)) {
+    Serial.println("FATAL: El módulo no responde. Revisar cableado.");
     while (1)
       ;
   }
 
-  // Send ATZ to wake up
-  AtError err;
-  err = lora.sendCommand("ATZ", 1000);
-  if (err != AtError::BOOT_ALERT) {
-    Serial.printf("Error al reiniciar módem: %d, %s\n", (int)err, lora.atErrorToString(err));
-  }
-  else {
-    Serial.println("Módem reiniciado correctamente.");
-  }
-
-  // CASO 1: Obtener EUI (Lectura)
-  // Buffer local en Stack (rápido y seguro)
+  Serial.println("Módulo OK.");
+  Serial.print("DevEUI: ");
   char devEui[32];
+  modem.getDevEUI(devEui, sizeof(devEui));
+  Serial.println(devEui);
 
-  // Pedimos AT+DEUI y esperamos que la respuesta empiece por "DevEui: "
-  err = lora.sendCommandWithResponse("AT+DEUI=?", nullptr, devEui, sizeof(devEui));
+  // 2. Configurar y Unirse
+  modem.setBand(5); // EU868
 
-  if (err == AtError::OK) {
-    Serial.printf("Mi DevEUI es: %s\n", devEui);
-  }
-  else {
-    Serial.printf("Error al leer EUI: %d, %s\n", (int)err, lora.atErrorToString(err));
-  }
-
-  // CASO 2: Configurar Join (Escritura simple)
-  // Cambiamos las claves por las nuestras
-  err = lora.sendCommand("AT+BAND=5");
-  if (err != AtError::OK) {
-    Serial.println("Error configurando Banda LoRaWAN.");
-  }
-  else {
-    Serial.println("Banda LoRaWAN configurada correctamente.");
-  }
-
-  // read back to verify
-  char band[64];
-  err = lora.sendCommandWithResponse("AT+BAND=?", nullptr, band, sizeof(band));
-  if (err == AtError::OK) {
-    Serial.printf("Banda leída: %s\n", band);
-  }
-  else {
-    Serial.printf("Error al leer Banda: %d, %s\n", (int)err, lora.atErrorToString(err));
-  }
-
-  // CASO 3: Unirse (Manejo de estados)
-  //   Serial.println("Intentando Join...");
-  err = lora.sendCommand("AT+JOIN=1"); // Esto solo inicia el proceso
-
-  if (err == AtError::OK) {
-    Serial.println("Petición de Join enviada. Esperando evento...");
-  }
-  else if (err == AtError::NO_NET_JOINED) {
-    Serial.println("Error: Configura las claves primero.");
-  }
-  else if (err == AtError::BUSY) {
-    Serial.println("El módem está ocupado.");
-  }
+  Serial.println("Solicitando Join...");
+  modem.join();
 }
 
 void loop()
 {
-  // Enviar un paquete cada 30 segundos
-  static uint32_t lastTx = 0;
-  if (millis() - lastTx > 30000) {
-    lastTx = millis();
-    Serial.println("Enviando paquete (Confirmado)...");
-    // Al recibir respuesta (ACK o Downlink), saltará el evento RX_META
-    lora.sendCommand("AT+SEND=33:1:0101");
+  // Ejemplo de envío periódico
+  static uint32_t lastSend = 0;
+
+  // Solo enviamos si estamos conectados y el módulo no está trabajando
+  if (millis() - lastSend > 30000) {
+    if (modem.isJoined() && !modem.isTxBusy()) {
+
+      const char* sensorData = "0102AAFF";
+      Serial.println("Enviando telemetría...");
+
+      // Enviar al puerto 10, Confirmado = true
+      if (modem.sendData(10, sensorData, true)) {
+        Serial.println("Petición de envío aceptada.");
+      }
+      else {
+        Serial.println("Error al solicitar envío (¿Busy?).");
+      }
+
+      lastSend = millis();
+    }
+    else {
+      // Serial.println("Esperando conexión o canal libre...");
+    }
   }
-  delay(10);
+
+  delay(100);
 }

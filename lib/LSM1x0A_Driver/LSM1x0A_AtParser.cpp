@@ -53,8 +53,7 @@ void LSM1x0A_AtParser::eatBuffer(const uint8_t* data, size_t len)
     // Detección de fin de línea estándar \r\n
     if (c == '\n' || c == '\r') {
       if (_lineIdx > 0) {
-        _lineBuffer[_lineIdx] = '\0';                                // Null-terminate
-        Serial.printf("AT Parser recibió línea: %s\n", _lineBuffer); // Debug
+        _lineBuffer[_lineIdx] = '\0'; // Null-terminate
         processLine(_lineBuffer);
         _lineIdx = 0; // Reset para siguiente línea
       }
@@ -80,6 +79,10 @@ void LSM1x0A_AtParser::processLine(char* line)
     line[--len] = '\0';
   if (len == 0)
     return;
+
+  // Verbose logging of all received lines
+  if (_eventCallback)
+    _eventCallback(LsmEvent::VERBOSE, line, _eventCtx);
 
   // 2. DETECCIÓN DE EVENTOS ASÍNCRONOS (+EVT)
   // Basado en las funciones: AT_event_join, AT_event_receive, AT_event_confirm
