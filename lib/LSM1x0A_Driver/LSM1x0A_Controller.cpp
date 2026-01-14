@@ -1,5 +1,6 @@
 #include "LSM1x0A_Controller.h"
 #include "driver/gpio.h"
+#include <sys/time.h>
 
 LSM1x0A_Controller::LSM1x0A_Controller()
 {
@@ -60,7 +61,7 @@ bool LSM1x0A_Controller::softReset()
 {
   log(LsmLogLevel::INFO, "Ejecutando SOFT RESET vía comando AT...");
 
-  AtError res = _parser.sendCommand("ATZ", 3000);
+  AtError res = _parser.sendCommand(LsmAtCommand::RESET, 5000);
   if (res != AtError::BOOT_ALERT) {
     log(LsmLogLevel::ERROR, "Fallo en SOFT RESET: El módulo no respondió correctamente (Error: %s)", _parser.atErrorToString(res));
     return false;
@@ -176,7 +177,7 @@ bool LSM1x0A_Controller::join(bool isOTAA)
     return false;
 
   char cmd[16];
-  snprintf(cmd, sizeof(cmd), "AT+JOIN=%d", isOTAA ? 1 : 0);
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN, isOTAA ? 1 : 0);
   AtError err = _parser.sendCommand(cmd);
   if (err == AtError::OK) {
     _isTxBusy = true;  // El módulo está ocupado intentando unirse
@@ -184,6 +185,75 @@ bool LSM1x0A_Controller::join(bool isOTAA)
     return true;
   }
   return false;
+}
+
+bool LSM1x0A_Controller::join()
+{
+  // Si ya estamos uniendo o transmitiendo, no interrumpir
+  if (_isTxBusy)
+    return false;
+
+  log(LsmLogLevel::INFO, "Sigfox: Iniciando 'Join' (Test de cobertura bidireccional)...");
+  log(LsmLogLevel::INFO, "Sigfox: Esto tardara aprox 60 segundos. Espere...");
+
+  char rxBuffer[32] = {0};
+
+  // 1. Enviamos el comando especial con un TIMEOUT LARGO (60000 ms)
+  // Usamos sendCommandWithResponse para buscar la etiqueta "+RX="
+  AtError err = _parser.sendCommandWithResponse(LsmAtCommand::SEND_BIT_CONFIRMED, // "AT$SB=1,1,2"
+                                                "+RX_H=",                         // Esperamos que la respuesta contenga esto
+                                                rxBuffer,                         // Aquí guardaremos lo que venga después de "+RX="
+                                                sizeof(rxBuffer),
+                                                60000 // Timeout crítico: 60 segundos
+  );
+  if (err != AtError::OK) {
+    log(LsmLogLevel::ERROR, "Sigfox: 'Join' fallido o sin respuesta (Error: %s)", _parser.atErrorToString(err));
+    _isJoined = false; // Reseteamos estado hasta confirmación
+    return false;
+  }
+
+  // 2. Parsear la respuesta recibida
+  if (strlen(rxBuffer) >= 12) {
+    char dataString[32];
+    parseTimestamp(rxBuffer, dataString);
+    parseRSSI(rxBuffer);
+    log(LsmLogLevel::INFO, "Sigfox: Conectado OK\n\t Fecha (UTC): %s\n\t Señal (RSSI): %d dBm", dataString, _currentRSSI);
+  }
+  else {
+    log(LsmLogLevel::ERROR, "Sigfox: Respuesta incompleta o formato incorrecto.");
+  }
+
+  _isJoined = true;
+  return true;
+}
+
+void LSM1x0A_Controller::parseTimestamp(const char* rxBuffer, char* outBuffer)
+{
+  char hexTemp[9]; 
+  // Parsear TIMESTAMP (Primeros 8 caracteres)
+  memcpy(hexTemp, rxBuffer, 8);
+  hexTemp[8]  = '\0';
+  uint32_t ts = strtoul(hexTemp, NULL, 16);
+
+  // Ajustar el reloj interno del ESP32 con esta hora
+  time_t         rawTime = (time_t)ts;
+  struct timeval tv      = {.tv_sec = rawTime, .tv_usec = 0};
+  settimeofday(&tv, NULL);
+
+  // Convertir a string legible
+  struct tm* timeInfo;
+  timeInfo = gmtime(&rawTime);
+  strftime(outBuffer, 32, "%Y-%m-%d %H:%M:%S", timeInfo);
+}
+
+void LSM1x0A_Controller::parseRSSI(const char* rxBuffer)
+{
+  char hexTemp[5]; 
+  // Parsear RSSI (Siguientes 4 caracteres)
+  memcpy(hexTemp, rxBuffer + 8, 4);
+  hexTemp[4]       = '\0';
+  uint32_t rawRssi = strtoul(hexTemp, NULL, 16); // RSSI en formato sin signo
+  _currentRSSI     = (int16_t)rawRssi;           // Convertir a signed
 }
 
 bool LSM1x0A_Controller::sendData(uint8_t port, const char* data, bool confirmed)
@@ -195,7 +265,7 @@ bool LSM1x0A_Controller::sendData(uint8_t port, const char* data, bool confirmed
 
   // Buffer temporal para el comando completo
   char cmdBuffer[AT_BUFFER_SIZE];
-  int  written = snprintf(cmdBuffer, sizeof(cmdBuffer), "AT+SEND=%d:%d:%s", port, confirmed ? 1 : 0, data);
+  int  written = snprintf(cmdBuffer, sizeof(cmdBuffer), "%s%d:%d:%s", LsmAtCommand::SEND, port, confirmed ? 1 : 0, data);
 
   if (written >= sizeof(cmdBuffer))
     return false; // Overflow

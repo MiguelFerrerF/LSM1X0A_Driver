@@ -31,7 +31,8 @@ public:
   void setLogLevel(LsmLogLevel level);
 
   // Métodos de Negocio
-  bool join(bool isOTAA = true);
+  bool join(bool isOTAA); // For LoRaWAN join
+  bool join();            // For SigFox join
   bool sendData(uint8_t port, const char* data, bool confirmed = false);
   bool setKeys(const char* devEui = nullptr, const char* appKey = nullptr, const char* appEui = nullptr);
   bool setBand(uint8_t band);
@@ -44,6 +45,7 @@ public:
 private:
   LSM1x0A_AtParser _parser;
   LsmUserCallback  _userCallback = nullptr;
+  int16_t          _currentRSSI  = 0;
 
   // Reset pin
   int _resetPin;
@@ -60,5 +62,7 @@ private:
 
   static void parserEventProxy(const char* type, const char* payload, void* ctx);
   void        handleInternalEvent(const char* type, const char* payload);
+  void        parseTimestamp(const char* rxBuffer, char* outBuffer);
+  void        parseRSSI(const char* rxBuffer);
 };
 #endif // LSM1X0A_CONTROLLER_H

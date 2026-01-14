@@ -41,6 +41,20 @@ AtError LSM1x0A_AtParser::parseErrorString(const char* line)
     return AtError::NO_NET_JOINED;
   if (strstr(line, "AT_RX_ERROR"))
     return AtError::RX_ERROR;
+  if (strstr(line, "AT_NO_CLASS_B_ENABLED"))
+    return AtError::NO_CLASS_B_ENABLE;
+  if (strstr(line, "AT_DUTYCYCLE_RESTRICTED"))
+    return AtError::DUTY_CYCLE_RESTRICT;
+  if (strstr(line, "AT_CRYPTO_ERROR"))
+    return AtError::CRYPTO_ERROR;
+  if (strstr(line, "AT_LIB_ERROR"))
+    return AtError::LIBRARY_ERROR;
+  if (strstr(line, "AT_TX_TIMEOUT"))
+    return AtError::TX_TIMEOUT;
+  if (strstr(line, "AT_RX_TIMEOUT"))
+    return AtError::RX_TIMEOUT;
+  if (strstr(line, "AT_RECONF_ERROR"))
+    return AtError::RECONF_ERROR;
   if (strstr(line, "BOOTALERT"))
     return AtError::BOOT_ALERT;
   return AtError::UNKNOWN;
@@ -321,11 +335,25 @@ const char* LSM1x0A_AtParser::atErrorToString(AtError err)
     return "AT_NO_NETWORK_JOINED";
   if (err == AtError::RX_ERROR)
     return "AT_RX_ERROR";
+  if (err == AtError::NO_CLASS_B_ENABLE)
+    return "AT_NO_CLASS_B_ENABLED";
+  if (err == AtError::DUTY_CYCLE_RESTRICT)
+    return "AT_DUTYCYCLE_RESTRICTED";
+  if (err == AtError::CRYPTO_ERROR)
+    return "AT_CRYPTO_ERROR";
+  if (err == AtError::LIBRARY_ERROR)
+    return "AT_LIB_ERROR";
+  if (err == AtError::TX_TIMEOUT)
+    return "AT_TX_TIMEOUT";
+  if (err == AtError::RX_TIMEOUT)
+    return "AT_RX_TIMEOUT";
+  if (err == AtError::RECONF_ERROR)
+    return "AT_RECONF_ERROR";
+  if (err == AtError::BOOT_ALERT)
+    return "BOOTALERT";
   if (err == AtError::TIMEOUT)
     return "TIMEOUT";
   if (err == AtError::BUFFER_OVERFLOW)
     return "BUFFER_OVERFLOW";
-  if (err == AtError::BOOT_ALERT)
-    return "BOOTALERT";
   return "UNKNOWN";
 }

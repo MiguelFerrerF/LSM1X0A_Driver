@@ -60,20 +60,30 @@ void setup()
   }
 
   Serial.println("Módulo OK.");
-  Serial.print("DevEUI: ");
-  char devEui[32];
-  modem.getDevEUI(devEui, sizeof(devEui));
-  Serial.println(devEui);
+  // --------------- SIGFOX JOIN ---------------
+  if (modem.join()) {
+    Serial.println("Comunicación bidireccional SigFox iniciada.");
+  }
+  else {
+    Serial.println("Error al iniciar comunicación SigFox.");
+  }
 
-  // 2. Configurar y Unirse
-  modem.setBand(5); // EU868
+  // --------------- LORAWAN JOIN ---------------
+  // Serial.print("DevEUI: ");
+  // char devEui[32];
+  // modem.getDevEUI(devEui, sizeof(devEui));
+  // Serial.println(devEui);
 
-  Serial.println("Solicitando Join...");
-  modem.join();
+  // // 2. Configurar y Unirse
+  // modem.setBand(5); // EU868
+
+  // Serial.println("Solicitando Join...");
+  // modem.join(true);
 }
 
 void loop()
 {
+  vTaskDelete(NULL); // No usamos loop en este ejemplo
   // Ejemplo de envío periódico
   static uint32_t lastSend = 0;
 
