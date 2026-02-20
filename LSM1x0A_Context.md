@@ -64,3 +64,66 @@ Para consultar los comandos, formatos y parámetros específicos durante el desa
 1. `LSM1x0A_AT_Commands.md` -> Resumen de comandos disponibles y sintaxis general.
 2. `LSM1x0A_LoRaWAN_Responses.md` -> Detalle exacto de la salida (`AT_PRINTF`) generada por el firmware en modo LoRaWAN.
 3. `LSM1x0A_Sigfox_Responses.md` -> Detalle exacto de la salida (`AT_PRINTF`) generada por el firmware en modo Sigfox.
+
+---
+
+# 7. PlatformIO Project Context
+
+Este apartado sirve como contexto para la compilación, carga y monitorización del proyecto. Incluye comandos específicos y detalles del entorno adaptados a esta máquina.
+
+## Detalles del Entorno
+- **Project Path:** `c:\Users\ORDENADOR 19\OneDrive - inBiot\Documentos\PlatformIO\Projects\LoRaWANController`
+- **PlatformIO Executable:** `C:\Users\ORDENADOR 19\.platformio\penv\Scripts\platformio.exe`
+- **Board:** `esp32dev` (ESP32 Dev Module genérico)
+- **Port:** Autodetectado o manual (ej. `COM7`, `COM11`)
+- **Monitor Speed:** `115200` (Definido en `platformio.ini`)
+- **Arquitectura Base:**
+    - **Framework:** Arduino con integración de FreeRTOS.
+    - **Controladores:**
+        - `UartDriver`: Capa física de interacción serial asíncrona dedicada. Maneja colas de FreeRTOS para aislar interrupciones RX.
+        - `LSM1x0A_Controller`: API principal y orquestador de lógica del módulo dual-stack.
+    - **Tests:** Framework Unity integrado con PlatformIO (`test_uartDriver`, etc.)
+- **Librerías/Test:** `throwtheswitch/Unity` para las pruebas asíncronas de UART.
+
+## Comandos
+
+### 1. Build (Compilación)
+Compila el código fuente del proyecto del firmware principal.
+```powershell
+& "C:\Users\ORDENADOR 19\.platformio\penv\Scripts\platformio.exe" run
+```
+
+### 2. Clean (Limpieza)
+Limpia los artefactos de compilación. Muy útil si hay errores extraños de dependencias o de cachés corruptas tras cambiar muchas configuraciones en `platformio.ini`.
+```powershell
+& "C:\Users\ORDENADOR 19\.platformio\penv\Scripts\platformio.exe" run --target clean
+```
+
+### 3. Upload (Carga de Firmware)
+Compila (si es necesario) y sube el firmware al ESP32 por USB o UART.
+```powershell
+& "C:\Users\ORDENADOR 19\.platformio\penv\Scripts\platformio.exe" run --target upload
+```
+
+### 4. Test (Ejecución de Pruebas Unitarias)
+Compila y sube el entorno de pruebas de un módulo específico (ej. el test de UART) validando en el hardware físico.
+```powershell
+& "C:\Users\ORDENADOR 19\.platformio\penv\Scripts\platformio.exe" test -e esp32dev -f LSM1x0A_Driver_Test/test_uartDriver
+```
+
+### 5. Monitor Serial
+Abre el monitor interactivo de PlatformIO para ver los logs en vivo. Importante: Para ver el debug en crudo puede ser necesario hacer un script en Python externo debido al reset por DTR que aplica por defecto PlatformIO y que borra el bootlog primigenio del chip.
+```powershell
+& "C:\Users\ORDENADOR 19\.platformio\penv\Scripts\platformio.exe" device monitor
+```
+Para salir del monitor de PIO: Presiona `Ctrl+C`.
+
+## Configuración (platformio.ini)
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+monitor_speed = 115200
+monitor_filters = esp32_exception_decoder
+```
