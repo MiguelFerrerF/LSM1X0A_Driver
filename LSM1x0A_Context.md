@@ -43,10 +43,23 @@ La máquina de estados del driver debe buscar explícitamente estas cadenas exac
 - `\r\nAT_LIB_ERROR\r\n` -> Error en el stack propietario de Sigfox.
 
 ## 4. Comportamientos Críticos de Comandos
+- **Wake-up Sequence (Modo Reposo):** Cuando el módulo lleva tiempo sin actividad o acaba de arrancar, el hardware UART puede estar en bajo consumo. El primer comando transmitido (`ATZ` o `AT`) suele ignorarse completamente (no devuelve ni eco ni `ERROR`) porque el módulo lo usa para despertar su microcontrolador interno. El driver de comunicaciones (`AtParser` o capa superior) debe implementar un mecanismo de "Ping" consistente en enviar `AT\r\n` repetidamente (varias veces con retardos de ~500ms) hasta obtener un `OK` antes de asumir que el módulo está listo para recibir comandos complejos.
 - **Cambio de Modo (`AT+MODE=0` o `AT+MODE=1`):** Según el análisis del firmware, cambiar el modo de red invoca la instrucción `NVIC_SystemReset();`. El driver detectará esto y **deberá esperar el tiempo de boot** del módulo antes de intentar ninguna otra comunicación.
 - **Obtención de Variables (`AT+<CMD>=?`):** Cuando el driver interroga por un valor, el firmware generalmente imprime el valor crudo en pantalla (con o sin comillas, según el caso) y luego finaliza el bloque con `\r\nOK\r\n`. El parser debe ser capaz de extraer lo que hay *entre* el eco del comando y el `\r\nOK\r\n`.
 
-## 5. Documentación de Referencia Interna
+## 5. Arquitectura del Driver Propuesta
+
+El driver debe separarse funcionalmente en capas para mantener el código testeable y modular, especialmente en FreeRTOS:
+
+1. **Capa Física (`UartDriver`)**: 
+   - **Responsabilidad:** Configurar periféricos ESP-IDF, manejar la interrupción RX asíncrona mediante una tarea dedicada (existente: `uart_rx_task`), gestionar errores de hardware (overflow) y notificar hacia arriba bloque a bloque mediante un callback.
+   - **Mejora:** Función pública `flush()` para garantizar el requisito de vaciado de buffer antes de enviar comandos sincrónicos.
+2. **Capa de Comandos (Futura iteración)**:
+   - **Responsabilidad:** Recibir los fragmentos del callback físico y ensamblar líneas enteras, bloqueando la tarea llamante de alto nivel hasta que ocurra un *Timeout* o se extraiga la respuesta. *Actualmente pospuesto, el parseo se hará manualmente o en iteraciones futuras.*
+3. **Capa de Aplicación (API Segura) (Futura iteración)**:
+   - **Responsabilidad:** Exponer llamadas de alto nivel como `getBattery()`.
+
+## 6. Documentación de Referencia Interna
 Para consultar los comandos, formatos y parámetros específicos durante el desarrollo, consultar:
 1. `LSM1x0A_AT_Commands.md` -> Resumen de comandos disponibles y sintaxis general.
 2. `LSM1x0A_LoRaWAN_Responses.md` -> Detalle exacto de la salida (`AT_PRINTF`) generada por el firmware en modo LoRaWAN.

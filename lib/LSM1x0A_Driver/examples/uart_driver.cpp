@@ -67,10 +67,23 @@ void setup()
     } // Bloqueo infinito
   }
 
-  // 3. Enviar un comando AT de prueba al Módem
+  // 3. Despertar al Módem (Wake-up Ping)
+  // El módulo puede estar en sleep. Mandamos un comando AT varias veces 
+  // hasta que nos responda algo, asegurando que está listo.
+  Serial.println(" [INFO] Sincronizando UART...");
+  
+  // Limpiamos buffer
+  modemDriver.flushRx();
+  
   const char* atCommand = "AT\r\n";
-  int         bytesSent = modemDriver.sendData((const uint8_t*)atCommand, strlen(atCommand));
-  Serial.printf(" [INFO] Enviados %d bytes al Módem: %s", bytesSent, atCommand);
+  for(int i=0; i<3; i++) {
+    int bytesSent = modemDriver.sendData((const uint8_t*)atCommand, strlen(atCommand));
+    Serial.printf(" [INFO] (Ping %d) Enviados %d bytes: %s", i+1, bytesSent, atCommand);
+    
+    // Le damos tiempo al módulo para procesar y responder. En el loopback
+    // real, la respuesta llega a onDataReceived, que se imprime asíncronamente.
+    vTaskDelay(pdMS_TO_TICKS(500)); 
+  }
 }
 
 // ==========================================
@@ -78,5 +91,9 @@ void setup()
 // ==========================================
 void loop()
 {
-  vTaskDelete(NULL); // Eliminamos esta tarea para que no se repita el loop
+  // Enviar un comando AT cada 10 segundos para mantener la comunicación activa
+  const char* atCommand = "AT+MODE=?\r\n";
+  int         bytesSent = modemDriver.sendData((const uint8_t*)atCommand, strlen(atCommand));
+  Serial.printf(" [INFO] Enviados %d bytes al Módem: %s", bytesSent, atCommand);
+  vTaskDelay(pdMS_TO_TICKS(10000)); // Esperar 10 segundos antes del próximo comando
 }

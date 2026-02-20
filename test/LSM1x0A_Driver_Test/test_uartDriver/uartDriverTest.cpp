@@ -54,9 +54,13 @@ static void test_rx_callback(void* ctx_void, uint8_t* data, size_t len)
   if (ctx == nullptr || len > 1024)
     return;
 
-  // Copiar datos al buffer del contexto
-  memcpy(ctx->buffer, data, len);
-  ctx->received_len = len;
+  // Copiar datos al buffer del contexto AFILANDO (Append)
+  if (ctx->received_len + len < 1024) {
+    memcpy(&ctx->buffer[ctx->received_len], data, len);
+    ctx->received_len += len;
+    // Nos aseguramos de que termine en null para poder usar strstr luego tranquilamente
+    ctx->buffer[ctx->received_len] = '\0';
+  }
   ctx->callback_count++;
 
   // Imprimir datos recibidos (opcional, para debug)
@@ -69,9 +73,22 @@ static void test_rx_callback(void* ctx_void, uint8_t* data, size_t len)
 }
 
 // ==========================================
-// CASO DE PRUEBA 1: Comunicación Básica (Loopback)
+// HELPER: Despertar al módulo
 // ==========================================
-void test_uart_loopback_basic()
+void wake_up_module(UartDriver& driver, TestContext& ctx) {
+    const char* atCommand = "AT\r\n";
+    for(int i = 0; i < 3; i++) {
+        driver.sendData((const uint8_t*)atCommand, strlen(atCommand));
+        vTaskDelay(pdMS_TO_TICKS(300));
+    }
+    driver.flushRx();
+    ctx.reset();
+}
+
+// ==========================================
+// CASO DE PRUEBA 1: Comunicación Básica (Ping al Módulo)
+// ==========================================
+void test_uart_ping_module()
 {
   UartDriver  driver;
   TestContext ctx;
@@ -81,29 +98,34 @@ void test_uart_loopback_basic()
   TEST_ASSERT_TRUE_MESSAGE(init_ok, "Fallo al inicializar UART Driver");
 
   // 2. Preparar datos
-  const char* rx_msg  = "\r\nAT_ERROR\r\n";
   const char* msg     = "AT\r\n";
-  size_t      msg_len = strlen(rx_msg);
+  
+  // El módulo normalmente hace echo del comando y luego responde,
+  // O bien (si el echo está apagado), solo responde `\r\nOK\r\n`.
+  // Asumimos que responde OK (veremos qué longitud llega).
+  const char* expected_resp = "\r\nOK\r\n"; 
 
-  // 3. Enviar datos (físicamente salen por TX y entran por RX)
-  int sent_bytes = driver.sendData((uint8_t*)msg, strlen(msg));
+  // 3. Despertar al módulo de forma segura
+  wake_up_module(driver, ctx);
 
-  // 4. Volver a enviar los datos para asegurar que el buffer no se pierde
-  // en caso de que el primer envío falle.
-  sent_bytes = driver.sendData((uint8_t*)msg, strlen(msg));
+  // 4. Enviar datos reales
+  int sent_bytes = driver.sendData((const uint8_t*)msg, strlen(msg));
+  TEST_ASSERT_EQUAL_INT(strlen(msg), sent_bytes);
 
-  TEST_ASSERT_EQUAL(strlen(msg), sent_bytes);
+  // 4. Esperar respuesta 
+  BaseType_t res = xSemaphoreTake(ctx.sync_sem, pdMS_TO_TICKS(1000));
+  TEST_ASSERT_TRUE_MESSAGE(res == pdTRUE, "Timeout: No se recibio respuesta del modulo");
 
-  // 4. Esperar a que la tarea del driver procese la recepción
-  // Damos un timeout de 200ms (suficiente para 9600 baudios)
-  BaseType_t res = xSemaphoreTake(ctx.sync_sem, pdMS_TO_TICKS(500));
-
-  TEST_ASSERT_TRUE_MESSAGE(res == pdTRUE, "Timeout: No se recibio respuesta (¿Esta el cable Loopback conectado?)");
-
-  // 5. Verificar integridad
-  TEST_ASSERT_EQUAL_INT(msg_len, ctx.received_len);
-  TEST_ASSERT_EQUAL_MEMORY(rx_msg, ctx.buffer, msg_len);
-  TEST_ASSERT_EQUAL_INT(1, ctx.callback_count);
+  // 5. Verificar integridad. Buscamos que contenga OK.
+  // Como la lectura puede fragmentarse, esperamos un rato más si es corta
+  vTaskDelay(pdMS_TO_TICKS(100)); 
+  
+  // Imprimo lo recibido para debugging si falla
+  char dbg_buf[128];
+  snprintf(dbg_buf, sizeof(dbg_buf), "Received len=%d: '%s'", ctx.received_len, ctx.buffer);
+  TEST_MESSAGE(dbg_buf);
+  
+  TEST_ASSERT_NOT_NULL_MESSAGE(strstr((char*)ctx.buffer, "OK"), "No se encontro OK en la respuesta");
 
   driver.deinit();
 }
@@ -151,6 +173,55 @@ void test_uart_invalid_config()
 }
 
 // ==========================================
+// CASO DE PRUEBA 4: Prueba de Flush RX
+// ==========================================
+void test_uart_flush_rx()
+{
+  UartDriver  driver;
+  TestContext ctx;
+
+  bool init_ok = driver.init(TEST_UART_PORT, TEST_BAUD, TEST_RX_PIN, TEST_TX_PIN, test_rx_callback, &ctx);
+  TEST_ASSERT_TRUE(init_ok);
+
+  // Despertar al módulo primero para asegurarnos de que procesará la basura
+  wake_up_module(driver, ctx);
+
+  const char* msg = "BASURA\r\n";
+  
+  // Enviamos basura al modulo para que responda un error.
+  driver.sendData((uint8_t*)msg, strlen(msg));
+  
+  // Esperamos suficiente tiempo para que el hardware UART reciba la respuesta de error 
+  // del modulo, pero sin que nuestra capa de aplicacion la consuma
+  vTaskDelay(pdMS_TO_TICKS(500));
+  
+  // Limpiamos todo (descartamos el AT_ERROR que acaba de llegar)
+  driver.flushRx();
+  ctx.reset();
+
+  // Ahora enviamos el comando bueno
+  const char* good_msg = "AT\r\n";
+  driver.sendData((uint8_t*)good_msg, strlen(good_msg));
+
+  // Esperamos la recepción
+  BaseType_t res = xSemaphoreTake(ctx.sync_sem, pdMS_TO_TICKS(1000));
+  TEST_ASSERT_TRUE(res == pdTRUE);
+
+  vTaskDelay(pdMS_TO_TICKS(100)); // Dar tiempo a copiar toda la cadena "OK"
+  
+  char dbg_buf2[128];
+  snprintf(dbg_buf2, sizeof(dbg_buf2), "Test 4 Received len=%d: '%s'", ctx.received_len, ctx.buffer);
+  TEST_MESSAGE(dbg_buf2);
+
+  // Deberíamos ver el \r\nOK\r\n o el eco sin ningún AT_ERROR antes
+  TEST_ASSERT_NOT_NULL(strstr((char*)ctx.buffer, "OK"));
+  TEST_ASSERT_NULL(strstr((char*)ctx.buffer, "ERROR"));
+
+  driver.deinit();
+}
+
+
+// ==========================================
 // RUNNER
 // ==========================================
 
@@ -161,9 +232,10 @@ int custom_main()
 
   UNITY_BEGIN();
 
-  RUN_TEST(test_uart_loopback_basic);
+  RUN_TEST(test_uart_ping_module);
   RUN_TEST(test_uart_lifecycle);
   RUN_TEST(test_uart_invalid_config);
+  RUN_TEST(test_uart_flush_rx);
 
   return UNITY_END();
 }

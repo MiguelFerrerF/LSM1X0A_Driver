@@ -57,6 +57,12 @@ public:
    */
   bool deinit();
 
+  /**
+   * @brief Vacia el buffer de RX de hardware y cualquier evento encolado, 
+   * descartando todos los datos obsoletos recibidos.
+   */
+  void flushRx();
+
 private:
   uart_port_t     _uart_port        = UART_NUM_MAX;
   ReceiveCallback _receive_callback = nullptr;
