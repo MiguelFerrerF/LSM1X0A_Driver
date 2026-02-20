@@ -23,6 +23,13 @@ public:
   bool init(UartDriver* driver, AtEventCallback onEvent = nullptr, void* eventCtx = nullptr);
 
   /**
+   * @brief Realiza un "Ping" de activación enviando comandos AT hasta recibir OK.
+   * Maneja el estado de bajo consumo del módulo.
+   * @return true si el módulo despertó y respondió adecuadamente.
+   */
+  bool wakeUp(uint8_t retries = 3, uint32_t delayMs = 500);
+
+  /**
    * @brief Envía comando simple y espera OK/ERROR.
    * Ejemplo: sendCommand("AT+JOIN");
    */

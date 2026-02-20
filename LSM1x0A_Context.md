@@ -47,17 +47,27 @@ La máquina de estados del driver debe buscar explícitamente estas cadenas exac
 - **Cambio de Modo (`AT+MODE=0` o `AT+MODE=1`):** Según el análisis del firmware, cambiar el modo de red invoca la instrucción `NVIC_SystemReset();`. El driver detectará esto y **deberá esperar el tiempo de boot** del módulo antes de intentar ninguna otra comunicación.
 - **Obtención de Variables (`AT+<CMD>=?`):** Cuando el driver interroga por un valor, el firmware generalmente imprime el valor crudo en pantalla (con o sin comillas, según el caso) y luego finaliza el bloque con `\r\nOK\r\n`. El parser debe ser capaz de extraer lo que hay *entre* el eco del comando y el `\r\nOK\r\n`.
 
-## 5. Arquitectura del Driver Propuesta
+## 5. Arquitectura del Driver
 
-El driver debe separarse funcionalmente en capas para mantener el código testeable y modular, especialmente en FreeRTOS:
+El driver se separa funcionalmente en capas para mantener el código testeable y modular, integrando FreeRTOS:
 
 1. **Capa Física (`UartDriver`)**: 
-   - **Responsabilidad:** Configurar periféricos ESP-IDF, manejar la interrupción RX asíncrona mediante una tarea dedicada (existente: `uart_rx_task`), gestionar errores de hardware (overflow) y notificar hacia arriba bloque a bloque mediante un callback.
-   - **Mejora:** Función pública `flush()` para garantizar el requisito de vaciado de buffer antes de enviar comandos sincrónicos.
-2. **Capa de Comandos (Futura iteración)**:
-   - **Responsabilidad:** Recibir los fragmentos del callback físico y ensamblar líneas enteras, bloqueando la tarea llamante de alto nivel hasta que ocurra un *Timeout* o se extraiga la respuesta. *Actualmente pospuesto, el parseo se hará manualmente o en iteraciones futuras.*
-3. **Capa de Aplicación (API Segura) (Futura iteración)**:
-   - **Responsabilidad:** Exponer llamadas de alto nivel como `getBattery()`.
+   - **Responsabilidad:** Configurar periféricos ESP-IDF, manejar la interrupción RX asíncrona (tarea `uart_rx_task`), gestionar errores de hardware y agilizar lecturas crudas.
+   - **Características:** Integra `flushRx()` para limpiar basura estática del buffer de hardware antes de pedir datos síncronos.
+
+2. **Capa de Enlace (`LSM1x0A_AtParser`)**:
+   - **Responsabilidad:** Gestionar la máquina de estados AT para los comandos de ambos Stacks.
+   - **Características Principales:**
+     - **Soporte Dual-Stack:** 
+        - **LoRaWAN:** Enruta de forma transparente eventos asíncronos vía callback (`LsmEvent::RX_DATA`, `JOIN`, `TX`) basándose en el prefijo `+EVT:`.
+        - **Sigfox:** Absorbe las respuestas síncronas de bajada (Downlinks), que no arrojan `+EVT:`, depositando el frame exácto en el buffer de salida del usuario, seguido por un match estricto de `\r\nOK\r\n`.
+     - **Wake-up Seguro (`wakeUp()`):** Abstrae el envío repetido de Pings (`AT\r\n`) silenciándolos hasta obtener respuesta, gestionando el sueño profundo.
+     - **Parseo Anti-Fragmentación:** Integra `eatBuffer()` que reconstruye datos de UART byte a byte a prueba de cortes.
+     - **Matching Estricto (`strcmp`):** Interpreta constantes como `AT_PARAM_ERROR` o `AT_LIB_ERROR` evitando que coincidan parcialidades de hex streams.
+     - **Filtrado de Ruido y Eco:** Ignora el eco del comando (`AT+...`) provocado por el firmware original.
+
+3. **Capa de Aplicación (`LSM1x0A_Controller`) (Futura iteración)**:
+   - **Responsabilidad:** Orquestar flujos completos como inicialización anidada, y exponer comandos abstractos (Ej: `joinNetwork()`, `sendUplink()`).
 
 ## 6. Documentación de Referencia Interna
 Para consultar los comandos, formatos y parámetros específicos durante el desarrollo, consultar:

@@ -27,36 +27,38 @@ void LSM1x0A_AtParser::staticRxCallback(void* ctx, uint8_t* data, size_t len)
 // Basado en lora_command.c y lora_at.h
 AtError LSM1x0A_AtParser::parseErrorString(const char* line)
 {
-  if (strstr(line, "OK"))
+  // Usamos stricmp/strcmp en lugar de strstr para evitar falsos positivos
+  if (strcmp(line, "OK") == 0)
     return AtError::OK;
-  if (strstr(line, "AT_ERROR"))
+  if (strcmp(line, "AT_ERROR") == 0)
     return AtError::GENERIC_ERROR;
-  if (strstr(line, "AT_PARAM_ERROR"))
+  if (strcmp(line, "AT_PARAM_ERROR") == 0)
     return AtError::PARAM_ERROR;
-  if (strstr(line, "AT_BUSY_ERROR"))
+  if (strcmp(line, "AT_BUSY_ERROR") == 0)
     return AtError::BUSY;
-  if (strstr(line, "AT_TEST_PARAM_OVERFLOW"))
+  if (strcmp(line, "AT_TEST_PARAM_OVERFLOW") == 0)
     return AtError::TEST_PARAM_OVERFLOW;
-  if (strstr(line, "AT_NO_NETWORK_JOINED"))
+  if (strcmp(line, "AT_NO_NETWORK_JOINED") == 0)
     return AtError::NO_NET_JOINED;
-  if (strstr(line, "AT_RX_ERROR"))
+  if (strcmp(line, "AT_RX_ERROR") == 0)
     return AtError::RX_ERROR;
-  if (strstr(line, "AT_NO_CLASS_B_ENABLED"))
+  if (strcmp(line, "AT_NO_CLASS_B_ENABLED") == 0)
     return AtError::NO_CLASS_B_ENABLE;
-  if (strstr(line, "AT_DUTYCYCLE_RESTRICTED"))
+  if (strcmp(line, "AT_DUTYCYCLE_RESTRICTED") == 0)
     return AtError::DUTY_CYCLE_RESTRICT;
-  if (strstr(line, "AT_CRYPTO_ERROR"))
+  if (strcmp(line, "AT_CRYPTO_ERROR") == 0)
     return AtError::CRYPTO_ERROR;
-  if (strstr(line, "AT_LIB_ERROR"))
+  if (strcmp(line, "AT_LIB_ERROR") == 0)
     return AtError::LIBRARY_ERROR;
-  if (strstr(line, "AT_TX_TIMEOUT"))
+  if (strcmp(line, "AT_TX_TIMEOUT") == 0)
     return AtError::TX_TIMEOUT;
-  if (strstr(line, "AT_RX_TIMEOUT"))
+  if (strcmp(line, "AT_RX_TIMEOUT") == 0)
     return AtError::RX_TIMEOUT;
-  if (strstr(line, "AT_RECONF_ERROR"))
+  if (strcmp(line, "AT_RECONF_ERROR") == 0)
     return AtError::RECONF_ERROR;
-  if (strstr(line, "BOOTALERT"))
+  if (strcmp(line, "BOOTALERT") == 0)
     return AtError::BOOT_ALERT;
+    
   return AtError::UNKNOWN;
 }
 
@@ -166,6 +168,10 @@ void LSM1x0A_AtParser::processLine(char* line)
   }
 
   // 4. Ignorar líneas irrelevantes
+  // Descartamos ecos asincronos del propio comando enviado (e.g. "AT+BAT=?")
+  if (strncmp(line, "AT", 2) == 0)
+    return;
+    
   // Si llegamos aquí, la línea NO tenía +EVT, así que si empieza por "confirmed flag",
   // es basura aislada y la descartamos.
   if (strncmp(line, "confirmed flag:", 15) == 0)
@@ -177,7 +183,7 @@ void LSM1x0A_AtParser::processLine(char* line)
 
   // 5. MAQUINA DE ESTADOS (Respuestas a Comandos Síncronos AT)
   // Detección de BOOT
-  if (strstr(line, "BOOTALERT")) {
+  if (strcmp(line, "BOOTALERT") == 0) {
     if (_eventCallback)
       _eventCallback(LsmEvent::INFO, "BOOT", _eventCtx);
     if (_pendingCommand) {
@@ -188,24 +194,19 @@ void LSM1x0A_AtParser::processLine(char* line)
   }
 
   if (_pendingCommand) {
-    if (strcmp(line, "OK") == 0) {
-      _lastResultError = AtError::OK;
-      xSemaphoreGive(_syncSem);
-      return;
-    }
-
     AtError err = parseErrorString(line);
+    
+    // Si la linea es un código de retorno final (OK, ERROR, etc... finalizamos)
     if (err != AtError::UNKNOWN) {
       _lastResultError = err;
       xSemaphoreGive(_syncSem);
       return;
     }
 
-    // Captura de datos (Getters)
+    // Captura de datos (Getters). Solo si la línea NO era un OK ni Error ni Eco
     if (_userOutBuffer != nullptr) {
-      // Lógica de extracción de valor (igual que la versión anterior)
       const char* dataStart = line;
-      bool        match     = (_expectedTag == nullptr);
+      bool        match     = (_expectedTag == nullptr); // Si no hay tag, cogemos toda la línea
 
       if (_expectedTag && strstr(line, _expectedTag)) {
         dataStart = strstr(line, _expectedTag) + strlen(_expectedTag);
@@ -214,7 +215,7 @@ void LSM1x0A_AtParser::processLine(char* line)
 
       if (match) {
         while (*dataStart == ' ' || *dataStart == ':')
-          dataStart++;
+          dataStart++; // Limpiamos prefijos
         strncpy(_userOutBuffer, dataStart, _userOutSize - 1);
         _userOutBuffer[_userOutSize - 1] = '\0';
       }
@@ -276,6 +277,19 @@ bool LSM1x0A_AtParser::parseRxMetadata(const char* payload, LsmRxMetadata* out)
   }
 
   return true;
+}
+
+bool LSM1x0A_AtParser::wakeUp(uint8_t retries, uint32_t delayMs)
+{
+    _driver->flushRx();
+    for (uint8_t i = 0; i < retries; i++) {
+        // Enviar Ping silenciando los errores de payload/buffer para no pisar lecturas.
+        AtError err = sendCommand("AT", delayMs);
+        if (err == AtError::OK) {
+            return true;
+        }
+    }
+    return false;
 }
 
 AtError LSM1x0A_AtParser::sendCommand(const char* cmd, uint32_t timeoutMs)

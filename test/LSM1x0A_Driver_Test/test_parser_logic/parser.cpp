@@ -30,11 +30,13 @@ TestSpy spy;
 // Callback que inyectaremos al parser
 void spyCallback(const char* type, const char* payload, void* ctx)
 {
+  // Ignoramos eventos puramente informativos de tramas crudas para los tests lógicos
+  if (strcmp(type, LsmEvent::VERBOSE) == 0) return;
+
   TestSpy* s     = (TestSpy*)ctx;
   s->lastType    = String(type);
   s->lastPayload = String(payload);
   s->eventCount++;
-  // Serial.printf("[SPY] Event: %s Data: %s\n", type, payload);
 }
 
 // Tarea simuladora de Módem para responder a comandos síncronos

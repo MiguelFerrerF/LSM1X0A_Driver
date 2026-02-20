@@ -76,14 +76,12 @@ void setup()
       ;
   }
 
-  // Send ATZ to wake up
-  AtError err;
-  err = lora.sendCommand("ATZ", 1000);
-  if (err != AtError::BOOT_ALERT) {
-    Serial.printf("Error al reiniciar módem: %d, %s\n", (int)err, lora.atErrorToString(err));
+  // Wake up safely
+  if (!lora.wakeUp()) {
+    Serial.println("Error al despertar el módem (Timeout). Revisa conexión/pines.");
   }
   else {
-    Serial.println("Módem reiniciado correctamente.");
+    Serial.println("Módem despertado y listo.");
   }
 
   // CASO 1: Obtener EUI (Lectura)
@@ -91,7 +89,7 @@ void setup()
   char devEui[32];
 
   // Pedimos AT+DEUI y esperamos que la respuesta empiece por "DevEui: "
-  err = lora.sendCommandWithResponse("AT+DEUI=?", nullptr, devEui, sizeof(devEui));
+  AtError err = lora.sendCommandWithResponse("AT+DEUI=?", nullptr, devEui, sizeof(devEui));
 
   if (err == AtError::OK) {
     Serial.printf("Mi DevEUI es: %s\n", devEui);
@@ -112,25 +110,25 @@ void setup()
 
   // read back to verify
   char band[64];
-  err = lora.sendCommandWithResponse("AT+BAND=?", nullptr, band, sizeof(band));
-  if (err == AtError::OK) {
+  AtError err2 = lora.sendCommandWithResponse("AT+BAND=?", nullptr, band, sizeof(band));
+  if (err2 == AtError::OK) {
     Serial.printf("Banda leída: %s\n", band);
   }
   else {
-    Serial.printf("Error al leer Banda: %d, %s\n", (int)err, lora.atErrorToString(err));
+    Serial.printf("Error al leer Banda: %d, %s\n", (int)err2, lora.atErrorToString(err2));
   }
 
   // CASO 3: Unirse (Manejo de estados)
   //   Serial.println("Intentando Join...");
-  err = lora.sendCommand("AT+JOIN=1"); // Esto solo inicia el proceso
+  AtError err3 = lora.sendCommand("AT+JOIN=1"); // Esto solo inicia el proceso
 
-  if (err == AtError::OK) {
+  if (err3 == AtError::OK) {
     Serial.println("Petición de Join enviada. Esperando evento...");
   }
-  else if (err == AtError::NO_NET_JOINED) {
+  else if (err3 == AtError::NO_NET_JOINED) {
     Serial.println("Error: Configura las claves primero.");
   }
-  else if (err == AtError::BUSY) {
+  else if (err3 == AtError::BUSY) {
     Serial.println("El módem está ocupado.");
   }
 }

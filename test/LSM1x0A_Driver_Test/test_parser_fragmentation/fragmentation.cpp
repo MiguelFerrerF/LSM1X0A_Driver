@@ -30,6 +30,8 @@ SpyContext spy;
 // Callback espía
 void spyCallback(const char* type, const char* payload, void* ctx)
 {
+  if (strcmp(type, LsmEvent::VERBOSE) == 0) return;
+  
   SpyContext* s = (SpyContext*)ctx;
   s->eventCount++;
   s->lastType    = String(type);
