@@ -6,6 +6,14 @@ LSM1x0A_AtParser::LSM1x0A_AtParser()
   _syncSem = xSemaphoreCreateBinary();
 }
 
+LSM1x0A_AtParser::~LSM1x0A_AtParser()
+{
+  if (_syncSem != nullptr) {
+    vSemaphoreDelete(_syncSem);
+    _syncSem = nullptr;
+  }
+}
+
 bool LSM1x0A_AtParser::init(UartDriver* driver, AtEventCallback onEvent, void* eventCtx)
 {
   _driver         = driver;

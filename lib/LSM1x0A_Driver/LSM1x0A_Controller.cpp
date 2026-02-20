@@ -1,345 +1,144 @@
 #include "LSM1x0A_Controller.h"
-#include "driver/gpio.h"
-#include <sys/time.h>
 
 LSM1x0A_Controller::LSM1x0A_Controller()
 {
-  _isJoined        = false;
-  _isTxBusy        = false;
-  _userCallback    = nullptr;
-  _currentLogLevel = LsmLogLevel::INFO; // Default: Solo información útil
+    _driver = new UartDriver();
+    _parser = new LSM1x0A_AtParser();
+    _initialized = false;
 }
 
-void LSM1x0A_Controller::setLogLevel(LsmLogLevel level)
+LSM1x0A_Controller::~LSM1x0A_Controller()
 {
-  _currentLogLevel = level;
-}
-
-// ---------------------------------------------------------
-// SISTEMA DE LOGGING INTERNO
-// ---------------------------------------------------------
-void LSM1x0A_Controller::log(LsmLogLevel level, const char* format, ...)
-{
-  // 1. Filtrado Eficiente: Si el nivel del mensaje es superior al configurado, ignorar.
-  if (level > _currentLogLevel)
-    return;
-  if (!_userCallback)
-    return;
-
-  // 2. Formateo de String (estilo printf)
-  char    buffer[128]; // Buffer seguro para logs
-  va_list args;
-  va_start(args, format);
-  vsnprintf(buffer, sizeof(buffer), format, args);
-  va_end(args);
-
-  // 3. Envío al Callback usando el canal LOG
-  _userCallback(LsmEvent::LOG, buffer);
-}
-
-// ---------------------------------------------------------
-// RESET HARDWARE
-// ---------------------------------------------------------
-bool LSM1x0A_Controller::hardReset()
-{
-  if (_resetPin < 0)
-    return false; // No configurado
-
-  gpio_num_t pin = (gpio_num_t)_resetPin;
-
-  log(LsmLogLevel::INFO, "Ejecutando HARD RESET (GPIO %d)...", _resetPin);
-
-  gpio_reset_pin(pin); // Aseguramos estado limpio del pin
-  gpio_set_direction(pin, GPIO_MODE_OUTPUT);
-  gpio_set_level(pin, 0); // Bajar a GND
-  vTaskDelay(pdMS_TO_TICKS(100));
-  gpio_set_level(pin, 1); // Subir a VCC
-  return true;
-}
-
-bool LSM1x0A_Controller::softReset()
-{
-  log(LsmLogLevel::INFO, "Ejecutando SOFT RESET vía comando AT...");
-
-  AtError res = _parser.sendCommand(LsmAtCommand::RESET, 5000);
-  if (res != AtError::BOOT_ALERT) {
-    log(LsmLogLevel::ERROR, "Fallo en SOFT RESET: El módulo no respondió correctamente (Error: %s)", _parser.atErrorToString(res));
-    return false;
-  }
-  log(LsmLogLevel::INFO, "SOFT RESET exitoso, módulo reiniciado.");
-  return true;
-}
-
-// ---------------------------------------------------------
-// INICIALIZACIÓN
-// ---------------------------------------------------------
-bool LSM1x0A_Controller::begin(UartDriver* driver, int resetPin, LsmUserCallback callback)
-{
-  _userCallback = callback;
-  _resetPin     = resetPin;
-
-  log(LsmLogLevel::INFO, "Iniciando Controlador LSM1x0A...");
-
-  if (!_parser.init(driver, LSM1x0A_Controller::parserEventProxy, this)) {
-    log(LsmLogLevel::ERROR, "Fallo crítico: No se pudo iniciar Parser/Driver");
-    return false;
-  }
-  else
-    log(LsmLogLevel::DEBUG, "Parser y Driver UART iniciados correctamente.");
-
-  log(LsmLogLevel::DEBUG, "Sincronizando UART...");
-  // Pequeña espera para estabilizar la UART
-  vTaskDelay(100);
-
-  int  retries = 0;
-  bool synced  = false;
-  while (retries < 5) {
-    if (softReset()) {
-      synced = true;
-      break;
+    end();
+    if (_parser) {
+        delete _parser;
+        _parser = nullptr;
     }
-    vTaskDelay(200);
-    retries++;
-  }
-
-  if (!synced) {
-    log(LsmLogLevel::ERROR, "Timeout: El módulo no responde a 'ATZ', forzando reinicio.");
-    if (!hardReset()) {
-      log(LsmLogLevel::ERROR, "Fallo crítico: No se pudo forzar reset hardware, pin no configurado.");
-      return false;
+    if (_driver) {
+        delete _driver;
+        _driver = nullptr;
     }
-    if (!softReset()) {
-      log(LsmLogLevel::ERROR, "Fallo crítico: No se pudo sincronizar con el módulo tras reset.");
-      return false;
-    }
-    log(LsmLogLevel::DEBUG, "Sincronización exitosa tras reset.");
-  }
-  log(LsmLogLevel::INFO, "Controlador LSM1x0A iniciado correctamente.");
-  return true;
 }
 
-// ---------------------------------------------------------
-// GESTIÓN DE EVENTOS
-// ---------------------------------------------------------
-void LSM1x0A_Controller::parserEventProxy(const char* type, const char* payload, void* ctx)
+bool LSM1x0A_Controller::begin(AtEventCallback callback, void* ctx)
 {
-  // Recuperamos la instancia del controlador
-  LSM1x0A_Controller* self = (LSM1x0A_Controller*)ctx;
-  self->handleInternalEvent(type, payload);
-}
+    if (_initialized) return true;
 
-void LSM1x0A_Controller::handleInternalEvent(const char* type, const char* payload)
-{
-  // 1. Actualizar Estado Interno (State Machine)
-
-  // --- VERBOSE LOGGING ---
-  if (strcmp(type, LsmEvent::VERBOSE) == 0) {
-    log(LsmLogLevel::VERBOSE, ">> %s", payload);
-  }
-
-  // --- JOIN ---
-  if (strcmp(type, LsmEvent::JOIN) == 0) {
-    if (strcmp(payload, "SUCCESS") == 0) {
-      _isJoined = true;
-      _isTxBusy = false; // El join libera el canal
+    if (!_driver || !_parser) {
+        return false;
     }
-    else {
-      _isJoined = false; // Falló join
-      _isTxBusy = false;
+
+    // Inicializamos el parser pasándole el UartDriver que construimos.
+    // El parser internamente llama a _driver->init()
+    if (!_parser->init(_driver, callback, ctx)) {
+        return false;
     }
-  }
 
-  // --- TX DONE ---
-  else if (strcmp(type, LsmEvent::TX) == 0) {
-    // Ya sea SUCCESS o FAILED, la transmisión terminó
-    _isTxBusy = false;
-  }
-
-  // --- RX DATA (Downlink) ---
-  // A veces recibir un downlink implica que la ventana RX2 cerró y estamos libres
-  else if (strcmp(type, LsmEvent::RX_DATA) == 0) {
-    _isTxBusy = false;
-  }
-
-  // 2. Propagar al usuario
-  if (_userCallback) {
-    _userCallback(type, payload);
-  }
-}
-
-// ---------------------------------------------------------
-// MÉTODOS PÚBLICOS
-// ---------------------------------------------------------
-bool LSM1x0A_Controller::join(bool isOTAA)
-{
-  // Si ya estamos uniendo o transmitiendo, no interrumpir
-  if (_isTxBusy)
-    return false;
-
-  char cmd[16];
-  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN, isOTAA ? 1 : 0);
-  AtError err = _parser.sendCommand(cmd);
-  if (err == AtError::OK) {
-    _isTxBusy = true;  // El módulo está ocupado intentando unirse
-    _isJoined = false; // Reseteamos estado hasta confirmación
+    _initialized = true;
     return true;
-  }
-  return false;
 }
 
-bool LSM1x0A_Controller::join()
+void LSM1x0A_Controller::end()
 {
-  // Si ya estamos uniendo o transmitiendo, no interrumpir
-  if (_isTxBusy)
-    return false;
+    if (!_initialized) return;
 
-  log(LsmLogLevel::INFO, "Sigfox: Iniciando 'Join' (Test de cobertura bidireccional)...");
-  log(LsmLogLevel::INFO, "Sigfox: Esto tardara aprox 60 segundos. Espere...");
-
-  char rxBuffer[32] = {0};
-
-  // 1. Enviamos el comando especial con un TIMEOUT LARGO (60000 ms)
-  // Usamos sendCommandWithResponse para buscar la etiqueta "+RX="
-  AtError err = _parser.sendCommandWithResponse(LsmAtCommand::SEND_BIT_CONFIRMED, // "AT$SB=1,1,2"
-                                                "+RX_H=",                         // Esperamos que la respuesta contenga esto
-                                                rxBuffer,                         // Aquí guardaremos lo que venga después de "+RX="
-                                                sizeof(rxBuffer),
-                                                60000 // Timeout crítico: 60 segundos
-  );
-  if (err != AtError::OK) {
-    log(LsmLogLevel::ERROR, "Sigfox: 'Join' fallido o sin respuesta (Error: %s)", _parser.atErrorToString(err));
-    _isJoined = false; // Reseteamos estado hasta confirmación
-    return false;
-  }
-
-  // 2. Parsear la respuesta recibida
-  if (strlen(rxBuffer) >= 12) {
-    char dataString[32];
-    parseTimestamp(rxBuffer, dataString);
-    parseRSSI(rxBuffer);
-    log(LsmLogLevel::INFO, "Sigfox: Conectado OK\n\t Fecha (UTC): %s\n\t Señal (RSSI): %d dBm", dataString, _currentRSSI);
-  }
-  else {
-    log(LsmLogLevel::ERROR, "Sigfox: Respuesta incompleta o formato incorrecto.");
-  }
-
-  _isJoined = true;
-  return true;
+    if (_driver) {
+        _driver->deinit();
+    }
+    _initialized = false;
 }
 
-void LSM1x0A_Controller::parseTimestamp(const char* rxBuffer, char* outBuffer)
+bool LSM1x0A_Controller::wakeUp()
 {
-  char hexTemp[9]; 
-  // Parsear TIMESTAMP (Primeros 8 caracteres)
-  memcpy(hexTemp, rxBuffer, 8);
-  hexTemp[8]  = '\0';
-  uint32_t ts = strtoul(hexTemp, NULL, 16);
-
-  // Ajustar el reloj interno del ESP32 con esta hora
-  time_t         rawTime = (time_t)ts;
-  struct timeval tv      = {.tv_sec = rawTime, .tv_usec = 0};
-  settimeofday(&tv, NULL);
-
-  // Convertir a string legible
-  struct tm* timeInfo;
-  timeInfo = gmtime(&rawTime);
-  strftime(outBuffer, 32, "%Y-%m-%d %H:%M:%S", timeInfo);
+    if (!_initialized || !_parser) return false;
+    return _parser->wakeUp();
 }
 
-void LSM1x0A_Controller::parseRSSI(const char* rxBuffer)
+AtError LSM1x0A_Controller::sendCommand(const char* cmd, uint32_t timeoutMs)
 {
-  char hexTemp[5]; 
-  // Parsear RSSI (Siguientes 4 caracteres)
-  memcpy(hexTemp, rxBuffer + 8, 4);
-  hexTemp[4]       = '\0';
-  uint32_t rawRssi = strtoul(hexTemp, NULL, 16); // RSSI en formato sin signo
-  _currentRSSI     = (int16_t)rawRssi;           // Convertir a signed
+    if (!_initialized || !_parser) return AtError::GENERIC_ERROR;
+    return _parser->sendCommand(cmd, timeoutMs);
 }
 
-bool LSM1x0A_Controller::sendData(uint8_t port, const char* data, bool confirmed)
+AtError LSM1x0A_Controller::sendCommandWithResponse(
+    const char* cmd, 
+    char* outBuffer, 
+    size_t outSize, 
+    const char* expectedTag, 
+    uint32_t timeoutMs)
 {
-  if (!_isJoined)
-    return false;
-  if (_isTxBusy)
-    return false; // Bloqueo de seguridad
+    if (!_initialized || !_parser) return AtError::GENERIC_ERROR;
 
-  // Buffer temporal para el comando completo
-  char cmdBuffer[AT_BUFFER_SIZE];
-  int  written = snprintf(cmdBuffer, sizeof(cmdBuffer), "%s%d:%d:%s", LsmAtCommand::SEND, port, confirmed ? 1 : 0, data);
+    if (!outBuffer || outSize == 0) return AtError::PARAM_ERROR;
+    outBuffer[0] = '\0';
 
-  if (written >= sizeof(cmdBuffer))
-    return false; // Overflow
-
-  AtError err = _parser.sendCommand(cmdBuffer);
-
-  if (err == AtError::OK) {
-    _isTxBusy = true; // Marcamos ocupado hasta recibir evento TX o RX
-    return true;
-  }
-  else if (err == AtError::BUSY) {
-    // El módulo dice que está ocupado (Duty cycle o RX windows)
-    _isTxBusy = true;
-  }
-
-  return false;
+    return _parser->sendCommandWithResponse(cmd, expectedTag, outBuffer, outSize, timeoutMs);
 }
 
-bool LSM1x0A_Controller::setKeys(const char* devEui, const char* appKey, const char* appEui)
+// =========================================================================
+// COMANDOS AT BÁSICOS / GENERALES
+// =========================================================================
+
+int LSM1x0A_Controller::getBattery()
 {
-  char cmd[64];
-  // Configurar DevEUI
-  if (devEui != nullptr) {
-    snprintf(cmd, sizeof(cmd), "AT+DEUI=%s", devEui);
-    if (_parser.sendCommand(cmd) != AtError::OK)
-      return false;
-    log(LsmLogLevel::DEBUG, "DevEUI configurado: %s", devEui);
-  }
-
-  // Configurar AppKey
-  if (appKey != nullptr) {
-    snprintf(cmd, sizeof(cmd), "AT+APPKEY=%s", appKey);
-    if (_parser.sendCommand(cmd) != AtError::OK)
-      return false;
-    log(LsmLogLevel::DEBUG, "AppKey configurada: %s", appKey);
-  }
-
-  // Configurar AppEUI
-  if (appEui != nullptr) {
-    snprintf(cmd, sizeof(cmd), "AT+APPEUI=%s", appEui);
-    if (_parser.sendCommand(cmd) != AtError::OK)
-      return false;
-    log(LsmLogLevel::DEBUG, "AppEUI configurada: %s", appEui);
-  }
-  return true;
+    char buf[16];
+    if (sendCommandWithResponse(LsmAtCommand::BATTERY, buf, sizeof(buf), nullptr, 1000) != AtError::OK) {
+        return -1;
+    }
+    // Convertir de char "3300" a int
+    return atoi(buf);
 }
 
-bool LSM1x0A_Controller::setBand(uint8_t band)
+bool LSM1x0A_Controller::getVersion(char* outBuffer, size_t size)
 {
-  char cmd[16];
-  snprintf(cmd, sizeof(cmd), "AT+BAND=%d", band);
-  AtError err = _parser.sendCommand(cmd);
-  if (err == AtError::OK) {
-    log(LsmLogLevel::DEBUG, "Banda LoRaWAN configurada: %d", band);
-    return true;
-  }
-  return false;
+    if (!outBuffer || size == 0) return false;
+    
+    // Comando AT+VER=?
+    // Puede venir con "APP_VERSION:" o nada, este módulo devuelve múltiples líneas
+    // usaremos el base parser que agarra la respuesta principal.
+    AtError err = sendCommandWithResponse(LsmAtCommand::FW_VERSION, outBuffer, size, "APP_VERSION:", 2000);
+    
+    // Si la etiqueta APP_VERSION no se encontraba, capturamos todo
+    if (err != AtError::OK) {
+       err = sendCommandWithResponse(LsmAtCommand::FW_VERSION, outBuffer, size, nullptr, 2000);
+    }
+    return err == AtError::OK;
 }
 
-void LSM1x0A_Controller::getDevEUI(char* outBuffer, size_t outSize)
+bool LSM1x0A_Controller::factoryReset()
 {
-  AtError err = _parser.sendCommandWithResponse("AT+DEUI=?", nullptr, outBuffer, outSize);
-  if (err != AtError::OK) {
-    if (outSize > 0)
-      outBuffer[0] = '\0'; // Cadena vacía en caso de error
-  }
+    return sendCommand(LsmAtCommand::FACTORY_RESET, 5000) == AtError::OK;
 }
 
-bool LSM1x0A_Controller::isJoined() const
+bool LSM1x0A_Controller::getLocalTime(char* outBuffer, size_t size)
 {
-  return _isJoined;
+    if (!outBuffer || size == 0) return false;
+    return sendCommandWithResponse(LsmAtCommand::LOCAL_TIME, outBuffer, size, nullptr, 1000) == AtError::OK;
 }
 
-bool LSM1x0A_Controller::isTxBusy() const
+int LSM1x0A_Controller::getBaudrate()
 {
-  return _isTxBusy;
+    char buf[16];
+    // Comando pidiendo el baudrate: AT+BAUDRATE=?
+    char cmd[32];
+    snprintf(cmd, sizeof(cmd), "%s?", LsmAtCommand::BAUDRATE);
+
+    if (sendCommandWithResponse(cmd, buf, sizeof(buf), nullptr, 1000) != AtError::OK) {
+        return -1;
+    }
+    return atoi(buf);
+}
+
+bool LSM1x0A_Controller::setBaudrate(int baudrate)
+{
+    char cmd[32];
+    snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::BAUDRATE, baudrate);
+    return sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_Controller::setVerboseLevel(int level)
+{
+    char cmd[32];
+    snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::VERBOSE_LEVEL, level);
+    return sendCommand(cmd, 1000) == AtError::OK;
 }

@@ -12,8 +12,15 @@
 #define LSM1X0A_RX_PIN 14
 #define LSM1X0A_TX_PIN 33
 
-// Dimensión segura basada en Payload LoRaWAN máximo en Hex + Protocolo
-#define AT_BUFFER_SIZE 512
+// Tamaños de buffer para comandos AT
+#define AT_BUFFER_SIZE 256
+#define AT_LORA_BUFFER_SIZE 512
+#define AT_SIGFOX_BUFFER_SIZE 64
+
+#define LSM1X0A_LORA_MODE 1
+#define LSM1X0A_SIGFOX_MODE 0
+
+#define LSM_INTERNAL_PROCESS_OVERHEAD 350
 
 // Mapeo directo de lora_at.h y lora_command.c
 enum class AtError
@@ -62,12 +69,23 @@ struct LsmRxMetadata
 // Niveles de Log (Jerarquía estándar)
 enum class LsmLogLevel
 {
-  NONE = 0, // Silencio total
-  ERROR,    // Solo fallos críticos (Hardware, Timeouts)
-  INFO,     // Estado de alto nivel (Join Success, Packet Sent)
-  DEBUG,    // Tráfico de comandos AT (TX: AT+... / RX: OK)
-  VERBOSE   // Todo (incluyendo dumps internos si los hubiera)
+  SILENCE = 0, // Silencio total
+  ERROR,       // Solo fallos críticos (Hardware, Timeouts)
+  WARN,        // Advertencias (Operación no óptima)
+  INFO,        // Estado de alto nivel (Join Success, Packet Sent)
+  LSM_DEBUG,   // Tráfico de comandos AT (TX: AT+... / RX: OK)
+  VERBOSE      // Todo (incluyendo dumps internos si los hubiera)
 };
+
+enum class LsmJoinMode { OTAA = 0, ABP };
+enum class LsmClass { CLASS_A = 0, CLASS_B, CLASS_C };
+enum class LsmNetworkType { PUBLIC = 0, PRIVATE };
+enum class LsmDataRate { DR_0 = 0, DR_1, DR_2, DR_3, DR_4, DR_5, DR_6, DR_7 };
+enum class LsmTxPower { TP_MAX = 0, TP_MAX_MINUS_2, TP_MAX_MINUS_4, TP_MAX_MINUS_6, TP_MAX_MINUS_8, TP_MAX_MINUS_10, TP_MAX_MINUS_12, TP_MAX_MINUS_14 };
+enum class LsmBand { AS923_1 = 0, AU915, CN470, CN779, EU433, EU868, KR920, IN865, US915, RU864, AS923_4 };
+enum class LsmPingSlot { EVERY_1_SEC = 0, EVERY_2_SEC, EVERY_4_SEC, EVERY_8_SEC, EVERY_16_SEC, EVERY_32_SEC, EVERY_64_SEC, EVERY_128_SEC };
+enum class LsmRCChannel { RC3A = 0, RC1, RC2, RC3C, RC4, RC5, RC6, RC7 };
+enum class LsmSigfoxDataType { BIT = 0, ASCII_DATA, HEX_DATA, OOB };
 
 // Tipos de Eventos Asíncronos que enviaremos al Callback
 namespace LsmEvent
@@ -84,6 +102,13 @@ const char LOG[]     = "LOG";     // Mensajes de Log
 const char VERBOSE[] = "VERBOSE";
 } // namespace LsmEvent
 
+// Estados comunes de respuesta
+namespace LsmStatus
+{
+const char SUCCESS[] = "SUCCESS";
+const char FAILED[]  = "FAILED";
+} // namespace LsmStatus
+
 // Commandos AT especiales para el módulo LSM1x0A
 namespace LsmAtCommand
 {
@@ -98,49 +123,51 @@ const char FW_VERSION[]    = "AT+VER=?";
 const char LOCAL_TIME[]    = "AT+LTIME=?";
 
 // LoRaWAN Specific Commands
-const char APP_EUI[]   = "AT+APPEUI=";   // AppEUI o JoinEUI del dispositivo. Se guarda en NVM
-const char DEV_EUI[]   = "AT+DEUI=";     // Identificador único del dispositivo. No se guarda en NVM
-const char APP_KEY[]   = "AT+APPKEY=";   // AppKey para OTAA. Se guarda en NVM
-const char NWK_KEY[]   = "AT+NWKKEY=";   // NwkKey para ABP. Se guarda en NVM
-const char DEV_ADDR[]  = "AT+DADDR=";    // Dirección del dispositivo para ABP. No se guarda en NVM
-const char APP_SKEY[]  = "AT+APPSKEY=";  // AppSKey para OTAA V1.1. Se guarda en NVM
-const char NWK_SKEY[]  = "AT+NWKSKEY=";  // NwkSKey para OTAA V1.1. Se guarda en NVM
-const char NWK_ID[]    = "AT+NWKID=";    // Network ID. No se guarda en NVM
-const char DEVNONCE[]  = "AT+DEVNONCE="; // DevNonce para OTAA. Se guarda en NVM
-const char FRAME_CNT[] = "AT+ABPFCNT=";  // Frame Counter para ABP. Se guarda en NVM
+const char APP_EUI[]   = "AT+APPEUI=";   
+const char DEV_EUI[]   = "AT+DEUI=";     
+const char APP_KEY[]   = "AT+APPKEY=";   
+const char NWK_KEY[]   = "AT+NWKKEY=";   
+const char DEV_ADDR[]  = "AT+DADDR=";    
+const char APP_SKEY[]  = "AT+APPSKEY=";  
+const char NWK_SKEY[]  = "AT+NWKSKEY=";  
+const char NWK_ID[]    = "AT+NWKID=";    
+const char DEVNONCE[]  = "AT+DEVNONCE="; 
+const char FRAME_CNT[] = "AT+ABPFCNT=";  
 
 // Operaciones de Red y Configuración MAC
-const char ADAPTIVE_DR[]     = "AT+ADR=";       // Adaptive Data Rate. No se guarda en NVM
-const char DR[]              = "AT+DR=";        // Data Rate fijo. No se guarda en NVM
-const char TX_POWER[]        = "AT+TXP=";       // Potencia de transmisión. No se guarda en NVM
-const char BAND[]            = "AT+BAND=";      // Banda de frecuencia. No se guarda en NVM
-const char CLASS[]           = "AT+CLASS=";     // Clase LoRaWAN (A, B, C). Se guarda en NVM
-const char DUTY_CYCLE[]      = "AT+DCS=";       // Duty Cycle. No se guarda en NVM
-const char JOIN_DELAY_1[]    = "AT+JN1DL=";     // Retardo de Join Window 1. No se guarda en NVM
-const char JOIN_DELAY_2[]    = "AT+JN2DL=";     // Retardo de Join Window 2. No se guarda en NVM
-const char RX1_DELAY[]       = "AT+RX1DL=";     // Retardo de RX1 (Clase A). No se guarda en NVM
-const char RX2_DELAY[]       = "AT+RX2DL=";     // Retardo de RX2 (Clase A). No se guarda en NVM
-const char RX2_DR[]          = "AT+RX2DR=";     // Data Rate de RX2. No se guarda en NVM
-const char RX2_FREQ[]        = "AT+RX2FQ=";     // Frecuencia de RX2. No se guarda en NVM
-const char PING_SLOT[]       = "AT+PGSLOT=";    // Intervalo de Ping Slot (Clase B). No se guarda en NVM
-const char LINK_CHECK[]      = "AT+LINKC";      // Link Check en la siguiente transmisión
-const char CONFIRM_RETRY[]   = "AT+CNFRETX=";   // Número de reintentos para confirmados. Se guarda en NVM
-const char UNCONFIRM_RETRY[] = "AT+UNCNFRETX="; // Número de reintentos para no confirmados. Se guarda en NVM
-const char NETWORK_TYPE[]    = "AT+NWKTYPE=";   // Tipo de red (Pública, Private). Se guarda en NVM
-const char CHANNEL_MASK[]    = "AT+CHMASK=";    // Máscara de canales.
-const char JOIN[]            = "AT+JOIN=";      // Iniciar proceso de Join (OTAA o ABP)
-const char SEND[]            = "AT+SEND=";      // Enviar datos (Confirmed/Unconfirmed)
+const char ADAPTIVE_DR[]     = "AT+ADR=";       
+const char DR[]              = "AT+DR=";        
+const char TX_POWER[]        = "AT+TXP=";       
+const char BAND[]            = "AT+BAND=";      
+const char CLASS[]           = "AT+CLASS=";     
+const char DUTY_CYCLE[]      = "AT+DCS=";       
+const char JOIN_DELAY_1[]    = "AT+JN1DL=";     
+const char JOIN_DELAY_2[]    = "AT+JN2DL=";     
+const char RX1_DELAY[]       = "AT+RX1DL=";     
+const char RX2_DELAY[]       = "AT+RX2DL=";     
+const char RX2_DR[]          = "AT+RX2DR=";     
+const char RX2_FREQ[]        = "AT+RX2FQ=";     
+const char PING_SLOT[]       = "AT+PGSLOT=";    
+const char LINK_CHECK[]      = "AT+LINKC";      
+const char CONFIRM_RETRY[]   = "AT+CNFRETX=";   
+const char UNCONFIRM_RETRY[] = "AT+UNCNFRETX="; 
+const char NETWORK_TYPE[]    = "AT+NWKTYPE=";   
+const char CHANNEL_MASK[]    = "AT+CHMASK=";    
+const char JOIN[]            = "AT+JOIN=";      
+const char SEND[]            = "AT+SEND=";      
 
 // SigFox Specific Commands
-const char DEV_ID[]             = "AT$ID";       // Identificador único del dispositivo SigFox
-const char PAC[]                = "AT$PAC=";     // PAC del dispositivo SigFox
-const char RC_CHANNEL[]         = "AT$RC=";      // Canal de Radio SigFox
-const char SEND_BITS[]          = "AT$SB=";      // Enviar datos en modo bits
-const char SEND_BIT_CONFIRMED[] = "AT$SB=1,1,2"; // Bit=1, Downlink=1, TxRepeat=2 (Join Simulado)
-const char SEND_FRAME[]         = "AT$SF=";      // Enviar datos en modo frame (ASCII)
-const char SEND_HEX[]           = "AT$SH=";      // Enviar datos en modo hexadecimal
-const char SEND_OOB[]           = "AT$S300";     // Enviar datos en modo Out-Of-Band (reporte gratuito)
-
+const char DEV_ID[]             = "AT$ID";       
+const char DEV_PAC[]            = "AT$PAC=";     
+const char RC_CHANNEL[]         = "AT$RC=";      
+const char SEND_BIT[]           = "AT$SB=";      
+const char SEND_BIT_CONFIRMED[] = "AT$SB=1,1,2"; 
+const char SEND_FRAME[]         = "AT$SF=";      
+const char SEND_HEX[]           = "AT$SH=";      
+const char SEND_OOB[]           = "ATS300";      
+const char RADIO_POWER[]        = "ATS302=";     
+const char ENCRYPT_KEY[]        = "ATS410=";     
+const char ENCRYPT_PAYLOAD[]    = "ATS411=";     
 } // namespace LsmAtCommand
 
 #endif // LSM1X0A_TYPES_H

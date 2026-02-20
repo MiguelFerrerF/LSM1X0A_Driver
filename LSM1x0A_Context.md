@@ -49,25 +49,22 @@ La máquina de estados del driver debe buscar explícitamente estas cadenas exac
 
 ## 5. Arquitectura del Driver
 
-El driver se separa funcionalmente en capas para mantener el código testeable y modular, integrando FreeRTOS:
+El driver se divide en tres capas fundamentales para mantener la mantenibilidad estructural:
 
 1. **Capa Física (`UartDriver`)**: 
    - **Responsabilidad:** Configurar periféricos ESP-IDF, manejar la interrupción RX asíncrona (tarea `uart_rx_task`), gestionar errores de hardware y agilizar lecturas crudas.
-   - **Características:** Integra `flushRx()` para limpiar basura estática del buffer de hardware antes de pedir datos síncronos.
+   - **Características:** Usa memoria en el stack `dtmp[1024]` durante la interrupción para prevenir leaks en destrucciones rudas de FreeRTOS.
 
-2. **Capa de Enlace (`LSM1x0A_AtParser`)**:
-   - **Responsabilidad:** Gestionar la máquina de estados AT para los comandos de ambos Stacks.
-   - **Características Principales:**
-     - **Soporte Dual-Stack:** 
-        - **LoRaWAN:** Enruta de forma transparente eventos asíncronos vía callback (`LsmEvent::RX_DATA`, `JOIN`, `TX`) basándose en el prefijo `+EVT:`.
-        - **Sigfox:** Absorbe las respuestas síncronas de bajada (Downlinks), que no arrojan `+EVT:`, depositando el frame exácto en el buffer de salida del usuario, seguido por un match estricto de `\r\nOK\r\n`.
-     - **Wake-up Seguro (`wakeUp()`):** Abstrae el envío repetido de Pings (`AT\r\n`) silenciándolos hasta obtener respuesta, gestionando el sueño profundo.
-     - **Parseo Anti-Fragmentación:** Integra `eatBuffer()` que reconstruye datos de UART byte a byte a prueba de cortes.
-     - **Matching Estricto (`strcmp`):** Interpreta constantes como `AT_PARAM_ERROR` o `AT_LIB_ERROR` evitando que coincidan parcialidades de hex streams.
-     - **Filtrado de Ruido y Eco:** Ignora el eco del comando (`AT+...`) provocado por el firmware original.
+2. **Capa de Enlace / Parser (`LSM1x0A_AtParser`):**
+   - **Responsabilidad:** Procesar el tráfico entrante de UART por línea (`\n`), sincronizar comandos síncronos y reenviar eventos asíncronos (`+EVT:`) mediante un callback de usuario.
+   - **Manejo Dinámico:** Contiene la lógica interna de `sendCommandWithResponse` y `parseRxMetadata`. Usa semáforos de FreeRTOS para aislar el hilo principal hasta la recepción del `\r\nOK\r\n` o `AT_ERROR`.
 
-3. **Capa de Aplicación (`LSM1x0A_Controller`) (Futura iteración)**:
-   - **Responsabilidad:** Orquestar flujos completos como inicialización anidada, y exponer comandos abstractos (Ej: `joinNetwork()`, `sendUplink()`).
+3. **Capa de Abstracción / Aplicación (`LSM1x0A_Controller`):**
+   - **Responsabilidad:** Orquestar la creación y destrucción dinámica de `UartDriver` y `LSM1x0A_AtParser`.
+   - **Paradigma Actual (Controlador Intuitivo):** Expone getters (`getBattery`, `getBaudrate`, `getVersion`) y setters nativos directos (Ej. `setDevEUI()`, `setClass()`) implementados mediantes llamadas directas a `sendCommand()` ocultando los búferes y formateos subyacentes.
+
+4. **Definiciones (`LSM1x0A_Types.h`):**
+   - Mantiene estrictamente enums compartidos (e.g., `AtError`, `LsmBand`, `LsmClass`) y diccionarios de comandos AT (`LsmAtCommand::...`) para evitar el uso de *magic strings* esparcidos en el código fuente.
 
 ## 6. Documentación de Referencia Interna
 Para consultar los comandos, formatos y parámetros específicos durante el desarrollo, consultar:
@@ -137,3 +134,11 @@ framework = arduino
 monitor_speed = 115200
 monitor_filters = esp32_exception_decoder
 ```
+
+## Progreso Reciente (Refactorización al Controlador Intuitivo)
+Tras validar el hardware original, se decidió abandonar la complejidad extrema de *Shadow Configs* y Máquinas de Recuperación del repositorio original (actualmente respaldado en la carpeta `reference_controller`) en favor de un enfoque ultra robusto y limpio. 
+
+1. **Memory Leaks Aislados:** Se implementó una prueba rigurosa de inicialización/destrucción dinámica en hardware repetida en `main.cpp`, asegurando 0 bytes de divergencia de Heap logrando un stack FreeRTOS hermético sin fugas.
+2. **Setup Rápido:** Capacidad de instanciar un controller que por debajo autoinicializa la UART y el parser.
+3. **Fase 1 (Terminada):** Implementación testada de comandos Getters (`getBattery`, `getBaudrate`, `getVersion`, `getLocalTime`) y Setters Básicos (`setBaudrate`, `setVerboseLevel`).
+4. **Fase 2 (En progreso):** Implementación de la capa LoRaWAN nativa (ej: `setDevEUI()`, `setClass()`). Estas envuelven formateos en buferes transparentes listos para `sendCommand()`.

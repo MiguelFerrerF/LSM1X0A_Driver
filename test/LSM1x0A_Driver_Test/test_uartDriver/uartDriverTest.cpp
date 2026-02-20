@@ -1,5 +1,11 @@
 #include "UartDriver.h"
+#include "driver/uart.h"
+#include "driver/gpio.h"
+#include <stdint.h>
+#include <stddef.h>
+#include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "freertos/task.h"
 #include "unity.h"
 #include <Arduino.h>
 #include <cstring>

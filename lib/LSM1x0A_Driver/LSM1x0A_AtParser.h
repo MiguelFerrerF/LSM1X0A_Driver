@@ -17,7 +17,7 @@ class LSM1x0A_AtParser
 {
 public:
   LSM1x0A_AtParser();
-  ~LSM1x0A_AtParser() = default;
+  ~LSM1x0A_AtParser();
 
   // Inicialización
   bool init(UartDriver* driver, AtEventCallback onEvent = nullptr, void* eventCtx = nullptr);

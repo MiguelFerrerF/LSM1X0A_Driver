@@ -94,7 +94,7 @@ void UartDriver::rx_task_entry(void* pvParameters)
 void UartDriver::rx_task_loop()
 {
   uart_event_t event;
-  uint8_t*     dtmp = (uint8_t*)malloc(RX_BUF_SIZE);
+  uint8_t      dtmp[RX_BUF_SIZE];
 
   while (true) {
     // --- Lógica de Lectura de ESP-IDF ---
@@ -141,6 +141,5 @@ void UartDriver::rx_task_loop()
       }
     }
   }
-  free(dtmp); // Liberamos memoria
   vTaskDelete(NULL);
 }
