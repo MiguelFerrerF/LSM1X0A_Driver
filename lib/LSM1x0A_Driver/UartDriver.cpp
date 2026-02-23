@@ -75,11 +75,11 @@ void UartDriver::flushRx()
 {
   // 1. Limpiamos las colas y buffers internos de hardware de ESP-IDF
   uart_flush_input(_uart_port);
-  
-  // 2. Vaciamos la cola de eventos de FreeRTOS asegurándonos de que 
+
+  // 2. Vaciamos la cola de eventos de FreeRTOS asegurándonos de que
   // no queden pendientes eventos UART_DATA antiguos.
   if (uart_event_queue != nullptr) {
-      xQueueReset(uart_event_queue);
+    xQueueReset(uart_event_queue);
   }
 }
 
