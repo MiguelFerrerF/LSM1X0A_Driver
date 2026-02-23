@@ -1,0 +1,363 @@
+#include "LSM1x0A_LoRaWAN.h"
+#include "../LSM1x0A_Controller.h"
+#include <stdio.h>
+#include <string.h>
+
+// Helper auxiliar local para formatear cadenas hexadecimales añadiendo delimitadores (:)
+static bool formatHexWithColons(const char* in, char* out, size_t outSize, size_t expectedBytes)
+{
+  if (strlen(in) != expectedBytes * 2)
+    return false;
+  size_t outIdx = 0;
+  for (size_t i = 0; i < expectedBytes; ++i) {
+    if (outIdx + DEFAULT_MAX_RETRIES > outSize)
+      return false;
+    out[outIdx++] = in[i * 2];
+    out[outIdx++] = in[i * 2 + 1];
+    if (i < expectedBytes - 1) {
+      out[outIdx++] = ':';
+    }
+  }
+  out[outIdx] = '\0';
+  return true;
+}
+
+LSM1x0A_LoRaWAN::LSM1x0A_LoRaWAN(LSM1x0A_Controller* controller) : _controller(controller)
+{
+}
+
+bool LSM1x0A_LoRaWAN::setDevEUI(const char* devEui)
+{
+  if (!devEui || strlen(devEui) < 16)
+    return false;
+  char formatted[32];
+  if (!formatHexWithColons(devEui, formatted, sizeof(formatted), 8))
+    return false;
+
+  char cmd[64];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::DEV_EUI, formatted);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setAppEUI(const char* appEui)
+{
+  if (!appEui || strlen(appEui) < 16)
+    return false;
+  char formatted[32];
+  if (!formatHexWithColons(appEui, formatted, sizeof(formatted), 8))
+    return false;
+
+  char cmd[64];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::APP_EUI, formatted);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setAppKey(const char* appKey)
+{
+  if (!appKey || strlen(appKey) < 32)
+    return false;
+  char formatted[64];
+  if (!formatHexWithColons(appKey, formatted, sizeof(formatted), 16))
+    return false;
+
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::APP_KEY, formatted);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setNwkKey(const char* nwkKey)
+{
+  if (!nwkKey || strlen(nwkKey) < 32)
+    return false;
+  char formatted[64];
+  if (!formatHexWithColons(nwkKey, formatted, sizeof(formatted), 16))
+    return false;
+
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::NWK_KEY, formatted);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setDevAddr(const char* devAddr)
+{
+  if (!devAddr || strlen(devAddr) < 8)
+    return false;
+  char formatted[32];
+  if (!formatHexWithColons(devAddr, formatted, sizeof(formatted), 4))
+    return false;
+
+  char cmd[64];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::DEV_ADDR, formatted);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setAppSKey(const char* appSKey)
+{
+  if (!appSKey || strlen(appSKey) < 32)
+    return false;
+  char formatted[64];
+  if (!formatHexWithColons(appSKey, formatted, sizeof(formatted), 16))
+    return false;
+
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::APP_SKEY, formatted);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setNwkSKey(const char* nwkSKey)
+{
+  if (!nwkSKey || strlen(nwkSKey) < 32)
+    return false;
+  char formatted[64];
+  if (!formatHexWithColons(nwkSKey, formatted, sizeof(formatted), 16))
+    return false;
+
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::NWK_SKEY, formatted);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setNwkID(int nwkId)
+{
+  if (nwkId < 0 || nwkId > 127)
+    return false;
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::NWK_ID, nwkId);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setJoinMode(LsmJoinMode mode)
+{
+  _joinMode = mode;
+  return true;
+}
+
+bool LSM1x0A_LoRaWAN::setBand(LsmBand band)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::BAND, (int)band);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setClass(LsmClass lorawanClass)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%c", LsmAtCommand::CLASS, lorawanClass == LsmClass::CLASS_A ? 'A' : (lorawanClass == LsmClass::CLASS_B ? 'B' : 'C'));
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setADR(bool enabled)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::ADAPTIVE_DR, enabled ? 1 : 0);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setDataRate(LsmDataRate dr)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::DR, (int)dr);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setDutyCycle(bool enabled)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::DUTY_CYCLE, enabled ? 1 : 0);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setRx1Delay(int delayMs)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX1_DELAY, delayMs);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setRx2Delay(int delayMs)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX2_DELAY, delayMs);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setRx2DataRate(LsmDataRate dr)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX2_DR, (int)dr);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setRx2Frequency(int freqHz)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX2_FREQ, freqHz);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setJoin1Delay(int delayMs)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN_DELAY_1, delayMs);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setJoin2Delay(int delayMs)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN_DELAY_2, delayMs);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setTxPower(LsmTxPower power)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::TX_POWER, (int)power);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setPingSlot(LsmPingSlot slot)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::PING_SLOT, (int)slot);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setNetworkType(LsmNetworkType type)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::NETWORK_TYPE, (int)type);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setConfirmRetry(int retries)
+{
+  if (retries < 1 || retries > 15)
+    return false;
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::CONFIRM_RETRY, retries);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setUnconfirmRetry(int retries)
+{
+  if (retries < 1 || retries > 15)
+    return false;
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::UNCONFIRM_RETRY, retries);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setChannelMask(const char* mask)
+{
+  if (!mask || strlen(mask) < 4)
+    return false;
+  char cmd[64];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, mask);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setDevNonce(int nonce)
+{
+  if (nonce < 0 || nonce > 255)
+    return false;
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::DEVNONCE, nonce);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::resetDevNonce()
+{
+  return setDevNonce(0);
+}
+
+bool LSM1x0A_LoRaWAN::setRfTestConfig(long freqHz, int power, int bw, int sf_dr, int cr, int lna)
+{
+  char cmd[64];
+  // Formato: AT+TCONF=<Freq>:<Power>:<BW>:<SF/Dr>:<CR>:<Lna>
+  snprintf(cmd, sizeof(cmd), "%s%ld:%d:%d:%d:%d:%d", LsmAtCommand::TTEST_CONF, freqHz, power, bw, sf_dr, cr, lna);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::startTxTest(int packets)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::TTEST_TX, packets);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::startRxTest(int packets)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::TTEST_RX, packets);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::startTxTone()
+{
+  return _controller->sendCommand(LsmAtCommand::TTEST_TONE, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::startRxRssiTone()
+{
+  return _controller->sendCommand(LsmAtCommand::TTEST_RSSI, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::stopTest()
+{
+  return _controller->sendCommand(LsmAtCommand::TTEST_STOP, 2000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setCertificationMode(LsmJoinMode mode)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::CERTIF_MODE, mode == LsmJoinMode::OTAA ? 1 : 0);
+  return _controller->sendCommand(cmd, 2000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::startTxHoppingTest(long fStart, long fStop, long fDelta, int packets)
+{
+  char cmd[64];
+  snprintf(cmd, sizeof(cmd), "%s%ld,%ld,%ld,%d", LsmAtCommand::TTEST_TX_HOP, fStart, fStop, fDelta, packets);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::startContinuousModulationTx()
+{
+  return _controller->sendCommand(LsmAtCommand::TTEST_MTX, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::startContinuousModulationRx()
+{
+  return _controller->sendCommand(LsmAtCommand::TTEST_MRX, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::sendCertificationPacket()
+{
+  return _controller->sendCommand(LsmAtCommand::CERTIF_SEND, 2000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::setP2pConfig(const char* configString)
+{
+  if (!configString)
+    return false;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::P2P_CONF, configString);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::sendP2pData(const char* hexData)
+{
+  if (!hexData)
+    return false;
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::P2P_SEND, hexData);
+  return _controller->sendCommand(cmd, 2000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::receiveP2pData(int timeoutMs)
+{
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::P2P_RECV, timeoutMs);
+  return _controller->sendCommand(cmd, timeoutMs + 1000) == AtError::OK;
+}
