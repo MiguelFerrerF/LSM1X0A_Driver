@@ -21,31 +21,10 @@ Para lograr una comunicación a prueba de fallos, el desarrollo del driver debe 
 4. **Estrategia de Errores y Retries:** Manejar la respuesta `\r\nAT_BUSY_ERROR\r\n` implementando un *Backoff* (retraso antes del retry) en lugar de abortar o fallar inmediatamente.
 5. **Eventos Asíncronos (URC):** El módulo genera eventos espontáneos (ej: `+EVT:JOINED`, `+EVT:RX_1...`). El driver debería contar con una tarea o rutina de interrupción de RX que atrape y enrute estos eventos hacia la aplicación superior, separándolos del flujo síncrono estándar.
 
-## 3. Códigos de Respuesta Esperados (El Parser)
-La máquina de estados del driver debe buscar explícitamente estas cadenas exactas como terminadores.
-
-### Respuestas Universales
-- `\r\nOK\r\n` -> Éxito.
-- `\r\nAT_ERROR\r\n` -> Error general / comando inválido.
-- `\r\nAT_PARAM_ERROR\r\n` -> Parámetro inválido o fuera de rango.
-- `\r\nAT_BUSY_ERROR\r\n` -> Módulo ocupado.
-- `\r\nAT_TEST_PARAM_OVERFLOW\r\n` -> Overflow de parámetros.
-- `\r\nAT_RX_ERROR\r\n` -> Error en la UART interna del módulo.
-
-### Respuestas Específicas: LoRaWAN
-- `\r\nAT_NO_NETWORK_JOINED\r\n` -> Intento de enviar Payload sin estar unido a la red.
-- `\r\nAT_DUTYCYCLE_RESTRICTED\r\n` -> Límite legal de ETSI Duty Cycle alcanzado.
-- `\r\nAT_CRYPTO_ERROR\r\n` -> Error de encriptación Mac.
-
-### Respuestas Específicas: Sigfox
-- `\r\nAT_TX_TIMEOUT\r\n` -> Timeout enviando a la red (Normalmente LBT/Límites de canal).
-- `\r\nAT_RX_TIMEOUT\r\n` -> Fin del tiempo de espera para el downlink de Sigfox.
-- `\r\nAT_LIB_ERROR\r\n` -> Error en el stack propietario de Sigfox.
-
-## 4. Comportamientos Críticos de Comandos
-- **Wake-up Sequence (Modo Reposo):** Cuando el módulo lleva tiempo sin actividad o acaba de arrancar, el hardware UART puede estar en bajo consumo. El primer comando transmitido (`ATZ` o `AT`) suele ignorarse completamente (no devuelve ni eco ni `ERROR`) porque el módulo lo usa para despertar su microcontrolador interno. El driver de comunicaciones (`AtParser` o capa superior) debe implementar un mecanismo de "Ping" consistente en enviar `AT\r\n` repetidamente (varias veces con retardos de ~500ms) hasta obtener un `OK` antes de asumir que el módulo está listo para recibir comandos complejos.
+## 3. Comportamientos Críticos y Sincronización
+- **Wake-up Sequence (Modo Reposo):** Cuando el módulo lleva tiempo sin actividad o acaba de arrancar, el hardware UART puede estar en bajo consumo. El primer comando transmitido (`ATZ` o `AT`) suele ignorarse completamente porque el módulo lo usa para despertar su microcontrolador interno. El `LSM1x0A_AtParser` implementa el mecanismo de "Ping" consistente en enviar `AT\r\n` repetidamente hasta obtener un `OK`.
 - **Cambio de Modo (`AT+MODE=0` o `AT+MODE=1`):** Según el análisis del firmware, cambiar el modo de red invoca la instrucción `NVIC_SystemReset();`. El driver detectará esto y **deberá esperar el tiempo de boot** del módulo antes de intentar ninguna otra comunicación.
-- **Obtención de Variables (`AT+<CMD>=?`):** Cuando el driver interroga por un valor, el firmware generalmente imprime el valor crudo en pantalla (con o sin comillas, según el caso) y luego finaliza el bloque con `\r\nOK\r\n`. El parser debe ser capaz de extraer lo que hay *entre* el eco del comando y el `\r\nOK\r\n`.
+- **Obtención de Variables (`AT+<CMD>=?`):** El firmware imprime el valor crudo en pantalla y luego finaliza con `\r\nOK\r\n`. El método `sendCommandWithResponse` del *AtParser* extrae lo que hay *entre* el eco del comando y el `\r\nOK\r\n`.
 
 ## 5. Arquitectura del Driver
 
@@ -140,5 +119,24 @@ Tras validar el hardware original, se decidió abandonar la complejidad extrema 
 
 1. **Memory Leaks Aislados:** Se implementó una prueba rigurosa de inicialización/destrucción dinámica en hardware repetida en `main.cpp`, asegurando 0 bytes de divergencia de Heap logrando un stack FreeRTOS hermético sin fugas.
 2. **Setup Rápido:** Capacidad de instanciar un controller que por debajo autoinicializa la UART y el parser.
-3. **Fase 1 (Terminada):** Implementación testada de comandos Getters (`getBattery`, `getBaudrate`, `getVersion`, `getLocalTime`) y Setters Básicos (`setBaudrate`, `setVerboseLevel`).
+3. **Fase 1 (Terminada):** Implementación testada de comandos Getters (`getBattery`, `getBaudrate`, `getVersion`, `getLocalTime`, `getSigfoxVersion`, `getDeviceType`) y Setters Básicos (`setBaudrate`, `setVerboseLevel`, `setMode`, `startFwUpgrade`, `factoryReset`). Adición de un mecanismo resiliente de *Retry* y *Module Recovery* (Fallbacks de `ATZ` a GPIO Reset).
 4. **Fase 2 (En progreso):** Implementación de la capa LoRaWAN nativa (ej: `setDevEUI()`, `setClass()`). Estas envuelven formateos en buferes transparentes listos para `sendCommand()`.
+
+---
+
+# 7. Reglas de Desarrollo Autónomo (AI Rules)
+
+Para mantener la calidad y fiabilidad del firmware, **todo el código autogenerado** o modificado por asistentes de IA en este proyecto debe cumplir estrictamente las siguientes directivas expuestas en los archivos base `.cursorrules` / `.windsurfrules`:
+
+1. **Compilación y Testeo Obligatorios:** 
+   Cada vez que se añada una nueva funcionalidad, se modifique el comportamiento del controlador o se modifique un archivo fuente (`.cpp` / `.h`), el Agente DEBE compilar el código (`pio run -e esp32dev`). Si el agente considera que el cambio es a nivel de despliegue, también DEBE subirlo al dispositivo y chequear el monitor serial usando los comandos de PlatformIO detallados en la sección 6. ¡No se entregará código sin verificar que compila exitosamente en el entorno físico/target!
+
+2. **Monitorización Autónoma Obligatoria:**
+   Si el agente lanza un cambio que debe ser testeado lógicamente, es completamente responsable de correr el monitor serial y analizar los logs impresos por el ESP32. Debe parsear y diagnosticar las salidas él mismo usando sus tools internas. 
+
+3. **Código Profesional, Modular y Depurado:**
+   Se exige un estándar de "Clean Code". Todo código nuevo debe:
+   - Estar separado en funciones simples y atómicas que hagan una sola cosa (Single Responsibility Principle).
+   - Mantener una estructura organizada (separación de la definición en `.h` y la implementación en `.cpp`).
+   - Evitar "God Objects" o rutinas kilométricas. Si una función crece demasiado, debe subdividirse en helpers privados auxiliares.
+   - Aplicar separación por casos de uso. Por ejemplo, separar la lógica de parseo, capa física y capa de abstracción.

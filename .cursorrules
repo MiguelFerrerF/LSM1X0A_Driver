@@ -1,0 +1,18 @@
+# Reglas de Desarrollo Autónomo (AI Rules) para LSM1x0A_Controller
+
+Para mantener la calidad y fiabilidad del firmware, **todo el código autogenerado** o modificado en este proyecto debe cumplir estrictamente las siguientes directivas:
+
+1. **Compilación y Testeo Obligatorios:** 
+   Cada vez que se añada una nueva funcionalidad, se modifique el comportamiento del controlador o se modifique un archivo fuente (`.cpp` / `.h`), TIENES QUE compilar el código ejecutando el comando:
+   `pio run -e esp32dev` (usando el ejecutable de platformio del entorno). 
+   ¡No se entregará código ni se dará por terminada una tarea sin verificar que compila exitosamente en el entorno físico/target!
+
+2. **Monitorización Autónoma Obligatoria:**
+   Si el cambio implica validación lógica en hardware físico, TIENES QUE subir el código (`pio run --target upload -e esp32dev`) y posteriormente lanzar el monitor serial (`pio device monitor -e esp32dev`) en background. Eres responsable de analizar el output producido por el ESP32, comprobar si hay errores lógicos en tiempo de ejecución y actuar en consecuencia antes de pedir feedback humano.
+
+3. **Código Profesional, Modular y Depurado:**
+   Se exige un estándar de "Clean Code". Todo código nuevo debe:
+   - Estar separado en funciones simples y atómicas que hagan una sola cosa (Single Responsibility Principle).
+   - Mantener una estructura organizada (separación de la definición en `.h` y la implementación en `.cpp`).
+   - Evitar "God Objects" o rutinas kilométricas. Si una función crece demasiado, debe subdividirse en helpers privados auxiliares.
+   - Aplicar separación por casos de uso. Por ejemplo, separar la lógica de parseo, de la capa física, de los tipos y de la capa superior de aplicación. No juntar lógica de diferente dominio en un solo archivo.
