@@ -27,13 +27,20 @@ public:
    * Maneja el estado de bajo consumo del módulo.
    * @return true si el módulo despertó y respondió adecuadamente.
    */
-  bool wakeUp(uint8_t retries = 3, uint32_t delayMs = 500);
+  bool wakeUp(uint8_t retries = DEFAULT_MAX_RETRIES, uint32_t delayMs = 500);
 
   /**
    * @brief Envía comando simple y espera OK/ERROR.
    * Ejemplo: sendCommand("AT+JOIN");
    */
   AtError sendCommand(const char* cmd, uint32_t timeoutMs = 2000);
+
+  /**
+   * @brief Espera a que ocurra un evento (como BOOTALERT) sin enviar ningún comando.
+   * Útil para reset por hardware donde el módulo habla solo.
+   * @return El AtError correspondiente al evento (ej. AtError::BOOT_ALERT).
+   */
+  AtError waitForEvent(uint32_t timeoutMs = LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
 
   /**
    * @brief Envía comando y extrae un valor de la respuesta.
@@ -57,26 +64,36 @@ public:
    */
   static bool parseRxMetadata(const char* payload, LsmRxMetadata* outMeta);
 
+  /**
+   * @brief Obtiene el modelo de dispositivo detectado durante el arranque.
+   */
+  LsmModuleType getDeviceType() const
+  {
+    return _deviceType;
+  }
+
 private:
-  UartDriver*     _driver;
-  AtEventCallback _eventCallback;
-  void*           _eventCtx;
+  UartDriver*     _driver        = nullptr;
+  AtEventCallback _eventCallback = nullptr;
+  void*           _eventCtx      = nullptr;
+
+  LsmModuleType _deviceType = LsmModuleType::UNKNOWN;
 
   // Buffer Interno Estático (Cero asignación dinámica)
-  char     _lineBuffer[AT_BUFFER_SIZE];
-  uint16_t _lineIdx = 0;
+  char     _lineBuffer[AT_BUFFER_SIZE] = {0};
+  uint16_t _lineIdx                    = 0;
 
   // Sincronización
-  SemaphoreHandle_t _syncSem;
+  SemaphoreHandle_t _syncSem = nullptr;
 
   // Estado de la Transacción Actual
-  bool    _pendingCommand;
-  AtError _lastResultError;
+  bool    _pendingCommand  = false;
+  AtError _lastResultError = AtError::UNKNOWN;
 
   // Punteros para parsing "Zero-Copy" durante la transacción
-  const char* _expectedTag;
-  char*       _userOutBuffer; // Puntero al buffer del usuario
-  size_t      _userOutSize;
+  const char* _expectedTag   = nullptr; // El tag que esperamos en la respuesta (ej. "DevEui: ")
+  char*       _userOutBuffer = nullptr; // Donde el usuario quiere que copiemos el resultado (ej. un buffer local o global)
+  size_t      _userOutSize   = 0;       // Tamaño del buffer de salida para evitar sobreescrituras
 
   // Métodos internos
   void    processLine(char* line);

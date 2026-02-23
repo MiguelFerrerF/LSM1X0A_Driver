@@ -66,7 +66,7 @@ AtError LSM1x0A_AtParser::parseErrorString(const char* line)
     return AtError::RECONF_ERROR;
   if (strcmp(line, "BOOTALERT") == 0)
     return AtError::BOOT_ALERT;
-    
+
   return AtError::UNKNOWN;
 }
 
@@ -177,9 +177,9 @@ void LSM1x0A_AtParser::processLine(char* line)
 
   // 4. Ignorar líneas irrelevantes
   // Descartamos ecos asincronos del propio comando enviado (e.g. "AT+BAT=?")
-  if (strncmp(line, "AT", 2) == 0)
+  if (strncmp(line, "AT+", 3) == 0)
     return;
-    
+
   // Si llegamos aquí, la línea NO tenía +EVT, así que si empieza por "confirmed flag",
   // es basura aislada y la descartamos.
   if (strncmp(line, "confirmed flag:", 15) == 0)
@@ -189,21 +189,15 @@ void LSM1x0A_AtParser::processLine(char* line)
   if (strncmp(line, "+EVT:Prepare Frame", 18) == 0)
     return;
 
-  // 5. MAQUINA DE ESTADOS (Respuestas a Comandos Síncronos AT)
-  // Detección de BOOT
-  if (strcmp(line, "BOOTALERT") == 0) {
-    if (_eventCallback)
-      _eventCallback(LsmEvent::INFO, "BOOT", _eventCtx);
-    if (_pendingCommand) {
-      _lastResultError = AtError::BOOT_ALERT;
-      xSemaphoreGive(_syncSem);
-    }
-    return;
-  }
+  // Detección del tipo de dispositivo
+  if (strstr(line, "LSM100A") != nullptr)
+    _deviceType = LsmModuleType::LSM100A;
+  else if (strstr(line, "LSM110A") != nullptr)
+    _deviceType = LsmModuleType::LSM110A;
 
   if (_pendingCommand) {
     AtError err = parseErrorString(line);
-    
+
     // Si la linea es un código de retorno final (OK, ERROR, etc... finalizamos)
     if (err != AtError::UNKNOWN) {
       _lastResultError = err;
@@ -289,20 +283,40 @@ bool LSM1x0A_AtParser::parseRxMetadata(const char* payload, LsmRxMetadata* out)
 
 bool LSM1x0A_AtParser::wakeUp(uint8_t retries, uint32_t delayMs)
 {
-    _driver->flushRx();
-    for (uint8_t i = 0; i < retries; i++) {
-        // Enviar Ping silenciando los errores de payload/buffer para no pisar lecturas.
-        AtError err = sendCommand("AT", delayMs);
-        if (err == AtError::OK) {
-            return true;
-        }
+  _driver->flushRx();
+  for (uint8_t i = 0; i < retries; i++) {
+    // Enviar Ping silenciando los errores de payload/buffer para no pisar lecturas.
+    AtError err = sendCommand("AT", delayMs);
+    if (err == AtError::OK) {
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 AtError LSM1x0A_AtParser::sendCommand(const char* cmd, uint32_t timeoutMs)
 {
   return sendCommandWithResponse(cmd, nullptr, nullptr, 0, timeoutMs);
+}
+
+AtError LSM1x0A_AtParser::waitForEvent(uint32_t timeoutMs)
+{
+  xSemaphoreTake(_syncSem, 0); // Limpiar
+
+  if (_pendingCommand) {
+    return AtError::BUSY;
+  }
+
+  _pendingCommand  = true;
+  _lastResultError = AtError::TIMEOUT;
+
+  if (xSemaphoreTake(_syncSem, pdMS_TO_TICKS(timeoutMs)) != pdTRUE) {
+    _pendingCommand = false;
+    return AtError::TIMEOUT;
+  }
+
+  _pendingCommand = false;
+  return _lastResultError;
 }
 
 AtError LSM1x0A_AtParser::sendCommandWithResponse(const char* cmd, const char* expectedTag, char* outBuffer, size_t outSize, uint32_t timeoutMs)
