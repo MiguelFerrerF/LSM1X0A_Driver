@@ -10,10 +10,10 @@ LSM1x0A_Controller::LSM1x0A_Controller() : lorawan(this)
   _resetPin    = LSM1X0A_RESET_PIN;
   _maxRetries  = DEFAULT_MAX_RETRIES;
 
-  _lastRssi = 0;
-  _lastSnr = 0;
+  _lastRssi  = 0;
+  _lastSnr   = 0;
   _lastDmodm = 0;
-  _lastGwn = 0;
+  _lastGwn   = 0;
 
   _syncEventGroup = xEventGroupCreate();
 }
@@ -336,13 +336,15 @@ bool LSM1x0A_Controller::isJoined() const
 
 uint32_t LSM1x0A_Controller::waitForEvent(uint32_t bitsToWaitFor, uint32_t timeoutMs, bool clearOnExit)
 {
-  if (!_syncEventGroup) return 0;
+  if (!_syncEventGroup)
+    return 0;
   return xEventGroupWaitBits(_syncEventGroup, bitsToWaitFor, clearOnExit ? pdTRUE : pdFALSE, pdFALSE, pdMS_TO_TICKS(timeoutMs));
 }
 
 void LSM1x0A_Controller::clearEvents(uint32_t bitsToClear)
 {
-  if (!_syncEventGroup) return;
+  if (!_syncEventGroup)
+    return;
   xEventGroupClearBits(_syncEventGroup, bitsToClear);
 }
 
@@ -352,7 +354,8 @@ void LSM1x0A_Controller::clearEvents(uint32_t bitsToClear)
 
 void LSM1x0A_Controller::internalEventCallback(const char* type, const char* payload, void* ctx)
 {
-  if (!ctx) return;
+  if (!ctx)
+    return;
   LSM1x0A_Controller* self = static_cast<LSM1x0A_Controller*>(ctx);
   self->handleEvent(type, payload);
 }
@@ -363,26 +366,32 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
   if (strcmp(type, LsmEvent::JOIN) == 0) {
     if (strstr(payload, "SUCCESS") || strstr(payload, "Network joined")) {
       _isJoined = true;
-      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_SUCCESS);
+      if (_syncEventGroup)
+        xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_SUCCESS);
     } 
     else if (strstr(payload, "FAILED") || strstr(payload, "Join failed")) {
       _isJoined = false;
-      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_FAIL);
+      if (_syncEventGroup)
+        xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_FAIL);
     }
   }
   else if (strcmp(type, LsmEvent::TX) == 0) {
     if (strstr(payload, "SUCCESS")) {
-      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
+      if (_syncEventGroup)
+        xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
     }
     else if (strstr(payload, "FAILED") || strstr(payload, "TIMEOUT")) {
-      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_FAIL);
+      if (_syncEventGroup)
+        xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_FAIL);
     }
   }
   else if (strcmp(type, LsmEvent::RX_DATA) == 0) {
-    if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_DATA);
+    if (_syncEventGroup)
+      xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_DATA);
   }
   else if (strcmp(type, LsmEvent::RX_META) == 0) {
-    if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
+    if (_syncEventGroup)
+      xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
     
     LsmRxMetadata meta;
     if (LSM1x0A_AtParser::parseRxMetadata(payload, &meta)) {
@@ -395,7 +404,8 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
     }
   } 
   else if (strcmp(type, LsmEvent::RX_TIMEOUT) == 0) {
-    if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_TIMEOUT);
+    if (_syncEventGroup)
+      xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_TIMEOUT);
   }
 
   // 2. Pasar el evento hacia arriba al callback del usuario
