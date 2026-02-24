@@ -65,9 +65,13 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
 
   if (confirmed) {
     if (calcTimeoutMs == 0) {
-      int retries = getConfirmRetry();
+      int retries = -1;
+      if (_cachedConfirmRetry >= 0)
+        retries = _cachedConfirmRetry;
+      else
+        retries = getConfirmRetry();
       if (retries < 0)
-        retries = 7; // Fallback
+        retries = 5; // Fallback
       // Base safety 5s + cada intento toma ~3.5 segundos de radio (Rx1+Rx2+Ack)
       calcTimeoutMs = 5000 + (retries * 3500);
     }
@@ -84,9 +88,13 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   }
   else {
     // Para Unconfirmed puro, esperamos los `MAC rxTimeOut` (2 por cada intento de transmisión)
-    int retries = getUnconfirmRetry();
+    int retries = -1;
+    if (_cachedUnconfirmRetry >= 0)
+      retries = _cachedUnconfirmRetry;
+    else
+      retries = getUnconfirmRetry();
     if (retries < 0)
-      retries = 0; // Fallback si dio error
+      retries = 5; // Fallback si dio error
 
     // (N reintentos) * 2 ventanas RX
     int expectedTimeouts = retries * 2;

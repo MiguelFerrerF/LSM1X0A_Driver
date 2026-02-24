@@ -283,7 +283,8 @@ int LSM1x0A_LoRaWAN::getConfirmRetry()
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CONFIRM_RETRY, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedConfirmRetry = atoi(rx);
+    return _cachedConfirmRetry;
   }
   return -1;
 }
@@ -294,7 +295,8 @@ int LSM1x0A_LoRaWAN::getUnconfirmRetry()
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::UNCONFIRM_RETRY, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedUnconfirmRetry = atoi(rx);
+    return _cachedUnconfirmRetry;
   }
   return -1;
 }

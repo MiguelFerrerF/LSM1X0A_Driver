@@ -100,9 +100,18 @@ public:
   int            getUnconfirmRetry();
   LsmNetworkType getNetworkType();
 
+  /**
+   * @brief Limpia la caché local de configuraciones volátiles/recuperables
+   */
+  void clearCache();
+
 private:
   LSM1x0A_Controller* _controller = nullptr;
   LsmJoinMode         _joinMode   = LsmJoinMode::OTAA;
+  
+  // Caché de reintentos para no bombardear al módulo en cada envío asíncrono
+  int _cachedConfirmRetry   = -1;
+  int _cachedUnconfirmRetry = -1;
 };
 
 #endif // LSM1X0A_LORAWAN_H

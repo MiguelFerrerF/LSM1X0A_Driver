@@ -38,6 +38,12 @@ LSM1x0A_LoRaWAN::LSM1x0A_LoRaWAN(LSM1x0A_Controller* controller) : _controller(c
 {
 }
 
+void LSM1x0A_LoRaWAN::clearCache()
+{
+  _cachedConfirmRetry   = -1;
+  _cachedUnconfirmRetry = -1;
+}
+
 bool LSM1x0A_LoRaWAN::setDevEUI(const char* devEui)
 {
   if (!devEui || strlen(devEui) < 16)
@@ -248,7 +254,11 @@ bool LSM1x0A_LoRaWAN::setConfirmRetry(int retries)
     return false;
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::CONFIRM_RETRY, retries);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedConfirmRetry = retries;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setUnconfirmRetry(int retries)
@@ -257,7 +267,11 @@ bool LSM1x0A_LoRaWAN::setUnconfirmRetry(int retries)
     return false;
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::UNCONFIRM_RETRY, retries);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedUnconfirmRetry = retries;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, int subBand)

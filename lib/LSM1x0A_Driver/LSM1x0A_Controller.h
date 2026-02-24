@@ -4,18 +4,18 @@
 #include "LSM1x0A_AtParser.h"
 #include "UartDriver.h"
 #include "api/LSM1x0A_LoRaWAN.h"
-#include <Arduino.h>
-#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include <Arduino.h>
+#include <time.h>
 
 // Definición de bits para el EventGroup interno de sincronización
 #define LSM_EVT_JOIN_SUCCESS (1 << 0)
-#define LSM_EVT_JOIN_FAIL    (1 << 1)
-#define LSM_EVT_TX_SUCCESS   (1 << 2)
-#define LSM_EVT_TX_FAIL      (1 << 3)
-#define LSM_EVT_RX_DATA      (1 << 4)
-#define LSM_EVT_RX_TIMEOUT   (1 << 5)
+#define LSM_EVT_JOIN_FAIL (1 << 1)
+#define LSM_EVT_TX_SUCCESS (1 << 2)
+#define LSM_EVT_TX_FAIL (1 << 3)
+#define LSM_EVT_RX_DATA (1 << 4)
+#define LSM_EVT_RX_TIMEOUT (1 << 5)
 
 /**
  * @class LSM1x0A_Controller
@@ -234,10 +234,22 @@ public:
   /**
    * @brief Getters para los últimos metadatos de radio recibidos.
    */
-  int getLastRssi() const { return _lastRssi; }
-  int getLastSnr() const { return _lastSnr; }
-  int getLastDemodMargin() const { return _lastDmodm; }
-  int getLastNbGateways() const { return _lastGwn; }
+  int getLastRssi() const
+  {
+    return _lastRssi;
+  }
+  int getLastSnr() const
+  {
+    return _lastSnr;
+  }
+  int getLastDemodMargin() const
+  {
+    return _lastDmodm;
+  }
+  int getLastNbGateways() const
+  {
+    return _lastGwn;
+  }
 
   // =========================================================================
   // SUB-MÓDULOS (APIs LORAWAN Y SIGFOX)
@@ -245,30 +257,30 @@ public:
   LSM1x0A_LoRaWAN lorawan;
 
 private:
-  UartDriver*       _driver;
-  LSM1x0A_AtParser* _parser;
-  bool              _initialized;
-  bool              _isJoined; 
+  UartDriver*       _driver      = nullptr;
+  LSM1x0A_AtParser* _parser      = nullptr;
+  bool              _initialized = false;
+  bool              _isJoined    = false;
 
-  int _resetPin;
-  int _maxRetries;
-  
+  int _resetPin   = LSM1X0A_RESET_PIN;
+  int _maxRetries = DEFAULT_MAX_RETRIES;
+
   // Últimos metadatos de red / radio recibidos
-  int _lastRssi;
-  int _lastSnr;
-  int _lastDmodm;
-  int _lastGwn;
+  int _lastRssi  = 0;
+  int _lastSnr   = 0;
+  int _lastDmodm = 0;
+  int _lastGwn   = 0;
 
   // Sincronización asíncrona
-  EventGroupHandle_t _syncEventGroup;
+  EventGroupHandle_t _syncEventGroup = nullptr;
 
   // Callback del usuario
-  AtEventCallback _userCallback;
-  void*           _userCtx;
+  AtEventCallback _userCallback = nullptr;
+  void*           _userCtx      = nullptr;
 
   // Interceptor
   static void internalEventCallback(const char* type, const char* payload, void* ctx);
-  void handleEvent(const char* type, const char* payload);
+  void        handleEvent(const char* type, const char* payload);
 };
 
 #endif // LSM1X0A_CONTROLLER_H
