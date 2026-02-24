@@ -78,14 +78,21 @@ void loop()
         // TEST LORAWAN GETTERS
         Serial.println("\n--- Probando LoRaWAN Getters ---");
         char pBuf[128];
-        
-        if (controller->lorawan.getDevEUI(pBuf, sizeof(pBuf))) Serial.printf("DevEUI: %s\n", pBuf);
-        if (controller->lorawan.getAppEUI(pBuf, sizeof(pBuf))) Serial.printf("AppEUI: %s\n", pBuf);
-        if (controller->lorawan.getAppKey(pBuf, sizeof(pBuf))) Serial.printf("AppKey: %s\n", pBuf);
-        if (controller->lorawan.getNwkKey(pBuf, sizeof(pBuf))) Serial.printf("NwkKey: %s\n", pBuf);
-        if (controller->lorawan.getDevAddr(pBuf, sizeof(pBuf))) Serial.printf("DevAddr: %s\n", pBuf);
-        if (controller->lorawan.getAppSKey(pBuf, sizeof(pBuf))) Serial.printf("AppSKey: %s\n", pBuf);
-        if (controller->lorawan.getNwkSKey(pBuf, sizeof(pBuf))) Serial.printf("NwkSKey: %s\n", pBuf);
+
+        if (controller->lorawan.getDevEUI(pBuf, sizeof(pBuf)))
+          Serial.printf("DevEUI: %s\n", pBuf);
+        if (controller->lorawan.getAppEUI(pBuf, sizeof(pBuf)))
+          Serial.printf("AppEUI: %s\n", pBuf);
+        if (controller->lorawan.getAppKey(pBuf, sizeof(pBuf)))
+          Serial.printf("AppKey: %s\n", pBuf);
+        if (controller->lorawan.getNwkKey(pBuf, sizeof(pBuf)))
+          Serial.printf("NwkKey: %s\n", pBuf);
+        if (controller->lorawan.getDevAddr(pBuf, sizeof(pBuf)))
+          Serial.printf("DevAddr: %s\n", pBuf);
+        if (controller->lorawan.getAppSKey(pBuf, sizeof(pBuf)))
+          Serial.printf("AppSKey: %s\n", pBuf);
+        if (controller->lorawan.getNwkSKey(pBuf, sizeof(pBuf)))
+          Serial.printf("NwkSKey: %s\n", pBuf);
 
         Serial.printf("NwkID: %d\n", controller->lorawan.getNwkID());
         Serial.printf("DevNonce: %d\n", controller->lorawan.getDevNonce());

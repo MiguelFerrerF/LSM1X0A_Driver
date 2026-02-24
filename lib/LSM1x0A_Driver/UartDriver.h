@@ -58,7 +58,7 @@ public:
   bool deinit();
 
   /**
-   * @brief Vacia el buffer de RX de hardware y cualquier evento encolado, 
+   * @brief Vacia el buffer de RX de hardware y cualquier evento encolado,
    * descartando todos los datos obsoletos recibidos.
    */
   void flushRx();

@@ -109,7 +109,7 @@ void setup()
   }
 
   // read back to verify
-  char band[64];
+  char    band[64];
   AtError err2 = lora.sendCommandWithResponse("AT+BAND=?", nullptr, band, sizeof(band));
   if (err2 == AtError::OK) {
     Serial.printf("Banda leída: %s\n", band);
