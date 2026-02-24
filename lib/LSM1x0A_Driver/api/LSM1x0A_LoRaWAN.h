@@ -46,7 +46,7 @@ public:
   bool setNetworkType(LsmNetworkType type);
   bool setConfirmRetry(int retries);
   bool setUnconfirmRetry(int retries);
-  bool setChannelMask(const char* mask);
+  bool setChannelMask(LsmBand band, int subBand);
   bool setDevNonce(int nonce);
   bool resetDevNonce();
 

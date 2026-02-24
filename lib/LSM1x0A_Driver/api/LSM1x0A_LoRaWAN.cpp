@@ -22,6 +22,17 @@ static bool formatHexWithColons(const char* in, char* out, size_t outSize, size_
   return true;
 }
 
+// Mácaras fijas para optimizar memoria flash y consumo (Progmem style)
+static const char* const M_8CH[]  = {"000F", "00F0", "00FF"};
+static const char* const M_72CH[] = {"00FF:0000:0000:0000:0000", "FF00:0000:0000:0000:0000", "0000:00FF:0000:0000:0000", "0000:FF00:0000:0000:0000",
+                                     "0000:0000:00FF:0000:0000", "0000:0000:FF00:0000:0000", "0000:0000:0000:00FF:0000", "0000:0000:0000:FF00:0000",
+                                     "0000:0000:0000:0000:00FF", "FFFF:FFFF:FFFF:FFFF:00FF"};
+static const char* const M_96CH[] = {"00FF:0000:0000:0000:0000:0000", "FF00:0000:0000:0000:0000:0000", "0000:00FF:0000:0000:0000:0000",
+                                     "0000:FF00:0000:0000:0000:0000", "0000:0000:00FF:0000:0000:0000", "0000:0000:FF00:0000:0000:0000",
+                                     "0000:0000:0000:00FF:0000:0000", "0000:0000:0000:FF00:0000:0000", "0000:0000:0000:0000:00FF:0000",
+                                     "0000:0000:0000:0000:FF00:0000", "0000:0000:0000:0000:0000:00FF", "0000:0000:0000:0000:0000:FF00",
+                                     "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF"};
+
 LSM1x0A_LoRaWAN::LSM1x0A_LoRaWAN(LSM1x0A_Controller* controller) : _controller(controller)
 {
 }
@@ -248,12 +259,43 @@ bool LSM1x0A_LoRaWAN::setUnconfirmRetry(int retries)
   return _controller->sendCommand(cmd, 1000) == AtError::OK;
 }
 
-bool LSM1x0A_LoRaWAN::setChannelMask(const char* mask)
+bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, int subBand)
 {
-  if (!mask || strlen(mask) < 4)
+  const char* const* targetMasks = nullptr;
+  int                maxCount    = 0;
+
+  switch (band) {
+    case LsmBand::EU868:
+    case LsmBand::AS923_1:
+    case LsmBand::KR920:
+    case LsmBand::IN865:
+    case LsmBand::RU864:
+    case LsmBand::AS923_4:
+    case LsmBand::EU433:
+    case LsmBand::CN779:
+      targetMasks = M_8CH;
+      maxCount    = 2; // last logic index is 2
+      break;
+    case LsmBand::US915:
+    case LsmBand::AU915:
+      targetMasks = M_72CH;
+      maxCount    = 9; // last logic index is 9
+      break;
+    case LsmBand::CN470:
+      targetMasks = M_96CH;
+      maxCount    = 12; // last logic index is 12
+      break;
+    default:
+      return false; // Unknown Band length
+  }
+
+  // Si no pasamos index correcto (0-N) entonces activamos mascara completa (ALL = maxCount)
+  int idx = (subBand >= 0 && subBand < maxCount) ? subBand : maxCount;
+
+  if (!targetMasks[idx] || strlen(targetMasks[idx]) < 4)
     return false;
   char cmd[64];
-  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, mask);
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, targetMasks[idx]);
   return _controller->sendCommand(cmd, 1000) == AtError::OK;
 }
 

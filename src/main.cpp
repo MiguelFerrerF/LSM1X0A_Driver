@@ -111,6 +111,9 @@ void loop()
         ok = controller->lorawan.setClass(LsmClass::CLASS_A);
         Serial.printf("Set Class: %s\n", ok ? "OK" : "ERROR");
 
+        ok = controller->lorawan.setChannelMask(LsmBand::EU868, 0);
+        Serial.printf("Set Channel Mask SubBand 0: %s\n", ok ? "OK" : "ERROR");
+
         ok = controller->lorawan.setADR(false);
         Serial.printf("Set ADR: %s\n", ok ? "OK" : "ERROR");
 
@@ -152,9 +155,6 @@ void loop()
 
         ok = controller->lorawan.setUnconfirmRetry(5);
         Serial.printf("Set UnconfirmRetry: %s\n", ok ? "OK" : "ERROR");
-
-        ok = controller->lorawan.setChannelMask("FF00FF00");
-        Serial.printf("Set ChannelMask: %s\n", ok ? "OK" : "ERROR");
 
         ok = controller->lorawan.setDevNonce(42);
         Serial.printf("Set DevNonce: %s\n", ok ? "OK" : "ERROR");
