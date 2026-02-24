@@ -10,6 +10,11 @@ LSM1x0A_Controller::LSM1x0A_Controller() : lorawan(this)
   _resetPin    = LSM1X0A_RESET_PIN;
   _maxRetries  = DEFAULT_MAX_RETRIES;
 
+  _lastRssi = 0;
+  _lastSnr = 0;
+  _lastDmodm = 0;
+  _lastGwn = 0;
+
   _syncEventGroup = xEventGroupCreate();
 }
 
@@ -378,6 +383,16 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
   }
   else if (strcmp(type, LsmEvent::RX_META) == 0) {
     if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
+    
+    LsmRxMetadata meta;
+    if (LSM1x0A_AtParser::parseRxMetadata(payload, &meta)) {
+      _lastRssi = meta.rssi;
+      _lastSnr  = meta.snr;
+      if (meta.hasLinkCheck) {
+        _lastDmodm = meta.demodMargin;
+        _lastGwn   = meta.nbGateways;
+      }
+    }
   } 
   else if (strcmp(type, LsmEvent::RX_TIMEOUT) == 0) {
     if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_TIMEOUT);

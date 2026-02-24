@@ -225,6 +225,12 @@ void loop()
             Serial.printf("\n-> Enviando Mensaje Unconfirmed %d/5...\n", i);
             ok = controller->lorawan.sendData(3, "BBCCDDEE", false);
             Serial.printf("-> Resultado: %s\n", ok ? "EXITOSO" : "FALLO o TIMEOUT");
+            
+            // Imprimir metadatos guardados si el envío generó recepción RX_META o info de LinkCheck en RX2
+            Serial.printf("   [Metadatos] RSSI: %d, SNR: %d, DMODM: %d, GWN: %d\n", 
+              controller->getLastRssi(), controller->getLastSnr(), 
+              controller->getLastDemodMargin(), controller->getLastNbGateways());
+              
             delay(3000); // Pequeña pausa entre envíos
           }
         }

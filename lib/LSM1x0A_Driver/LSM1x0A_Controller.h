@@ -231,6 +231,14 @@ public:
    */
   LsmModuleType getDeviceType() const;
 
+  /**
+   * @brief Getters para los últimos metadatos de radio recibidos.
+   */
+  int getLastRssi() const { return _lastRssi; }
+  int getLastSnr() const { return _lastSnr; }
+  int getLastDemodMargin() const { return _lastDmodm; }
+  int getLastNbGateways() const { return _lastGwn; }
+
   // =========================================================================
   // SUB-MÓDULOS (APIs LORAWAN Y SIGFOX)
   // =========================================================================
@@ -244,6 +252,12 @@ private:
 
   int _resetPin;
   int _maxRetries;
+  
+  // Últimos metadatos de red / radio recibidos
+  int _lastRssi;
+  int _lastSnr;
+  int _lastDmodm;
+  int _lastGwn;
 
   // Sincronización asíncrona
   EventGroupHandle_t _syncEventGroup;

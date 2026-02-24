@@ -60,14 +60,14 @@ enum class AtError
 // Estructura para almacenar datos de calidad de señal (Coverage Analysis)
 struct LsmRxMetadata
 {
-  char slot[8]; // "1", "2", "C", "P_MC", etc.
-  int  port;
-  int  dataRate;
-  int  rssi;
-  int  snr;
-  bool hasLinkCheck; // true si el servidor mandó info de gateways
-  int  demodMargin;  // Solo válido si hasLinkCheck = true
-  int  nbGateways;   // Solo válido si hasLinkCheck = true
+  char slot[8]      = ""; // "1", "2", "C", "P_MC", etc.
+  int  port         = 0;
+  int  dataRate     = 0;
+  int  rssi         = 0;
+  int  snr          = 0;
+  bool hasLinkCheck = false; // true si el servidor mandó info de gateways
+  int  demodMargin  = 0;     // Solo válido si hasLinkCheck = true
+  int  nbGateways   = 0;     // Solo válido si hasLinkCheck = true
 };
 
 // Niveles de Log (Jerarquía estándar)
@@ -187,17 +187,17 @@ enum class LsmSigfoxDataType
 // Tipos de Eventos Asíncronos que enviaremos al Callback
 namespace LsmEvent
 {
-const char JOIN[]    = "JOIN";
-const char TX[]      = "TX";
+const char JOIN[]       = "JOIN";
+const char TX[]         = "TX";
 const char RX_DATA[]    = "RX_DATA";    // El payload útil (Hex)
 const char RX_META[]    = "RX_META";    // Metadatos (RSSI, SNR, DR)
 const char RX_TIMEOUT[] = "RX_TIMEOUT"; // Timeout explícito de la ventana de recepción
 const char CLASS[]      = "CLASS";      // Cambio de Clase A/B/C
 const char BEACON[]     = "BEACON";     // Info de Beacon
-const char NVM[]     = "NVM";     // Guardado en Flash interna
-const char INFO[]    = "INFO";    // Otros
-const char LOG[]     = "LOG";     // Mensajes de Log
-const char VERBOSE[] = "VERBOSE";
+const char NVM[]        = "NVM";        // Guardado en Flash interna
+const char INFO[]       = "INFO";       // Otros
+const char LOG[]        = "LOG";        // Mensajes de Log
+const char VERBOSE[]    = "VERBOSE";
 } // namespace LsmEvent
 
 // Estados comunes de respuesta
