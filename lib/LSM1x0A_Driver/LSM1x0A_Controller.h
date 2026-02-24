@@ -19,6 +19,11 @@
 class LSM1x0A_Controller
 {
 public:
+
+  // =========================================================================
+  // CONSTRUCTORES Y DESTRUCTORES
+  // =========================================================================
+
   /**
    * @brief Constructor por defecto.
    * Crea las instancias internas de UartDriver y LSM1x0A_AtParser,
@@ -31,6 +36,10 @@ public:
    * Libera recursos y de-inicializa los componentes internos.
    */
   ~LSM1x0A_Controller();
+
+  // =========================================================================
+  // INICIALIZACIÓN Y CONTROL DE COMUNICACIÓN
+  // =========================================================================
 
   /**
    * @brief Inicializa el hardware UART y el Parser interno.
