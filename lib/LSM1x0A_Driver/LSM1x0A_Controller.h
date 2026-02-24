@@ -87,20 +87,6 @@ public:
   // =========================================================================
 
   /**
-   * @brief Obtiene el voltaje de la batería en mV.
-   * @return El voltaje >= 0 (ej. 3300 para 3.3V) o -1 si hubo error.
-   */
-  int getBattery();
-
-  /**
-   * @brief Obtiene la versión del firmware del módulo "APP_VERSION".
-   * @param outBuffer Buffer donde copiar el string (ej. "V1.0.4").
-   * @param size Capacidad máxima del buffer.
-   * @return true si tiene éxito.
-   */
-  bool getVersion(char* outBuffer, size_t size);
-
-  /**
    * @brief Ejecuta un factory reset devolviendo al módulo a su estado de fábrica.
    * Cuidado: Esto borra todas las llaves LoRaWAN/Sigfox escritas.
    * @return true si el módulo responde afirmativamente.
@@ -108,17 +94,26 @@ public:
   bool factoryReset();
 
   /**
-   * @brief Obtiene el tiempo local del módulo (ej. "2024-01-01 12:00:00").
-   * @param timeinfo Puntero a la estructura estandar tm donde se guardará el resultado
-   * @return true si se obtuvo y parseó correctamente.
+   * @brief Realiza un reinicio por software (Comando ATZ).
+   * @return true si el reinicio y boot alert fueron exitosos.
    */
-  bool getLocalTime(struct tm* timeinfo);
+  bool softwareReset();
 
   /**
-   * @brief Obtiene el baudrate actual configurado en el módulo.
-   * @return El baudrate (ej. 9600) o -1 si falla.
+   * @brief Realiza un reinicio por hardware usando el pin de reset.
+   * @return true si el reinicio y boot alert fueron exitosos.
    */
-  int getBaudrate();
+  bool hardwareReset();
+
+  /**
+   * @brief Ejecuta el protocolo de recuperación. Primero Soft-Reset (ATZ), luego Hard-Reset si hay pin.
+   * @return true si logró recuperar el módulo y recibir el Boot Alert.
+   */
+  bool recoverModule();
+
+  // =========================================================================
+  // SETTERS
+  // =========================================================================
 
   /**
    * @brief Configura el baudrate del módulo (por defecto suele ser 9600).
@@ -142,34 +137,6 @@ public:
   bool setMode(LsmMode mode);
 
   /**
-   * @brief Obtiene la versión del stack de Sigfox.
-   */
-  bool getSigfoxVersion(char* buffer, size_t size);
-
-  /**
-   * @brief Obtiene el tipo de dispositivo detectado (ej LSM100A).
-   */
-  LsmModuleType getDeviceType() const;
-
-  /**
-   * @brief Realiza un reinicio por software (Comando ATZ).
-   * @return true si el reinicio y boot alert fueron exitosos.
-   */
-  bool softwareReset();
-
-  /**
-   * @brief Realiza un reinicio por hardware usando el pin de reset.
-   * @return true si el reinicio y boot alert fueron exitosos.
-   */
-  bool hardwareReset();
-
-  /**
-   * @brief Ejecuta el protocolo de recuperación. Primero Soft-Reset (ATZ), luego Hard-Reset si hay pin.
-   * @return true si logró recuperar el módulo y recibir el Boot Alert.
-   */
-  bool recoverModule();
-
-  /**
    * @brief Configura el pin de reset del módulo (si es que se usa alguno).
    * @param pin El número de pin GPIO conectado al reset del módulo.
    */
@@ -180,6 +147,47 @@ public:
    * @param retries Número de reintentos (mínimo 1).
    */
   void setMaxRetries(int retries);
+
+  // =========================================================================
+  // GETTERS
+  // =========================================================================
+
+  /**
+   * @brief Obtiene el voltaje de la batería en mV.
+   * @return El voltaje >= 0 (ej. 3300 para 3.3V) o -1 si hubo error.
+   */
+  int getBattery();
+
+  /**
+   * @brief Obtiene la versión del firmware del módulo "APP_VERSION".
+   * @param outBuffer Buffer donde copiar el string (ej. "V1.0.4").
+   * @param size Capacidad máxima del buffer.
+   * @return true si tiene éxito.
+   */
+  bool getVersion(char* outBuffer, size_t size);
+
+  /**
+   * @brief Obtiene el tiempo local del módulo (ej. "2024-01-01 12:00:00").
+   * @param timeinfo Puntero a la estructura estandar tm donde se guardará el resultado
+   * @return true si se obtuvo y parseó correctamente.
+   */
+  bool getLocalTime(struct tm* timeinfo);
+
+  /**
+   * @brief Obtiene el baudrate actual configurado en el módulo.
+   * @return El baudrate (ej. 9600) o -1 si falla.
+   */
+  int getBaudrate();
+
+  /**
+   * @brief Obtiene la versión del stack de Sigfox.
+   */
+  bool getSigfoxVersion(char* buffer, size_t size);
+
+  /**
+   * @brief Obtiene el tipo de dispositivo detectado (ej LSM100A).
+   */
+  LsmModuleType getDeviceType() const;
 
   // =========================================================================
   // SUB-MÓDULOS (APIs LORAWAN Y SIGFOX)
