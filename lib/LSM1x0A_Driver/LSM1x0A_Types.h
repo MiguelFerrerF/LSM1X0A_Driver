@@ -91,23 +91,27 @@ enum class LsmModuleType
 enum class LsmMode
 {
   SIGFOX = 0,
-  LORAWAN
+  LORAWAN,
+  MODE_UNKNOWN
 };
 enum class LsmJoinMode
 {
   OTAA = 0,
-  ABP
+  ABP,
+  JOIN_MODE_UNKNOWN
 };
 enum class LsmClass
 {
   CLASS_A = 0,
   CLASS_B,
-  CLASS_C
+  CLASS_C,
+  CLASS_UNKNOWN
 };
 enum class LsmNetworkType
 {
   PUBLIC = 0,
-  PRIVATE
+  PRIVATE,
+  NETWORK_TYPE_UNKNOWN
 };
 enum class LsmDataRate
 {
@@ -118,7 +122,8 @@ enum class LsmDataRate
   DR_4,
   DR_5,
   DR_6,
-  DR_7
+  DR_7,
+  DR_UNKNOWN
 };
 enum class LsmTxPower
 {
@@ -129,7 +134,8 @@ enum class LsmTxPower
   TP_MAX_MINUS_8,
   TP_MAX_MINUS_10,
   TP_MAX_MINUS_12,
-  TP_MAX_MINUS_14
+  TP_MAX_MINUS_14,
+  TP_UNKNOWN
 };
 enum class LsmBand
 {
@@ -143,7 +149,8 @@ enum class LsmBand
   IN865,
   US915,
   RU864,
-  AS923_4
+  AS923_4,
+  BAND_UNKNOWN
 };
 enum class LsmPingSlot
 {
@@ -154,7 +161,8 @@ enum class LsmPingSlot
   EVERY_16_SEC,
   EVERY_32_SEC,
   EVERY_64_SEC,
-  EVERY_128_SEC
+  EVERY_128_SEC,
+  PING_SLOT_UNKNOWN
 };
 enum class LsmRCChannel
 {
@@ -165,7 +173,8 @@ enum class LsmRCChannel
   RC4,
   RC5,
   RC6,
-  RC7
+  RC7,
+  RC_UNKNOWN
 };
 enum class LsmSigfoxDataType
 {

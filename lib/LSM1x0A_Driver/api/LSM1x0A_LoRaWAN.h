@@ -69,6 +69,34 @@ public:
   bool sendP2pData(const char* hexData);
   bool receiveP2pData(int timeoutMs);
 
+    // 5. Getters de Configuración (LoRaWAN)
+    bool getDevEUI(char* outBuffer, size_t size);
+    bool getAppEUI(char* outBuffer, size_t size);
+    bool getAppKey(char* outBuffer, size_t size);
+    bool getNwkKey(char* outBuffer, size_t size);
+    bool getDevAddr(char* outBuffer, size_t size);
+    bool getAppSKey(char* outBuffer, size_t size);
+    bool getNwkSKey(char* outBuffer, size_t size);
+    int  getNwkID();
+
+    int  getDevNonce();
+    int  getADR(); // 1, 0 o -1
+    LsmDataRate  getDataRate();
+    LsmTxPower  getTxPower();
+    LsmBand  getBand(); 
+    LsmClass getClass(); 
+    int  getDutyCycle();
+    int  getJoin1Delay();
+    int  getJoin2Delay();
+    int  getRx1Delay();
+    int  getRx2Delay();
+    LsmDataRate  getRx2DataRate();
+    long getRx2Frequency();
+    LsmPingSlot  getPingSlot();
+    int  getConfirmRetry();
+    int  getUnconfirmRetry();
+    LsmNetworkType  getNetworkType(); // 0=Public, 1=Private
+
 private:
   LSM1x0A_Controller* _controller = nullptr;
   LsmJoinMode         _joinMode   = LsmJoinMode::OTAA;

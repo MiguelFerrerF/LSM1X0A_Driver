@@ -75,6 +75,37 @@ void loop()
         LsmModuleType type = controller->getDeviceType();
         Serial.printf("Module Type: %s\n", (type == LsmModuleType::LSM100A) ? "LSM100A" : (type == LsmModuleType::LSM110A) ? "LSM110A" : "UNKNOWN");
 
+        // TEST LORAWAN GETTERS
+        Serial.println("\n--- Probando LoRaWAN Getters ---");
+        char pBuf[128];
+        
+        if (controller->lorawan.getDevEUI(pBuf, sizeof(pBuf))) Serial.printf("DevEUI: %s\n", pBuf);
+        if (controller->lorawan.getAppEUI(pBuf, sizeof(pBuf))) Serial.printf("AppEUI: %s\n", pBuf);
+        if (controller->lorawan.getAppKey(pBuf, sizeof(pBuf))) Serial.printf("AppKey: %s\n", pBuf);
+        if (controller->lorawan.getNwkKey(pBuf, sizeof(pBuf))) Serial.printf("NwkKey: %s\n", pBuf);
+        if (controller->lorawan.getDevAddr(pBuf, sizeof(pBuf))) Serial.printf("DevAddr: %s\n", pBuf);
+        if (controller->lorawan.getAppSKey(pBuf, sizeof(pBuf))) Serial.printf("AppSKey: %s\n", pBuf);
+        if (controller->lorawan.getNwkSKey(pBuf, sizeof(pBuf))) Serial.printf("NwkSKey: %s\n", pBuf);
+
+        Serial.printf("NwkID: %d\n", controller->lorawan.getNwkID());
+        Serial.printf("DevNonce: %d\n", controller->lorawan.getDevNonce());
+        Serial.printf("ADR: %d\n", controller->lorawan.getADR());
+        Serial.printf("DataRate: %d\n", (int)controller->lorawan.getDataRate());
+        Serial.printf("TxPower: %d\n", (int)controller->lorawan.getTxPower());
+        Serial.printf("Band: %d\n", (int)controller->lorawan.getBand());
+        Serial.printf("Class: %d\n", (int)controller->lorawan.getClass());
+        Serial.printf("DutyCycle: %d\n", controller->lorawan.getDutyCycle());
+        Serial.printf("Join1Delay: %d\n", controller->lorawan.getJoin1Delay());
+        Serial.printf("Join2Delay: %d\n", controller->lorawan.getJoin2Delay());
+        Serial.printf("Rx1Delay: %d\n", controller->lorawan.getRx1Delay());
+        Serial.printf("Rx2Delay: %d\n", controller->lorawan.getRx2Delay());
+        Serial.printf("Rx2DataRate: %d\n", (int)controller->lorawan.getRx2DataRate());
+        Serial.printf("Rx2Frequency: %ld\n", controller->lorawan.getRx2Frequency());
+        Serial.printf("PingSlot: %d\n", (int)controller->lorawan.getPingSlot());
+        Serial.printf("ConfirmRetry: %d\n", controller->lorawan.getConfirmRetry());
+        Serial.printf("UnconfirmRetry: %d\n", controller->lorawan.getUnconfirmRetry());
+        Serial.printf("NetworkType: %d\n", (int)controller->lorawan.getNetworkType());
+
         // TEST SETTERS
         Serial.println("\n--- Probando Setters ---");
 

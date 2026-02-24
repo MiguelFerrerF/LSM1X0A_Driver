@@ -120,7 +120,8 @@ Tras validar el hardware original, se decidió abandonar la complejidad extrema 
 1. **Memory Leaks Aislados:** Se implementó una prueba rigurosa de inicialización/destrucción dinámica en hardware repetida en `main.cpp`, asegurando 0 bytes de divergencia de Heap logrando un stack FreeRTOS hermético sin fugas.
 2. **Setup Rápido:** Capacidad de instanciar un controller que por debajo autoinicializa la UART y el parser.
 3. **Fase 1 (Terminada):** Implementación testada de comandos Getters (`getBattery`, `getBaudrate`, `getVersion`, `getLocalTime`, `getSigfoxVersion`, `getDeviceType`) y Setters Básicos (`setBaudrate`, `setVerboseLevel`, `setMode`, `startFwUpgrade`, `factoryReset`). Adición de un mecanismo resiliente de *Retry* y *Module Recovery* (Fallbacks de `ATZ` a GPIO Reset).
-4. **Fase 2 (En progreso):** Implementación de la capa LoRaWAN nativa (ej: `setDevEUI()`, `setClass()`). Estas envuelven formateos en buferes transparentes listos para `sendCommand()`.
+4. **Fase 2 (En progreso):** Implementación de la capa LoRaWAN nativa (ej: `setDevEUI()`, `setClass()`). Estas envuelven formateos en buferes transparentes listos para `sendCommand()`. 
+   - *Nota:* Para evitar archivos kilométricos («God Objects»), la implementación de `LSM1x0A_LoRaWAN` se dividió en `LSM1x0A_LoRaWAN_Setters.cpp` y `LSM1x0A_LoRaWAN_Getters.cpp`.
 
 ---
 
