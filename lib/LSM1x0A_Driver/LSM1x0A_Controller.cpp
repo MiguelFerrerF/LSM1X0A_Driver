@@ -6,8 +6,11 @@ LSM1x0A_Controller::LSM1x0A_Controller() : lorawan(this)
   _driver      = new UartDriver();
   _parser      = new LSM1x0A_AtParser();
   _initialized = false;
+  _isJoined    = false;
   _resetPin    = LSM1X0A_RESET_PIN;
   _maxRetries  = DEFAULT_MAX_RETRIES;
+
+  _syncEventGroup = xEventGroupCreate();
 }
 
 LSM1x0A_Controller::~LSM1x0A_Controller()
@@ -16,6 +19,10 @@ LSM1x0A_Controller::~LSM1x0A_Controller()
   if (_parser) {
     delete _parser;
     _parser = nullptr;
+  }
+  if (_syncEventGroup) {
+    vEventGroupDelete(_syncEventGroup);
+    _syncEventGroup = nullptr;
   }
   if (_driver) {
     delete _driver;
@@ -32,9 +39,13 @@ bool LSM1x0A_Controller::begin(AtEventCallback callback, void* ctx)
     return false;
   }
 
+  _userCallback = callback;
+  _userCtx      = ctx;
+
   // Inicializamos el parser pasándole el UartDriver que construimos.
   // El parser internamente llama a _driver->init()
-  if (!_parser->init(_driver, callback, ctx)) {
+  // Pasamos internalEventCallback como callback, y apuntamos ctx a 'this'
+  if (!_parser->init(_driver, internalEventCallback, this)) {
     return false;
   }
 
@@ -241,6 +252,7 @@ bool LSM1x0A_Controller::setMode(LsmMode mode)
 // ------------------------------------------------------------------
 // CONFIGURATION GETTERS
 // ------------------------------------------------------------------
+
 LsmModuleType LSM1x0A_Controller::getDeviceType() const
 {
   if (!_initialized || !_parser)
@@ -302,9 +314,78 @@ bool LSM1x0A_Controller::recoverModule()
     for (int i = 0; i < _maxRetries; i++) {
       if (hardwareReset())
         return true;
-      delay(500);
     }
   }
 
   return false;
 }
+
+// =========================================================================
+// ESTADO Y SINCRONIZACIÓN NATIVA
+// =========================================================================
+
+bool LSM1x0A_Controller::isJoined() const
+{
+  return _isJoined;
+}
+
+uint32_t LSM1x0A_Controller::waitForEvent(uint32_t bitsToWaitFor, uint32_t timeoutMs, bool clearOnExit)
+{
+  if (!_syncEventGroup) return 0;
+  return xEventGroupWaitBits(_syncEventGroup, bitsToWaitFor, clearOnExit ? pdTRUE : pdFALSE, pdFALSE, pdMS_TO_TICKS(timeoutMs));
+}
+
+void LSM1x0A_Controller::clearEvents(uint32_t bitsToClear)
+{
+  if (!_syncEventGroup) return;
+  xEventGroupClearBits(_syncEventGroup, bitsToClear);
+}
+
+// =========================================================================
+// INTERCEPTOR DE EVENTOS ASÍNCRONOS
+// =========================================================================
+
+void LSM1x0A_Controller::internalEventCallback(const char* type, const char* payload, void* ctx)
+{
+  if (!ctx) return;
+  LSM1x0A_Controller* self = static_cast<LSM1x0A_Controller*>(ctx);
+  self->handleEvent(type, payload);
+}
+
+void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
+{
+  // 1. Interceptar para cambiar el estado interno y liberar semáforos
+  if (strcmp(type, LsmEvent::JOIN) == 0) {
+    if (strstr(payload, "SUCCESS") || strstr(payload, "Network joined")) {
+      _isJoined = true;
+      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_SUCCESS);
+    } 
+    else if (strstr(payload, "FAILED") || strstr(payload, "Join failed")) {
+      _isJoined = false;
+      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_FAIL);
+    }
+  }
+  else if (strcmp(type, LsmEvent::TX) == 0) {
+    if (strstr(payload, "SUCCESS")) {
+      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
+    }
+    else if (strstr(payload, "FAILED") || strstr(payload, "TIMEOUT")) {
+      if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_FAIL);
+    }
+  }
+  else if (strcmp(type, LsmEvent::RX_DATA) == 0) {
+    if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_DATA);
+  }
+  else if (strcmp(type, LsmEvent::RX_META) == 0) {
+    if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
+  } 
+  else if (strcmp(type, LsmEvent::RX_TIMEOUT) == 0) {
+    if (_syncEventGroup) xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_TIMEOUT);
+  }
+
+  // 2. Pasar el evento hacia arriba al callback del usuario
+  if (_userCallback) {
+    _userCallback(type, payload, _userCtx);
+  }
+}
+

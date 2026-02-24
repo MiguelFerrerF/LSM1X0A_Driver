@@ -195,6 +195,12 @@ void LSM1x0A_AtParser::processLine(char* line)
   else if (strstr(line, "LSM110A") != nullptr)
     _deviceType = LsmModuleType::LSM110A;
 
+  // Interceptar MAC rxTimeOut explícitamente sin fallar el pendingCommand
+  if (strstr(line, "MAC rxTimeOut") != nullptr) {
+    if (_eventCallback)
+      _eventCallback(LsmEvent::RX_TIMEOUT, "TIMEOUT", _eventCtx);
+  }
+
   if (_pendingCommand) {
     AtError err = parseErrorString(line);
 

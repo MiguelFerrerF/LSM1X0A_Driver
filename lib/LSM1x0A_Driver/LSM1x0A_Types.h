@@ -189,10 +189,11 @@ namespace LsmEvent
 {
 const char JOIN[]    = "JOIN";
 const char TX[]      = "TX";
-const char RX_DATA[] = "RX_DATA"; // El payload útil (Hex)
-const char RX_META[] = "RX_META"; // Metadatos (RSSI, SNR, DR)
-const char CLASS[]   = "CLASS";   // Cambio de Clase A/B/C
-const char BEACON[]  = "BEACON";  // Info de Beacon
+const char RX_DATA[]    = "RX_DATA";    // El payload útil (Hex)
+const char RX_META[]    = "RX_META";    // Metadatos (RSSI, SNR, DR)
+const char RX_TIMEOUT[] = "RX_TIMEOUT"; // Timeout explícito de la ventana de recepción
+const char CLASS[]      = "CLASS";      // Cambio de Clase A/B/C
+const char BEACON[]     = "BEACON";     // Info de Beacon
 const char NVM[]     = "NVM";     // Guardado en Flash interna
 const char INFO[]    = "INFO";    // Otros
 const char LOG[]     = "LOG";     // Mensajes de Log

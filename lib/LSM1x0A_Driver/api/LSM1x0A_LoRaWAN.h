@@ -46,12 +46,15 @@ public:
   bool setNetworkType(LsmNetworkType type);
   bool setConfirmRetry(int retries);
   bool setUnconfirmRetry(int retries);
-  bool setChannelMask(LsmBand band, int subBand);
+  bool setChannelMask(LsmBand band, int subBand = -1);
   bool setDevNonce(int nonce);
   bool resetDevNonce();
 
-  // 3. Modos Operacionales (LoRaWAN)
+  // 3. Modos Operacionales y Red (LoRaWAN)
   bool setJoinMode(LsmJoinMode mode);
+  bool join(bool isOTAA, uint32_t timeoutMs = 60000);
+  bool sendData(uint8_t port, const char* data, bool confirmed = false, uint32_t timeoutMs = 0);
+  bool requestLinkCheck();
 
   // 4. Modo de Pruebas y Certificación (RF Test)
   bool setRfTestConfig(long freqHz, int power, int bw, int sf_dr, int cr, int lna);
@@ -80,7 +83,7 @@ public:
   int  getNwkID();
 
   int            getDevNonce();
-  int            getADR(); // 1, 0 o -1
+  int            getADR();
   LsmDataRate    getDataRate();
   LsmTxPower     getTxPower();
   LsmBand        getBand();
@@ -95,7 +98,7 @@ public:
   LsmPingSlot    getPingSlot();
   int            getConfirmRetry();
   int            getUnconfirmRetry();
-  LsmNetworkType getNetworkType(); // 0=Public, 1=Private
+  LsmNetworkType getNetworkType();
 
 private:
   LSM1x0A_Controller* _controller = nullptr;

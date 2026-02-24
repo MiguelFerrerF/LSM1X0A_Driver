@@ -6,6 +6,16 @@
 #include "api/LSM1x0A_LoRaWAN.h"
 #include <Arduino.h>
 #include <time.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+
+// Definición de bits para el EventGroup interno de sincronización
+#define LSM_EVT_JOIN_SUCCESS (1 << 0)
+#define LSM_EVT_JOIN_FAIL    (1 << 1)
+#define LSM_EVT_TX_SUCCESS   (1 << 2)
+#define LSM_EVT_TX_FAIL      (1 << 3)
+#define LSM_EVT_RX_DATA      (1 << 4)
+#define LSM_EVT_RX_TIMEOUT   (1 << 5)
 
 /**
  * @class LSM1x0A_Controller
@@ -157,6 +167,30 @@ public:
   void setMaxRetries(int retries);
 
   // =========================================================================
+  // ESTADO Y SINCRONIZACIÓN NATIVA
+  // =========================================================================
+
+  /**
+   * @brief Indica si el módulo está actualmente unido a la red (JOINED).
+   */
+  bool isJoined() const;
+
+  /**
+   * @brief Espera de forma síncrona/bloqueante a que ocurra un evento asíncrono.
+   * Útil para envolver comandos como Join o Send.
+   * @param bitsToWaitFor Máscara de bits (ej. LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL)
+   * @param timeoutMs Tiempo de espera máximo
+   * @param clearOnExit Si debe limpiar los bits al salir
+   * @return Los bits que desencadenaron la salida, o 0 si fue timeout.
+   */
+  uint32_t waitForEvent(uint32_t bitsToWaitFor, uint32_t timeoutMs, bool clearOnExit = true);
+
+  /**
+   * @brief Limpia los bits del EventGroup interno manualmente.
+   */
+  void clearEvents(uint32_t bitsToClear);
+
+  // =========================================================================
   // GETTERS
   // =========================================================================
 
@@ -206,9 +240,21 @@ private:
   UartDriver*       _driver;
   LSM1x0A_AtParser* _parser;
   bool              _initialized;
+  bool              _isJoined; 
 
   int _resetPin;
   int _maxRetries;
+
+  // Sincronización asíncrona
+  EventGroupHandle_t _syncEventGroup;
+
+  // Callback del usuario
+  AtEventCallback _userCallback;
+  void*           _userCtx;
+
+  // Interceptor
+  static void internalEventCallback(const char* type, const char* payload, void* ctx);
+  void handleEvent(const char* type, const char* payload);
 };
 
 #endif // LSM1X0A_CONTROLLER_H

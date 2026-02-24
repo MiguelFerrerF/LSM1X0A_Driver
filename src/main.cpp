@@ -26,25 +26,23 @@ void loop()
   uint32_t heapBefore = ESP.getFreeHeap();
   Serial.printf("[MEM] Heap antes de instanciar: %lu bytes\n", heapBefore);
 
-  {
-    Serial.println("[APP] Creando controlador...");
-    LSM1x0A_Controller* controller = new LSM1x0A_Controller();
+  Serial.println("[APP] Creando controlador...");
+  LSM1x0A_Controller* controller = new LSM1x0A_Controller();
 
-    Serial.println("[APP] Inicializando controlador...");
-    // Intentar init
-    if (controller->begin(verboseEventCallback, nullptr)) {
-      Serial.println("[APP] Controlador inicializado OK. Probando WakeUp...");
+  Serial.println("[APP] Inicializando controlador...");
+  // Intentar init
+  if (controller->begin(verboseEventCallback, nullptr)) {
+    Serial.println("[APP] Controlador inicializado OK. Probando WakeUp...");
 
+    for (int i = 0; i < 5; i++) {
       if (controller->wakeUp()) {
         Serial.println("[APP] WakeUp OK.");
 
         // Set module to LoRaWAN mode for testing
-        if (controller->setMode(LsmMode::LORAWAN)) {
+        if (controller->setMode(LsmMode::LORAWAN))
           Serial.println("[APP] Modo LoRaWAN configurado OK.");
-        }
-        else {
+        else
           Serial.println("[APP] Error al configurar modo LoRaWAN.");
-        }
 
         // TEST GETTERS
         Serial.println("\n--- Probando Getters ---");
@@ -56,21 +54,17 @@ void loop()
         Serial.printf("Baudrate Actual: %d\n", baud);
 
         char versionBuf[64];
-        if (controller->getVersion(versionBuf, sizeof(versionBuf))) {
+        if (controller->getVersion(versionBuf, sizeof(versionBuf)))
           Serial.printf("Version: %s\n", versionBuf);
-        }
-        else {
+        else
           Serial.println("Version: Error al obtener");
-        }
 
         struct tm timeinfo;
-        if (controller->getLocalTime(&timeinfo)) {
+        if (controller->getLocalTime(&timeinfo))
           Serial.printf("Local Time: %02d:%02d:%02d %02d/%02d/%04d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday,
                         timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
-        }
-        else {
+        else
           Serial.println("Local Time: No disponible / Error");
-        }
 
         LsmModuleType type = controller->getDeviceType();
         Serial.printf("Module Type: %s\n", (type == LsmModuleType::LSM100A) ? "LSM100A" : (type == LsmModuleType::LSM110A) ? "LSM110A" : "UNKNOWN");
@@ -112,6 +106,7 @@ void loop()
         Serial.printf("ConfirmRetry: %d\n", controller->lorawan.getConfirmRetry());
         Serial.printf("UnconfirmRetry: %d\n", controller->lorawan.getUnconfirmRetry());
         Serial.printf("NetworkType: %d\n", (int)controller->lorawan.getNetworkType());
+        Serial.printf("DevNonce: %d\n", controller->lorawan.getDevNonce());
 
         // TEST SETTERS
         Serial.println("\n--- Probando Setters ---");
@@ -119,29 +114,29 @@ void loop()
         bool ok = controller->setVerboseLevel(2);
         Serial.printf("Set Verbose: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setDevEUI("0102030405060708");
-        Serial.printf("Set DevEUI: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setDevEUI("0102030405060708");
+        // Serial.printf("Set DevEUI: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setAppEUI("A1B2C3D4E5F67890");
-        Serial.printf("Set AppEUI: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setAppEUI("A1B2C3D4E5F67890");
+        // Serial.printf("Set AppEUI: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setAppKey("0102030405060708090A0B0C0D0E0F10");
-        Serial.printf("Set AppKey: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setAppKey("0102030405060708090A0B0C0D0E0F10");
+        // Serial.printf("Set AppKey: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setNwkKey("00112233445566778899AABBCCDDEEFF");
-        Serial.printf("Set NwkKey: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setNwkKey("0102030405060708090A0B0C0D0E0F10");
+        // Serial.printf("Set NwkKey: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setDevAddr("26011BDA");
-        Serial.printf("Set DevAddr: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setDevAddr("26011BDA");
+        // Serial.printf("Set DevAddr: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setAppSKey("FFEEDDCCBBAA99887766554433221100");
-        Serial.printf("Set AppSKey: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setAppSKey("0102030405060708090A0B0C0D0E0F10");
+        // Serial.printf("Set AppSKey: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setNwkSKey("1234567890ABCDEF1234567890ABCDEF");
-        Serial.printf("Set NwkSKey: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setNwkSKey("0102030405060708090A0B0C0D0E0F10");
+        // Serial.printf("Set NwkSKey: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setNwkID(5);
-        Serial.printf("Set NwkID: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setNwkID(5);
+        // Serial.printf("Set NwkID: %s\n", ok ? "OK" : "ERROR");
 
         ok = controller->lorawan.setBand(LsmBand::EU868);
         Serial.printf("Set Band: %s\n", ok ? "OK" : "ERROR");
@@ -149,41 +144,41 @@ void loop()
         ok = controller->lorawan.setClass(LsmClass::CLASS_A);
         Serial.printf("Set Class: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setChannelMask(LsmBand::EU868, 0);
+        ok = controller->lorawan.setChannelMask(LsmBand::EU868);
         Serial.printf("Set Channel Mask SubBand 0: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setADR(false);
+        ok = controller->lorawan.setADR(true);
         Serial.printf("Set ADR: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setDataRate(LsmDataRate::DR_3);
-        Serial.printf("Set DataRate: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setDataRate(LsmDataRate::DR_3);
+        // Serial.printf("Set DataRate: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setDutyCycle(true);
-        Serial.printf("Set Duty Cycle: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setDutyCycle(true);
+        // Serial.printf("Set Duty Cycle: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setRx1Delay(1000);
-        Serial.printf("Set Rx1 Delay: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setRx1Delay(1000);
+        // Serial.printf("Set Rx1 Delay: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setRx2Delay(2000);
-        Serial.printf("Set Rx2 Delay: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setRx2Delay(2000);
+        // Serial.printf("Set Rx2 Delay: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setRx2DataRate(LsmDataRate::DR_2);
-        Serial.printf("Set Rx2 DataRate: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setRx2DataRate(LsmDataRate::DR_2);
+        // Serial.printf("Set Rx2 DataRate: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setRx2Frequency(869525000);
-        Serial.printf("Set Rx2 Frequency: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setRx2Frequency(869525000);
+        // Serial.printf("Set Rx2 Frequency: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setJoin1Delay(500);
-        Serial.printf("Set Join1 Delay: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setJoin1Delay(500);
+        // Serial.printf("Set Join1 Delay: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setJoin2Delay(1000);
-        Serial.printf("Set Join2 Delay: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setJoin2Delay(1000);
+        // Serial.printf("Set Join2 Delay: %s\n", ok ? "OK" : "ERROR");
 
         ok = controller->lorawan.setTxPower(LsmTxPower::TP_MAX);
         Serial.printf("Set TxPower: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setPingSlot(LsmPingSlot::EVERY_4_SEC);
-        Serial.printf("Set PingSlot: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setPingSlot(LsmPingSlot::EVERY_4_SEC);
+        // Serial.printf("Set PingSlot: %s\n", ok ? "OK" : "ERROR");
 
         ok = controller->lorawan.setNetworkType(LsmNetworkType::PUBLIC);
         Serial.printf("Set NetworkType: %s\n", ok ? "OK" : "ERROR");
@@ -194,8 +189,48 @@ void loop()
         ok = controller->lorawan.setUnconfirmRetry(5);
         Serial.printf("Set UnconfirmRetry: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setDevNonce(42);
-        Serial.printf("Set DevNonce: %s\n", ok ? "OK" : "ERROR");
+        // ok = controller->lorawan.setDevNonce(42);
+        // Serial.printf("Set DevNonce: %s\n", ok ? "OK" : "ERROR");
+
+        // TEST LORAWAN OPERATIONS (ASYNCHRONOUS SIMULATED AS SYNCHRONOUS)
+        Serial.println("\n--- Probando LoRaWAN Operations ---");
+
+        Serial.println("[TEST] Ejecutando Join (OTAA) con rcon un máximo de 5 intentos...");
+        for (int i = 1; i <= 5; i++) {
+          Serial.printf("-> Intento de Join %d/5...\n", i);
+          ok = controller->lorawan.join(true);
+          if (ok) {
+            Serial.println("-> Join (OTAA): EXITOSO");
+            delay(500);
+            break;
+          }
+          else {
+            Serial.println("-> Join (OTAA): FALLO o TIMEOUT");
+            if (i < 5)
+              delay(5000); // Esperar 5s antes de reintentar
+          }
+        }
+
+        if (controller->isJoined()) {
+          Serial.println("[TEST] Ejecutando Send Data (Con Confirmacion) en Puerto 2...");
+          ok = controller->lorawan.sendData(2, "01020304AA", true);
+          Serial.printf("-> Send Data (Confirmado): %s\n", ok ? "EXITOSO" : "FALLO o TIMEOUT");
+
+          // Serial.println("[TEST] Solicitando LinkCheck para el proximo uplink...");
+          // ok = controller->lorawan.requestLinkCheck();
+          // Serial.printf("-> Request LinkCheck: %s\n", ok ? "OK" : "ERROR (Not Joined o Busy)");
+
+          Serial.println("[TEST] Ejecutando Send Data (Sin Confirmacion) en Puerto 3 (5 Mensajes)...");
+          for (int i = 1; i <= 5; i++) {
+            Serial.printf("\n-> Enviando Mensaje Unconfirmed %d/5...\n", i);
+            ok = controller->lorawan.sendData(3, "BBCCDDEE", false);
+            Serial.printf("-> Resultado: %s\n", ok ? "EXITOSO" : "FALLO o TIMEOUT");
+            delay(3000); // Pequeña pausa entre envíos
+          }
+        }
+        else {
+          Serial.println("[TEST] Ignorando Send Data porque el Join ha fallado.");
+        }
 
         // TEST RESETS
         Serial.println("\n--- Probando Resets ---");
@@ -211,19 +246,27 @@ void loop()
         Serial.printf("\n[TEST] Ejecutando Hardware Reset en GPIO %d...\n", testResetPin);
         bool hrOK = controller->hardwareReset();
         Serial.printf("-> Hardware Reset: %s\n", hrOK ? "EXITOSO (Boot Alert Recibido)" : "FALLO");
+
+        break;
       }
       else {
         Serial.println("[APP] WakeUp falló.");
+        if (controller->recoverModule()) {
+          Serial.println("[APP] Recover OK.");
+          break;
+        }
+        else
+          Serial.println("[APP] Recover falló.");
       }
     }
-    else {
-      Serial.println("[APP] Error inicializando el controlador.");
-    }
-
-    Serial.println("[APP] Destruyendo controlador...");
-    delete controller;
-    Serial.println("[APP] Controlador destruido.");
   }
+  else {
+    Serial.println("[APP] Error inicializando el controlador.");
+  }
+
+  Serial.println("[APP] Destruyendo controlador...");
+  delete controller;
+  Serial.println("[APP] Controlador destruido.");
 
   // Imprimir free heap después
   uint32_t heapAfter = ESP.getFreeHeap();
