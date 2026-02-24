@@ -216,9 +216,9 @@ void loop()
           ok = controller->lorawan.sendData(2, "01020304AA", true);
           Serial.printf("-> Send Data (Confirmado): %s\n", ok ? "EXITOSO" : "FALLO o TIMEOUT");
 
-          // Serial.println("[TEST] Solicitando LinkCheck para el proximo uplink...");
-          // ok = controller->lorawan.requestLinkCheck();
-          // Serial.printf("-> Request LinkCheck: %s\n", ok ? "OK" : "ERROR (Not Joined o Busy)");
+          Serial.println("[TEST] Solicitando LinkCheck para el proximo uplink...");
+          ok = controller->lorawan.requestLinkCheck();
+          Serial.printf("-> Request LinkCheck: %s\n", ok ? "OK" : "ERROR (Not Joined o Busy)");
 
           Serial.println("[TEST] Ejecutando Send Data (Sin Confirmacion) en Puerto 3 (5 Mensajes)...");
           for (int i = 1; i <= 5; i++) {
