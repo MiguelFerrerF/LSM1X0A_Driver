@@ -198,7 +198,7 @@ void loop()
         Serial.println("[TEST] Ejecutando Join (OTAA) con rcon un máximo de 5 intentos...");
         for (int i = 1; i <= 5; i++) {
           Serial.printf("-> Intento de Join %d/5...\n", i);
-          ok = controller->lorawan.join(true);
+          ok = controller->lorawan.join(LsmJoinMode::OTAA);
           if (ok) {
             Serial.println("-> Join (OTAA): EXITOSO");
             delay(500);
@@ -211,7 +211,7 @@ void loop()
           }
         }
 
-        if (controller->isJoined()) {
+        if (controller->lorawan.isJoined()) {
           Serial.println("[TEST] Ejecutando Send Data (Con Confirmacion) en Puerto 2...");
           ok = controller->lorawan.sendData(2, "01020304AA", true);
           Serial.printf("-> Send Data (Confirmado): %s\n", ok ? "EXITOSO" : "FALLO o TIMEOUT");

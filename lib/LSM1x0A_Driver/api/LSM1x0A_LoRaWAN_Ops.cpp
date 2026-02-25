@@ -1,18 +1,17 @@
 #include "../LSM1x0A_Controller.h"
 #include "LSM1x0A_LoRaWAN.h"
-#include <Arduino.h>
 
 // =========================================================================
 // OPERACIONES DE RED LORAWAN (JOIN, SEND, LINKCHECK)
 // =========================================================================
 
-bool LSM1x0A_LoRaWAN::join(bool isOTAA, uint32_t timeoutMs)
+bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
 {
   if (!_controller)
     return false;
 
   char cmd[16];
-  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN, isOTAA ? 1 : 0);
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN, joinMode);
 
   // Limpiamos banderas anteriores
   _controller->clearEvents(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL);
@@ -39,7 +38,7 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
 {
   if (!_controller)
     return false;
-  if (!_controller->isJoined())
+  if (!isJoined())
     return false;
   if (port < 1 || port > 223)
     return false;
@@ -133,10 +132,32 @@ bool LSM1x0A_LoRaWAN::requestLinkCheck()
 {
   if (!_controller)
     return false;
-  if (!_controller->isJoined())
+  if (!isJoined())
     return false;
 
   // AT+LINKC no genera evento inmediato, sólo agenda el request para el próximo Uplink
   AtError err = _controller->sendCommand(LsmAtCommand::LINK_CHECK, 2000, 1);
   return (err == AtError::OK);
+}
+
+bool LSM1x0A_LoRaWAN::isJoined() const
+{
+  return _isJoined;
+}
+
+void LSM1x0A_LoRaWAN::setJoined(bool joined)
+{
+  _isJoined = joined;
+}
+
+bool LSM1x0A_LoRaWAN::recoverConnection(int maxRetries)
+{
+  for (int i = 0; i < maxRetries; i++) {
+    // Aquí asumimos OTAA por defecto, aunque en un futuro se podría cachear el modo
+    if (join(_joinMode)) {
+      return true;
+    }
+    delay(2000); // Pausa entre intentos
+  }
+  return false;
 }

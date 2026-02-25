@@ -52,7 +52,7 @@ public:
 
   // 3. Modos Operacionales y Red (LoRaWAN)
   bool setJoinMode(LsmJoinMode mode);
-  bool join(bool isOTAA, uint32_t timeoutMs = 60000);
+  bool join(LsmJoinMode joinMode, uint32_t timeoutMs = 60000);
   bool sendData(uint8_t port, const char* data, bool confirmed = false, uint32_t timeoutMs = 0);
   bool requestLinkCheck();
 
@@ -100,18 +100,39 @@ public:
   int            getUnconfirmRetry();
   LsmNetworkType getNetworkType();
 
-  /**
-   * @brief Limpia la caché local de configuraciones volátiles/recuperables
-   */
+// 6. Gestión de Estado y Recuperación
+  bool restoreConfig();
+  bool loadConfigFromModule();
   void clearCache();
+
+  // 7. Estado de Conexión y Recuperación
+  bool isJoined() const;
+  void setJoined(bool joined);
+  bool recoverConnection(int maxRetries);
 
 private:
   LSM1x0A_Controller* _controller = nullptr;
   LsmJoinMode         _joinMode   = LsmJoinMode::OTAA;
-  
+  bool                _isJoined   = false;
+
   // Caché de reintentos para no bombardear al módulo en cada envío asíncrono
-  int _cachedConfirmRetry   = -1;
-  int _cachedUnconfirmRetry = -1;
+  char        _cachedDevEui[24]     = {0};
+  char        _cachedDevAddr[12]    = {0};
+  char        _cachedNwkID[12]      = {0};
+  int8_t      _cachedAdrEnabled     = -1;
+  LsmDataRate _cachedDataRate       = LsmDataRate::DR_UNKNOWN;
+  LsmTxPower  _cachedTxPower        = LsmTxPower::TP_UNKNOWN;
+  LsmBand     _cachedBand           = LsmBand::BAND_UNKNOWN;
+  int8_t      _cachedSubBand        = -1;
+  int8_t      _cachedDutyCycle      = -1;
+  int32_t     _cachedJoin1Delay     = -1;
+  int32_t     _cachedJoin2Delay     = -1;
+  int32_t     _cachedRx1Delay       = -1;
+  int32_t     _cachedRx2Delay       = -1;
+  LsmDataRate _cachedRx2DataRate    = LsmDataRate::DR_UNKNOWN;
+  long        _cachedRx2Frequency   = -1;
+  int         _cachedConfirmRetry   = -1;
+  int         _cachedUnconfirmRetry = -1;
 };
 
 #endif // LSM1X0A_LORAWAN_H

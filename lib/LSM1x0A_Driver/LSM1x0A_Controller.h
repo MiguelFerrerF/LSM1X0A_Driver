@@ -129,6 +129,13 @@ public:
    */
   bool recoverModule();
 
+  /**
+   * @brief Sincroniza la caché RAM interna leyendo los parámetros clave operativos del firmware del módulo.
+   * Útil tras arrancar por primera vez para alinear el estado del hardware con la rutina software.
+   * @return true si tuvo éxito comunicándose con el módulo.
+   */
+  bool syncConfigToCache();
+
   // =========================================================================
   // SETTERS
   // =========================================================================
@@ -169,11 +176,6 @@ public:
   // =========================================================================
   // ESTADO Y SINCRONIZACIÓN NATIVA
   // =========================================================================
-
-  /**
-   * @brief Indica si el módulo está actualmente unido a la red (JOINED).
-   */
-  bool isJoined() const;
 
   /**
    * @brief Espera de forma síncrona/bloqueante a que ocurra un evento asíncrono.
@@ -260,7 +262,7 @@ private:
   UartDriver*       _driver      = nullptr;
   LSM1x0A_AtParser* _parser      = nullptr;
   bool              _initialized = false;
-  bool              _isJoined    = false;
+  LsmMode           _currentMode = LsmMode::LORAWAN;
 
   int _resetPin   = LSM1X0A_RESET_PIN;
   int _maxRetries = DEFAULT_MAX_RETRIES;
@@ -281,6 +283,26 @@ private:
   // Interceptor
   static void internalEventCallback(const char* type, const char* payload, void* ctx);
   void        handleEvent(const char* type, const char* payload);
+
+  // =========================================================================
+  // MÉTODOS DE RECUPERACIÓN DE CONFIGURACIÓN Y ESTADO
+  // =========================================================================
+
+  /**
+   * @brief  Recupera la configuración del módulo después de un reinicio inesperado, re-aplicando los parámetros guardados.
+   * Esto es útil para mantener la consistencia del estado del módulo incluso si se pierde la comunicación o el módulo se reinicia por sí solo.
+   * @return true si logró recuperar la configuración (ej. re-aplicar parámetros clave como DevEUI, AppKey, Band, Class, etc.) y el módulo respondió a
+   * los comandos de configuración, false si no pudo recuperarla (ej. no respondió a los comandos de configuración o hubo un error crítico).
+   */
+  bool recoverModuleConfig();
+
+  /**
+   * @brief Recupera el estado operativo del módulo después de un reinicio inesperado, re-ejecutando acciones como Join si el módulo estaba unido
+   * antes del reinicio.
+   *  @return true si logró recuperar el estado operativo (ej. volver a unirlo si estaba unido antes), false si no pudo recuperarlo (ej. no respondió
+   * a los comandos de configuración o no se pudo unir de nuevo).
+   */
+  bool recoverModuleState();
 };
 
 #endif // LSM1X0A_CONTROLLER_H

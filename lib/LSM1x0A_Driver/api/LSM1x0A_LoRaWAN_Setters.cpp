@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 // Helper auxiliar local para formatear cadenas hexadecimales añadiendo delimitadores (:)
 static bool formatHexWithColons(const char* in, char* out, size_t outSize, size_t expectedBytes)
 {
@@ -38,12 +37,6 @@ LSM1x0A_LoRaWAN::LSM1x0A_LoRaWAN(LSM1x0A_Controller* controller) : _controller(c
 {
 }
 
-void LSM1x0A_LoRaWAN::clearCache()
-{
-  _cachedConfirmRetry   = -1;
-  _cachedUnconfirmRetry = -1;
-}
-
 bool LSM1x0A_LoRaWAN::setDevEUI(const char* devEui)
 {
   if (!devEui || strlen(devEui) < 16)
@@ -54,7 +47,11 @@ bool LSM1x0A_LoRaWAN::setDevEUI(const char* devEui)
 
   char cmd[64];
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::DEV_EUI, formatted);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    strncpy(_cachedDevEui, formatted, sizeof(_cachedDevEui));
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setAppEUI(const char* appEui)
@@ -106,7 +103,11 @@ bool LSM1x0A_LoRaWAN::setDevAddr(const char* devAddr)
 
   char cmd[64];
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::DEV_ADDR, formatted);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    strncpy(_cachedDevAddr, formatted, sizeof(_cachedDevAddr));
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setAppSKey(const char* appSKey)
@@ -141,7 +142,11 @@ bool LSM1x0A_LoRaWAN::setNwkID(int nwkId)
     return false;
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::NWK_ID, nwkId);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    snprintf(_cachedNwkID, sizeof(_cachedNwkID), "%d", nwkId);
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setJoinMode(LsmJoinMode mode)
@@ -154,7 +159,11 @@ bool LSM1x0A_LoRaWAN::setBand(LsmBand band)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::BAND, (int)band);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedBand = band;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setClass(LsmClass lorawanClass)
@@ -168,21 +177,33 @@ bool LSM1x0A_LoRaWAN::setADR(bool enabled)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::ADAPTIVE_DR, enabled ? 1 : 0);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedAdrEnabled = enabled;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setDataRate(LsmDataRate dr)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::DR, (int)dr);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedDataRate = dr;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setDutyCycle(bool enabled)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::DUTY_CYCLE, enabled ? 1 : 0);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedDutyCycle = enabled;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setRx1Delay(int delayMs)
@@ -417,4 +438,114 @@ bool LSM1x0A_LoRaWAN::receiveP2pData(int timeoutMs)
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::P2P_RECV, timeoutMs);
   return _controller->sendCommand(cmd, timeoutMs + 1000) == AtError::OK;
+}
+
+bool LSM1x0A_LoRaWAN::restoreConfig()
+{
+  bool success = true;
+
+  // Restaurar identificadores si estaban en caché
+  if (_cachedDevEui[0] != '\0') 
+    if (!setDevEUI(_cachedDevEui)) success = false;
+  if (_cachedDevAddr[0] != '\0') 
+    if (!setDevAddr(_cachedDevAddr)) success = false;
+  if (_cachedNwkID[0] != '\0') 
+    if (!setNwkID((int)strtol(_cachedNwkID, NULL, 16))) success = false;
+
+  // Restaurar Band y SubBand si es posible
+  if (_cachedBand != LsmBand::BAND_UNKNOWN) {
+    if (!setBand(_cachedBand)) success = false;
+    if (_cachedSubBand != (int8_t)-1 && _cachedBand == LsmBand::US915) 
+      if (!setChannelMask(_cachedBand, _cachedSubBand)) success = false;
+  }
+
+  // Restaurar configuraciones de red
+  if (_cachedAdrEnabled != -1) 
+    if (!setADR(_cachedAdrEnabled == 1)) success = false;
+  if (_cachedDataRate != LsmDataRate::DR_UNKNOWN) 
+    if (!setDataRate(_cachedDataRate)) success = false;
+  if (_cachedTxPower != LsmTxPower::TP_UNKNOWN) 
+    if (!setTxPower(_cachedTxPower)) success = false;
+  if (_cachedDutyCycle != -1) 
+    if (!setDutyCycle(_cachedDutyCycle == 1)) success = false;
+
+  // Restaurar delays
+  if (_cachedJoin1Delay != -1) 
+    if (!setJoin1Delay(_cachedJoin1Delay)) success = false;
+  if (_cachedJoin2Delay != -1) 
+    if (!setJoin2Delay(_cachedJoin2Delay)) success = false;
+  if (_cachedRx1Delay != -1) 
+    if (!setRx1Delay(_cachedRx1Delay)) success = false;
+  if (_cachedRx2Delay != -1) 
+    if (!setRx2Delay(_cachedRx2Delay)) success = false;
+
+  // Restaurar frecuencias / data rates de RX2
+  if (_cachedRx2DataRate != LsmDataRate::DR_UNKNOWN) 
+    if (!setRx2DataRate(_cachedRx2DataRate)) success = false;
+  if (_cachedRx2Frequency > 0) 
+    if (!setRx2Frequency(_cachedRx2Frequency)) success = false;
+
+  // Restaurar reintentos
+  if (_cachedConfirmRetry >= 0) 
+    if (!setConfirmRetry(_cachedConfirmRetry)) success = false;
+  if (_cachedUnconfirmRetry >= 0) 
+    if (!setUnconfirmRetry(_cachedUnconfirmRetry)) success = false;
+
+  return success;
+}
+
+bool LSM1x0A_LoRaWAN::loadConfigFromModule()
+{
+  bool success = true;
+
+  // Llama a los getters internos para forzar que sus valores se sobreescriban en la caché actual
+  if (!getDevEUI(_cachedDevEui, sizeof(_cachedDevEui))) success = false;
+  if (!getDevAddr(_cachedDevAddr, sizeof(_cachedDevAddr))) success = false;
+  
+  int nwkId = getNwkID();
+  if (nwkId >= 0) {
+    snprintf(_cachedNwkID, sizeof(_cachedNwkID), "%08X", (unsigned int)nwkId);
+  } else {
+    success = false;
+  }
+
+  if (getADR() < 0) success = false;
+  if (getDataRate() == LsmDataRate::DR_UNKNOWN) success = false;
+  if (getTxPower() == LsmTxPower::TP_UNKNOWN) success = false;
+  if (getBand() == LsmBand::BAND_UNKNOWN) success = false;
+  if (getDutyCycle() < 0) success = false;
+  
+  if (getJoin1Delay() < 0) success = false;
+  if (getJoin2Delay() < 0) success = false;
+  if (getRx1Delay() < 0) success = false;
+  if (getRx2Delay() < 0) success = false;
+  
+  if (getRx2DataRate() == LsmDataRate::DR_UNKNOWN) success = false;
+  if (getRx2Frequency() < 0) success = false;
+
+  if (getConfirmRetry() < 0) success = false;
+  if (getUnconfirmRetry() < 0) success = false;
+
+  return success;
+}
+
+void LSM1x0A_LoRaWAN::clearCache()
+{
+  _cachedDevEui[0]      = '\0';
+  _cachedDevAddr[0]     = '\0';
+  _cachedNwkID[0]       = '\0';
+  _cachedAdrEnabled     = -1;
+  _cachedDataRate       = LsmDataRate::DR_UNKNOWN;
+  _cachedTxPower        = LsmTxPower::TP_UNKNOWN;
+  _cachedBand           = LsmBand::BAND_UNKNOWN;
+  _cachedSubBand        = -1;
+  _cachedDutyCycle      = -1;
+  _cachedJoin1Delay     = -1;
+  _cachedJoin2Delay     = -1;
+  _cachedRx1Delay       = -1;
+  _cachedRx2Delay       = -1;
+  _cachedRx2DataRate    = LsmDataRate::DR_UNKNOWN;
+  _cachedRx2Frequency   = -1;
+  _cachedConfirmRetry   = -1;
+  _cachedUnconfirmRetry = -1;
 }

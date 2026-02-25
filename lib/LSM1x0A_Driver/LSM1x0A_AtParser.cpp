@@ -274,7 +274,7 @@ bool LSM1x0A_AtParser::parseRxMetadata(const char* payload, LsmRxMetadata* out)
   if (pSnr)
     out->snr = atoi(pSnr + 4);
 
-  // 3. Extraer LinkCheck (Opcional)
+  // 3. Extraer LinkCheck
   const char* pDmodm = strstr(payload, "DMODM ");
   const char* pGwn   = strstr(payload, "GWN ");
 

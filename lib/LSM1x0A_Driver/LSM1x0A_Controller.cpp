@@ -6,7 +6,6 @@ LSM1x0A_Controller::LSM1x0A_Controller() : lorawan(this)
   _driver      = new UartDriver();
   _parser      = new LSM1x0A_AtParser();
   _initialized = false;
-  _isJoined    = false;
   _resetPin    = LSM1X0A_RESET_PIN;
   _maxRetries  = DEFAULT_MAX_RETRIES;
 
@@ -249,6 +248,7 @@ bool LSM1x0A_Controller::setMode(LsmMode mode)
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::MODE, (int)mode);
   AtError err = _parser->sendCommand(cmd, LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
   if (err == AtError::BOOT_ALERT) {
+    _currentMode = mode;
     return wakeUp();
   }
   return false;
@@ -308,31 +308,46 @@ bool LSM1x0A_Controller::recoverModule()
 {
 
   // 1. Intento Software (ATZ) con reintentos
+  bool wasJoined   = lorawan.isJoined();
+  bool isRecovered = false;
+
   for (int i = 0; i < _maxRetries; i++) {
     if (softwareReset())
-      return true;
+      isRecovered = true;
     delay(500);
   }
 
   // 2. Intento Hardware (Si el pin está configurado) con reintentos
-  if (_resetPin >= 0) {
+  if (!isRecovered && _resetPin >= 0) {
     for (int i = 0; i < _maxRetries; i++) {
       if (hardwareReset())
-        return true;
+        isRecovered = true;
     }
   }
 
-  return false;
+  if (isRecovered) {
+    if (_currentMode == LsmMode::LORAWAN) {
+      lorawan.setJoined(false);
+      // Volver a configurar los parámetros del módulo
+      if (lorawan.restoreConfig()) {
+        if (wasJoined) {
+          lorawan.recoverConnection(_maxRetries);
+        }
+        else {
+          clearEvents(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL | LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL | LSM_EVT_RX_DATA | LSM_EVT_RX_TIMEOUT);
+        }
+      }
+    }
+  }
+
+  return isRecovered;
 }
 
 // =========================================================================
 // ESTADO Y SINCRONIZACIÓN NATIVA
 // =========================================================================
 
-bool LSM1x0A_Controller::isJoined() const
-{
-  return _isJoined;
-}
+
 
 uint32_t LSM1x0A_Controller::waitForEvent(uint32_t bitsToWaitFor, uint32_t timeoutMs, bool clearOnExit)
 {
@@ -365,12 +380,12 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
   // 1. Interceptar para cambiar el estado interno y liberar semáforos
   if (strcmp(type, LsmEvent::JOIN) == 0) {
     if (strstr(payload, "SUCCESS") || strstr(payload, "Network joined")) {
-      _isJoined = true;
+      lorawan.setJoined(true);
       if (_syncEventGroup)
         xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_SUCCESS);
-    } 
+    }
     else if (strstr(payload, "FAILED") || strstr(payload, "Join failed")) {
-      _isJoined = false;
+      lorawan.setJoined(false);
       if (_syncEventGroup)
         xEventGroupSetBits(_syncEventGroup, LSM_EVT_JOIN_FAIL);
     }
@@ -392,7 +407,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
   else if (strcmp(type, LsmEvent::RX_META) == 0) {
     if (_syncEventGroup)
       xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
-    
+
     LsmRxMetadata meta;
     if (LSM1x0A_AtParser::parseRxMetadata(payload, &meta)) {
       _lastRssi = meta.rssi;
@@ -402,7 +417,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
         _lastGwn   = meta.nbGateways;
       }
     }
-  } 
+  }
   else if (strcmp(type, LsmEvent::RX_TIMEOUT) == 0) {
     if (_syncEventGroup)
       xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_TIMEOUT);
@@ -414,3 +429,13 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
   }
 }
 
+
+
+bool LSM1x0A_Controller::syncConfigToCache()
+{
+  if (!_initialized || !_parser)
+    return false;
+  
+  // En un futuro se podría llamar a sigfox.loadConfigFromModule() también
+  return lorawan.loadConfigFromModule();
+}
