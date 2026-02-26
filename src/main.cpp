@@ -220,17 +220,23 @@ void loop()
           // ok = controller->lorawan.requestLinkCheck();
           // Serial.printf("-> Request LinkCheck: %s\n", ok ? "OK" : "ERROR (Not Joined o Busy)");
 
-          Serial.println("[TEST] Ejecutando Send Data (Sin Confirmacion) en Puerto 3 (5 Mensajes)...");
-          for (int i = 1; i <= 5; i++) {
-            Serial.printf("\n-> Enviando Mensaje Unconfirmed %d/5...\n", i);
+          Serial.println("[TEST] Ejecutando Send Data (Sin Confirmacion) en Puerto 3 (10 Mensajes)...");
+          for (int i = 1; i <= 10; i++) {
+            // Linck check cada 3 mensajes
+            if (i % 3 == 0) {
+              Serial.println("\n[TEST] Solicitando LinkCheck para el proximo uplink...");
+              ok = controller->lorawan.requestLinkCheck();
+              Serial.printf("-> Request LinkCheck: %s\n", ok ? "OK" : "ERROR (Not Joined o Busy)");
+            }
+
+            Serial.printf("\n-> Enviando Mensaje Unconfirmed %d/10...\n", i);
             ok = controller->lorawan.sendData(3, "BBCCDDEE", false);
             Serial.printf("-> Resultado: %s\n", ok ? "EXITOSO" : "FALLO o TIMEOUT");
-            
+
             // Imprimir metadatos guardados si el envío generó recepción RX_META o info de LinkCheck en RX2
-            Serial.printf("   [Metadatos] RSSI: %d, SNR: %d, DMODM: %d, GWN: %d\n", 
-              controller->getLastRssi(), controller->getLastSnr(), 
-              controller->getLastDemodMargin(), controller->getLastNbGateways());
-              
+            Serial.printf("   [Metadatos] RSSI: %d, SNR: %d, DMODM: %d, GWN: %d\n", controller->getLastRssi(), controller->getLastSnr(),
+                          controller->getLastDemodMargin(), controller->getLastNbGateways());
+
             delay(3000); // Pequeña pausa entre envíos
           }
         }

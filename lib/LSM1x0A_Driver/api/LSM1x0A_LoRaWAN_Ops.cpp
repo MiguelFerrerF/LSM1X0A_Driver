@@ -75,9 +75,20 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       calcTimeoutMs = 5000 + (retries * 3500);
     }
 
+    uint32_t expectedBits = LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL;
+    if (_linkCheckRequested)
+      expectedBits |= LSM_EVT_LINK_CHECK_ANS;
+
     // Para Confirmados, esperamos la ventana (TX Done o Rx Done) que lanza +EVT
-    uint32_t result = _controller->waitForEvent(LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL, calcTimeoutMs);
+    uint32_t result = _controller->waitForEvent(expectedBits, calcTimeoutMs);
+    
+    if (result & LSM_EVT_LINK_CHECK_ANS) {
+      _linkCheckRequested = false;
+      return true;
+    }
+    
     if (result & LSM_EVT_TX_SUCCESS) {
+      _linkCheckRequested = false;
       return true;
     }
     
@@ -109,16 +120,33 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     _controller->clearEvents(LSM_EVT_RX_TIMEOUT); // limpiar antes de empezar
 
     while ((millis() - startMs) < calcTimeoutMs) {
-      // Esperamos por un timeout de RX de MAC, o si mágicamente llega un SUCCESS (por ejemplo, LinkCheck piggyback)
-      uint32_t result = _controller->waitForEvent(LSM_EVT_TX_SUCCESS | LSM_EVT_RX_TIMEOUT, 3000, true);
+      uint32_t expectedBits = LSM_EVT_TX_SUCCESS | LSM_EVT_RX_TIMEOUT;
+      if (_linkCheckRequested)
+        expectedBits |= LSM_EVT_LINK_CHECK_ANS;
 
-      if (result & LSM_EVT_TX_SUCCESS)
-        return true; // Downlink interceptado o MAC terminó temprano
+      // Esperamos por un timeout de RX de MAC, o si mágicamente llega un SUCCESS (por ejemplo, LinkCheck piggyback)
+      uint32_t result = _controller->waitForEvent(expectedBits, 3000, true);
+
+      if (result & LSM_EVT_LINK_CHECK_ANS) {
+        _linkCheckRequested = false;
+        return true; // Éxito total: metadatos recibidos
+      }
+
+      if (result & LSM_EVT_TX_SUCCESS) {
+        if (!_linkCheckRequested)
+          return true; // Downlink interceptado o MAC terminó temprano
+      }
 
       if (result & LSM_EVT_RX_TIMEOUT) {
         receivedTimeouts++;
-        if (receivedTimeouts >= expectedTimeouts)
+        if (receivedTimeouts >= expectedTimeouts) {
+          if (_linkCheckRequested) {
+             _linkCheckRequested = false;
+             _controller->recoverModule();
+             return false;
+          }
           return true;
+        }
       }
     }
 
@@ -137,7 +165,11 @@ bool LSM1x0A_LoRaWAN::requestLinkCheck()
 
   // AT+LINKC no genera evento inmediato, sólo agenda el request para el próximo Uplink
   AtError err = _controller->sendCommand(LsmAtCommand::LINK_CHECK, 2000, 1);
-  return (err == AtError::OK);
+  if (err == AtError::OK) {
+    _linkCheckRequested = true;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::isJoined() const

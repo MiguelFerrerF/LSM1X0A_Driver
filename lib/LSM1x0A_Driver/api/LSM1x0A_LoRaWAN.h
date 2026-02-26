@@ -114,6 +114,7 @@ private:
   LSM1x0A_Controller* _controller = nullptr;
   LsmJoinMode         _joinMode   = LsmJoinMode::OTAA;
   bool                _isJoined   = false;
+  bool                _linkCheckRequested = false;
 
   // Caché de reintentos para no bombardear al módulo en cada envío asíncrono
   char        _cachedDevEui[24]     = {0};

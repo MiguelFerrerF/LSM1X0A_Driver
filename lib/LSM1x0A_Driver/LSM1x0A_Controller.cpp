@@ -405,8 +405,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
       xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_DATA);
   }
   else if (strcmp(type, LsmEvent::RX_META) == 0) {
-    if (_syncEventGroup)
-      xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
+    uint32_t bitsToSet = LSM_EVT_TX_SUCCESS;
 
     LsmRxMetadata meta;
     if (LSM1x0A_AtParser::parseRxMetadata(payload, &meta)) {
@@ -415,8 +414,12 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
       if (meta.hasLinkCheck) {
         _lastDmodm = meta.demodMargin;
         _lastGwn   = meta.nbGateways;
+        bitsToSet |= LSM_EVT_LINK_CHECK_ANS;
       }
     }
+    
+    if (_syncEventGroup)
+      xEventGroupSetBits(_syncEventGroup, bitsToSet);
   }
   else if (strcmp(type, LsmEvent::RX_TIMEOUT) == 0) {
     if (_syncEventGroup)

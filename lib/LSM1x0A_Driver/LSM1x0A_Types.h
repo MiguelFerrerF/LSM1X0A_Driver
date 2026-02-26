@@ -96,8 +96,8 @@ enum class LsmMode
 };
 enum class LsmJoinMode
 {
-  OTAA = 0,
-  ABP,
+  ABP = 0,
+  OTAA,
   JOIN_MODE_UNKNOWN
 };
 enum class LsmClass

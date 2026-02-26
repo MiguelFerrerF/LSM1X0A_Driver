@@ -16,6 +16,7 @@
 #define LSM_EVT_TX_FAIL (1 << 3)
 #define LSM_EVT_RX_DATA (1 << 4)
 #define LSM_EVT_RX_TIMEOUT (1 << 5)
+#define LSM_EVT_LINK_CHECK_ANS (1 << 6)
 
 /**
  * @class LSM1x0A_Controller
