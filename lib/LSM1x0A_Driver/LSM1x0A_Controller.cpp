@@ -281,7 +281,7 @@ bool LSM1x0A_Controller::softwareReset()
     return false;
   AtError err = _parser->sendCommand(LsmAtCommand::RESET, LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
   if (err == AtError::BOOT_ALERT) {
-    return wakeUp();
+    return true;
   }
   return false;
 }
@@ -298,8 +298,7 @@ bool LSM1x0A_Controller::hardwareReset()
 
   AtError err = _parser->waitForEvent(LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
   if (err == AtError::BOOT_ALERT) {
-    delay(1000); // Esperar a que el bootloader termine completamente
-    return wakeUp();
+    return true;
   }
   return false;
 }
@@ -417,7 +416,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
         bitsToSet |= LSM_EVT_LINK_CHECK_ANS;
       }
     }
-    
+
     if (_syncEventGroup)
       xEventGroupSetBits(_syncEventGroup, bitsToSet);
   }
@@ -438,7 +437,7 @@ bool LSM1x0A_Controller::syncConfigToCache()
 {
   if (!_initialized || !_parser)
     return false;
-  
+
   // En un futuro se podría llamar a sigfox.loadConfigFromModule() también
   return lorawan.loadConfigFromModule();
 }

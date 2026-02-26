@@ -26,6 +26,9 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
   uint32_t result = _controller->waitForEvent(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL, timeoutMs);
 
   if (result & LSM_EVT_JOIN_SUCCESS) {
+    if (_pendingChannelMask) {
+      setChannelMask(_cachedBand, _cachedSubBand);
+    }
     return true; // Éxito completo
   }
 

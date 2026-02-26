@@ -115,6 +115,7 @@ private:
   LsmJoinMode         _joinMode   = LsmJoinMode::OTAA;
   bool                _isJoined   = false;
   bool                _linkCheckRequested = false;
+  bool                _pendingChannelMask = false;
 
   // Caché de reintentos para no bombardear al módulo en cada envío asíncrono
   char        _cachedDevEui[24]     = {0};

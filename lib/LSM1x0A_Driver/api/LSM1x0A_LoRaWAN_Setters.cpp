@@ -297,6 +297,18 @@ bool LSM1x0A_LoRaWAN::setUnconfirmRetry(int retries)
 
 bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, int subBand)
 {
+  _cachedBand = band;
+  _cachedSubBand = subBand;
+
+  if (!isJoined()) {
+    // El módulo solo permite cambiar la máscara si ya está conectado
+    // Lo cacheamos y retornamos true para aplicarlo justo tras el Join
+    _pendingChannelMask = true;
+    return true;
+  }
+
+  _pendingChannelMask = false;
+
   const char* const* targetMasks = nullptr;
   int                maxCount    = 0;
 
