@@ -295,10 +295,10 @@ bool LSM1x0A_LoRaWAN::setUnconfirmRetry(int retries)
   return false;
 }
 
-bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, int subBand)
+bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
 {
   _cachedBand = band;
-  _cachedSubBand = subBand;
+  _cachedSubBandMask = subBandMask;
 
   if (!isJoined()) {
     // El módulo solo permite cambiar la máscara si ya está conectado
@@ -309,8 +309,7 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, int subBand)
 
   _pendingChannelMask = false;
 
-  const char* const* targetMasks = nullptr;
-  int                maxCount    = 0;
+  int maxCount = 0;
 
   switch (band) {
     case LsmBand::EU868:
@@ -321,29 +320,71 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, int subBand)
     case LsmBand::AS923_4:
     case LsmBand::EU433:
     case LsmBand::CN779:
-      targetMasks = M_8CH;
-      maxCount    = 2; // last logic index is 2
+      maxCount = 2;
       break;
     case LsmBand::US915:
     case LsmBand::AU915:
-      targetMasks = M_72CH;
-      maxCount    = 9; // last logic index is 9
+      maxCount = 8;
       break;
     case LsmBand::CN470:
-      targetMasks = M_96CH;
-      maxCount    = 12; // last logic index is 12
+      maxCount = 12;
       break;
     default:
       return false; // Unknown Band length
   }
 
-  // Si no pasamos index correcto (0-N) entonces activamos mascara completa (ALL = maxCount)
-  int idx = (subBand >= 0 && subBand < maxCount) ? subBand : maxCount;
+  // Generamos el string combinando bloques de 16-bits.
+  // Ej US915: (b0) -> "00FF", (b1) -> "FF00", (b2) -> "0000:00FF"
+  // Aquí podemos componer las submáscaras activas.
+  char maskStr[128] = {0};
+  char blockParams[64] = {0};
+  
+  if (subBandMask == 0xFFFF) {
+    // Especial: Activar todos los canales posibles
+    if (maxCount == 2) {
+      snprintf(maskStr, sizeof(maskStr), "00FF");
+    } else if (maxCount == 8) {
+      snprintf(maskStr, sizeof(maskStr), "FFFF:FFFF:FFFF:FFFF:00FF");
+    } else if (maxCount == 12) {
+      snprintf(maskStr, sizeof(maskStr), "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF");
+    }
+  } else {
+      if(maxCount == 2) {
+        // En bandas de 16 ch (Ej: EU868), Block 1 es "000F", Block 2 "00F0"
+        uint16_t val = 0;
+        if(subBandMask & 0x0001) val |= 0x000F;
+        if(subBandMask & 0x0002) val |= 0x00F0;
+        snprintf(maskStr, sizeof(maskStr), "%04X", val);
+      } else {
+        // En bandas 72 o 96 ch (Ej: US915), cada subBand abarca 8 canales reales (0x00FF)
+        // subBand 0: block0 = 0x00FF, subBand 1: block0 = 0xFF00, subBand 2: block1 = 0x00FF...
+        uint16_t blocks[6] = {0};
+        
+        for (int i = 0; i < maxCount; i++) {
+          if (subBandMask & (1 << i)) {
+            int blockIdx = i / 2;
+            int offsetHex = (i % 2) == 0 ? 0x00FF : 0xFF00;
+            blocks[blockIdx] |= offsetHex;
+          }
+        }
+        
+        size_t currentLen = 0;
+        for (int i = 0; i < (maxCount+1)/2; i++) {
+          int written = 0;
+          if(i > 0) written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, ":%04X", blocks[i]);
+          else written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, "%04X", blocks[i]);
+          
+          if (written > 0 && currentLen + written < sizeof(maskStr)) {
+             currentLen += written;
+          }
+        }
+      }
+  }
 
-  if (!targetMasks[idx] || strlen(targetMasks[idx]) < 4)
-    return false;
-  char cmd[64];
-  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, targetMasks[idx]);
+  if (strlen(maskStr) == 0) return false;
+
+  char cmd[128];
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, maskStr);
   return _controller->sendCommand(cmd, 1000) == AtError::OK;
 }
 
@@ -467,8 +508,8 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
   // Restaurar Band y SubBand si es posible
   if (_cachedBand != LsmBand::BAND_UNKNOWN) {
     if (!setBand(_cachedBand)) success = false;
-    if (_cachedSubBand != (int8_t)-1 && _cachedBand == LsmBand::US915) 
-      if (!setChannelMask(_cachedBand, _cachedSubBand)) success = false;
+    if (_cachedSubBandMask != 0xFFFF && _cachedBand == LsmBand::US915) 
+      if (!setChannelMask(_cachedBand, _cachedSubBandMask)) success = false;
   }
 
   // Restaurar configuraciones de red
@@ -550,7 +591,7 @@ void LSM1x0A_LoRaWAN::clearCache()
   _cachedDataRate       = LsmDataRate::DR_UNKNOWN;
   _cachedTxPower        = LsmTxPower::TP_UNKNOWN;
   _cachedBand           = LsmBand::BAND_UNKNOWN;
-  _cachedSubBand        = -1;
+  _cachedSubBandMask    = 0xFFFF;
   _cachedDutyCycle      = -1;
   _cachedJoin1Delay     = -1;
   _cachedJoin2Delay     = -1;

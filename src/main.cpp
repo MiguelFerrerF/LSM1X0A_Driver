@@ -107,6 +107,18 @@ void loop()
         Serial.printf("UnconfirmRetry: %d\n", controller->lorawan.getUnconfirmRetry());
         Serial.printf("NetworkType: %d\n", (int)controller->lorawan.getNetworkType());
         Serial.printf("DevNonce: %d\n", controller->lorawan.getDevNonce());
+        Serial.printf("ChannelMask: ");
+        uint16_t chMasks[6];
+        size_t   chMaskCount = 0;
+        if (controller->lorawan.getChannelMask(chMasks, &chMaskCount)) {
+          for (size_t i = 0; i < chMaskCount; i++) {
+            Serial.printf("0x%04X ", chMasks[i]);
+          }
+          Serial.println();
+        }
+        else {
+          Serial.println("Error al obtener Channel Mask");
+        }
 
         // TEST SETTERS
         Serial.println("\n--- Probando Setters ---");

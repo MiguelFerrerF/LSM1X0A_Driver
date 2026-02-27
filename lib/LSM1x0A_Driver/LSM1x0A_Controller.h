@@ -259,6 +259,11 @@ public:
   // =========================================================================
   LSM1x0A_LoRaWAN lorawan;
 
+  // Acceso a buffers temporales internos para submódulos
+  const uint16_t* getTempMaskBuffer() const { return _tempMaskBuffer; }
+  int getTempMaskCount() const { return _tempMaskCount; }
+  void resetTempMaskBuffer() { _tempMaskCount = 0; memset(_tempMaskBuffer, 0, sizeof(_tempMaskBuffer)); }
+
 private:
   UartDriver*       _driver      = nullptr;
   LSM1x0A_AtParser* _parser      = nullptr;
@@ -273,6 +278,10 @@ private:
   int _lastSnr   = 0;
   int _lastDmodm = 0;
   int _lastGwn   = 0;
+  
+  // Buffers temporales para extracciones de listas de configuración
+  uint16_t _tempMaskBuffer[6] = {0};
+  int      _tempMaskCount     = 0;
 
   // Sincronización asíncrona
   EventGroupHandle_t _syncEventGroup = nullptr;

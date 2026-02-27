@@ -316,3 +316,28 @@ LsmNetworkType LSM1x0A_LoRaWAN::getNetworkType()
   }
   return LsmNetworkType::NETWORK_TYPE_UNKNOWN;
 }
+
+bool LSM1x0A_LoRaWAN::getChannelMask(uint16_t* outMasks, size_t* outArraySize)
+{
+  if (!outMasks || !outArraySize || *outArraySize == 0) return false;
+
+  // 1. Limpiamos buffer en clase base
+  _controller->resetTempMaskBuffer();
+
+  // 2. Ejecutar AT+CHMASK?
+  char cmd[16] = {0};
+  snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, "?");
+
+  // Al mandar esto, el parser verá multiples respuestas e interceptará los bloques channel_mask[X]
+  if (_controller->sendCommandWithResponse(cmd, nullptr, 0, nullptr, 2000) == AtError::OK) {
+    int count = _controller->getTempMaskCount();
+    if (count > 0 && count <= (int)(*outArraySize)) {
+      memcpy(outMasks, _controller->getTempMaskBuffer(), count * sizeof(uint16_t));
+      *outArraySize = count;
+      return true;
+    }
+  }
+
+  *outArraySize = 0;
+  return false;
+}

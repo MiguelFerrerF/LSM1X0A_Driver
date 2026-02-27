@@ -424,6 +424,15 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
     if (_syncEventGroup)
       xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_TIMEOUT);
   }
+  else if (strcmp(type, LsmEvent::CHMASK) == 0) {
+    if (_tempMaskCount < 6) {
+      const char* hexPtr = strstr(payload, "0x");
+      if (hexPtr) {
+        _tempMaskBuffer[_tempMaskCount] = (uint16_t)strtol(hexPtr + 2, NULL, 16);
+        _tempMaskCount++;
+      }
+    }
+  }
 
   // 2. Pasar el evento hacia arriba al callback del usuario
   if (_userCallback) {

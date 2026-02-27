@@ -174,6 +174,13 @@ void LSM1x0A_AtParser::processLine(char* line)
       _eventCallback(LsmEvent::NVM, line, _eventCtx);
     return;
   }
+  
+  if (strncmp(line, "channel_mask[", 13) == 0) {
+    if (_eventCallback)
+      _eventCallback(LsmEvent::CHMASK, line, _eventCtx);
+    // IMPORTANTE: NO hacemos return; si es un comando síncrono que espera el 'OK' final.
+    // Esto enviará el evento asíncrono y luego el Parser seguirá corriendo esperando el OK.
+  }
 
   // 4. Ignorar líneas irrelevantes
   // Descartamos ecos asincronos del propio comando enviado (e.g. "AT+BAT=?")
