@@ -47,9 +47,10 @@ El driver se divide en tres capas fundamentales para mantener la mantenibilidad 
 
 ## 6. Documentación de Referencia Interna
 Para consultar los comandos, formatos y parámetros específicos durante el desarrollo, consultar:
-1. `LSM1x0A_AT_Commands.md` -> Resumen de comandos disponibles y sintaxis general.
-2. `LSM1x0A_LoRaWAN_Responses.md` -> Detalle exacto de la salida (`AT_PRINTF`) generada por el firmware en modo LoRaWAN.
-3. `LSM1x0A_Sigfox_Responses.md` -> Detalle exacto de la salida (`AT_PRINTF`) generada por el firmware en modo Sigfox.
+1. `lib/LSM1x0A_Driver/docs/LSM1x0A_AT_Commands.md` -> Resumen de comandos disponibles y sintaxis general.
+2. `lib/LSM1x0A_Driver/docs/LSM1x0A_LoRaWAN_Responses.md` -> Detalle exacto de la salida (`AT_PRINTF`) generada por el firmware en modo LoRaWAN.
+3. `lib/LSM1x0A_Driver/docs/LSM1x0A_Sigfox_Responses.md` -> Detalle exacto de la salida (`AT_PRINTF`) generada por el firmware en modo Sigfox.
+4. `lib/LSM1x0A_Driver/docs/LSM1x0A_LoRaWAN_API.md` -> Guía de arquitectura para los adaptadores de la API C++.
 
 ---
 
@@ -120,10 +121,16 @@ Tras validar el hardware original, se decidió abandonar la complejidad extrema 
 1. **Memory Leaks Aislados:** Se implementó una prueba rigurosa de inicialización/destrucción dinámica en hardware repetida en `main.cpp`, asegurando 0 bytes de divergencia de Heap logrando un stack FreeRTOS hermético sin fugas.
 2. **Setup Rápido:** Capacidad de instanciar un controller que por debajo autoinicializa la UART y el parser.
 3. **Fase 1 (Terminada):** Implementación testada de comandos Getters (`getBattery`, `getBaudrate`, `getVersion`, `getLocalTime`, `getSigfoxVersion`, `getDeviceType`) y Setters Básicos (`setBaudrate`, `setVerboseLevel`, `setMode`, `startFwUpgrade`, `factoryReset`). Adición de un mecanismo resiliente de *Retry* y *Module Recovery* (Fallbacks de `ATZ` a GPIO Reset), incluyendo la posterior recuperación de configuraciones volátiles (`recoverModuleConfig`) y estado de conexión (`recoverModuleState`).
-4. **Fase 2 (En progreso):** Implementación de la capa LoRaWAN nativa (ej: `setDevEUI()`, `setClass()`). Estas envuelven formateos en buferes transparentes listos para `sendCommand()`. 
+4. **Fase 2 (En progreso avanzado):** Implementación de la capa LoRaWAN nativa (ej: `setDevEUI()`, `setClass()`). Estas envuelven formateos en buferes transparentes listos para `sendCommand()`. 
    - *Nota:* Para evitar archivos kilométricos («God Objects»), la implementación de `LSM1x0A_LoRaWAN` se dividió en `LSM1x0A_LoRaWAN_Setters.cpp`, `LSM1x0A_LoRaWAN_Getters.cpp` y `LSM1x0A_LoRaWAN_Ops.cpp`.
    - *Sincronización Avanzada*: Se integró un bloque de FreeRTOS `EventGroup` dentro de `LSM1x0A_Controller` para interceptar comandos asíncronos (`+JOIN:`, `+TX:`, etc.) del parseador. Esto permite crear funciones como `lorawan.join(...)` y `lorawan.sendData(...)` aparentemente síncronas que se bloquean hasta recibir confirmación por red simulando un flujo secuencial sin bloquear el sistema operativo (RTOS `xEventGroupWaitBits`).
    - *Recuperación Caching Volátil*: Todo Setter sobreescribe un slot caché `_cached...` que luego es reaplicado masivamente si el módulo sufre un reset desatendido mediante `restoreConfig()`.
+   - **Gestión Avanzada de Subbandas (Channel Mask):** Se refactorizaron las operaciones `setChannelMask` y `getChannelMask` para abstraer la complejidad de regiones híbridas (US915 / AU915 / CN470). El driver ahora maneja asincronía en las solicitudes AT, traduce nativamente constantes bit a bit (`LsmSubBand`) en cadenas AT multi-bloque hexagonales correctamente formateadas (ej. los 6 bloques US915) independientemente de la región activa.
+
+---
+
+# 8. Documentación de Referencia Interna
+Las guías de referencia y comandos AT ya no se encuentran dispersas en la raíz del proyecto. **Han sido unificadas dentro del submódulo del driver** bajo la carpeta `lib/LSM1x0A_Driver/docs/` para no contaminar el root directory y relacionarlas estricamente con los encabezados `.h`.
 
 ---
 

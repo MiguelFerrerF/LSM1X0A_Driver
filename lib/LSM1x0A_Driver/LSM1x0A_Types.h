@@ -152,6 +152,26 @@ enum class LsmBand
   AS923_4,
   BAND_UNKNOWN
 };
+
+// Constantes para selección de subbandas (Channel Mask).
+// Usar un OR bit a bit para activar múltiples: (SUB_BAND_1 | SUB_BAND_2)
+enum LsmSubBand {
+  SUB_BAND_NONE = 0x0000,
+  SUB_BAND_1    = 0x0001,
+  SUB_BAND_2    = 0x0002,
+  SUB_BAND_3    = 0x0004,
+  SUB_BAND_4    = 0x0008,
+  SUB_BAND_5    = 0x0010,
+  SUB_BAND_6    = 0x0020,
+  SUB_BAND_7    = 0x0040,
+  SUB_BAND_8    = 0x0080,
+  SUB_BAND_9    = 0x0100, // Específico de CN470
+  SUB_BAND_10   = 0x0200, // Específico de CN470
+  SUB_BAND_11   = 0x0400, // Específico de CN470
+  SUB_BAND_12   = 0x0800, // Específico de CN470
+  SUB_BAND_ALL  = 0xFFFF
+};
+
 enum class LsmPingSlot
 {
   EVERY_1_SEC = 0,

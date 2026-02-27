@@ -16,3 +16,10 @@ Para mantener la calidad y fiabilidad del firmware, **todo el código autogenera
    - Mantener una estructura organizada (separación de la definición en `.h` y la implementación en `.cpp`).
    - Evitar "God Objects" o rutinas kilométricas. Si una función crece demasiado, debe subdividirse en helpers privados auxiliares.
    - Aplicar separación por casos de uso. Por ejemplo, separar la lógica de parseo, de la capa física, de los tipos y de la capa superior de aplicación. No juntar lógica de diferente dominio en un solo archivo.
+
+4. **Conocimiento Contextual Requerido:**
+   SIEMPRE debes leer e integrar el contenido de la documentación en la carpeta en tu contexto inicial antes de tocar el comportamiento del driver:
+   - `LSM1x0A_Context.md` (Visión General de la arquitectura).
+   - `lib/LSM1x0A_Driver/docs/LSM1x0A_AT_Commands.md` (Para sintaxis de comandos)
+   - `lib/LSM1x0A_Driver/docs/LSM1x0A_LoRaWAN_Responses.md` / `LSM1x0A_Sigfox_Responses.md` (Para sincronización del AT parser)
+   - `lib/LSM1x0A_Driver/docs/LSM1x0A_LoRaWAN_API.md` (Estructura de la API)

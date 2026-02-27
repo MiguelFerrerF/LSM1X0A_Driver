@@ -328,8 +328,9 @@ bool LSM1x0A_LoRaWAN::getChannelMask(uint16_t* outMasks, size_t* outArraySize)
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, "?");
 
-  // Al mandar esto, el parser verá multiples respuestas e interceptará los bloques channel_mask[X]
-  if (_controller->sendCommandWithResponse(cmd, nullptr, 0, nullptr, 2000) == AtError::OK) {
+  // Ejecutamos AT+CHMASK? con sendCommand, esto asegura que el parser espera al 'OK'
+  // Mientras esperamos, el parser iterará las líneas e irá rellenando evt->tempMaskBuffer
+  if (_controller->sendCommand(cmd, 2000) == AtError::OK) {
     int count = _controller->getTempMaskCount();
     if (count > 0 && count <= (int)(*outArraySize)) {
       memcpy(outMasks, _controller->getTempMaskBuffer(), count * sizeof(uint16_t));

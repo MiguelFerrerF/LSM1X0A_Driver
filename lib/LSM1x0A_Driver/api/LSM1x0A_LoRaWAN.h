@@ -46,7 +46,7 @@ public:
   bool setNetworkType(LsmNetworkType type);
   bool setConfirmRetry(int retries);
   bool setUnconfirmRetry(int retries);
-  bool setChannelMask(LsmBand band, uint16_t subBandMask = 0xFFFF);
+  bool setChannelMask(LsmBand band, uint16_t subBandMask = LsmSubBand::SUB_BAND_ALL);
   bool setDevNonce(int nonce);
   bool resetDevNonce();
 
@@ -126,7 +126,7 @@ private:
   LsmDataRate _cachedDataRate       = LsmDataRate::DR_UNKNOWN;
   LsmTxPower  _cachedTxPower        = LsmTxPower::TP_UNKNOWN;
   LsmBand     _cachedBand           = LsmBand::BAND_UNKNOWN;
-  uint16_t    _cachedSubBandMask    = 0xFFFF;
+  uint16_t    _cachedSubBandMask    = LsmSubBand::SUB_BAND_ALL;
   int8_t      _cachedDutyCycle      = -1;
   int32_t     _cachedJoin1Delay     = -1;
   int32_t     _cachedJoin2Delay     = -1;

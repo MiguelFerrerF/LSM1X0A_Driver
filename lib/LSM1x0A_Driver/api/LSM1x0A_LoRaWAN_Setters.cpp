@@ -301,14 +301,11 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
   _cachedSubBandMask = subBandMask;
 
   if (!isJoined()) {
-    // El módulo solo permite cambiar la máscara si ya está conectado
-    // Lo cacheamos y retornamos true para aplicarlo justo tras el Join
     _pendingChannelMask = true;
     return true;
   }
 
   _pendingChannelMask = false;
-
   int maxCount = 0;
 
   switch (band) {
@@ -320,65 +317,72 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
     case LsmBand::AS923_4:
     case LsmBand::EU433:
     case LsmBand::CN779:
-      maxCount = 2;
+      maxCount = 1;
       break;
     case LsmBand::US915:
     case LsmBand::AU915:
-      maxCount = 8;
-      break;
     case LsmBand::CN470:
-      maxCount = 12;
+      maxCount = 6;
       break;
     default:
       return false; // Unknown Band length
   }
 
-  // Generamos el string combinando bloques de 16-bits.
-  // Ej US915: (b0) -> "00FF", (b1) -> "FF00", (b2) -> "0000:00FF"
-  // Aquí podemos componer las submáscaras activas.
-  char maskStr[128] = {0};
-  char blockParams[64] = {0};
+  uint16_t blocks[6] = {0};
   
   if (subBandMask == 0xFFFF) {
-    // Especial: Activar todos los canales posibles
-    if (maxCount == 2) {
-      snprintf(maskStr, sizeof(maskStr), "00FF");
-    } else if (maxCount == 8) {
-      snprintf(maskStr, sizeof(maskStr), "FFFF:FFFF:FFFF:FFFF:00FF");
-    } else if (maxCount == 12) {
-      snprintf(maskStr, sizeof(maskStr), "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF");
+    if (maxCount == 1) {
+      blocks[0] = 0x00FF; // Default 16 channels? Or FFFF? Actually in EU868 standard is 00FF (first 8) or 000F. We will use 00FF to be safe.
+    } else if (maxCount == 6) {
+      blocks[0] = 0xFFFF;
+      blocks[1] = 0xFFFF;
+      blocks[2] = 0xFFFF;
+      blocks[3] = 0xFFFF;
+      if (band == LsmBand::CN470) {
+        blocks[4] = 0xFFFF;
+        blocks[5] = 0xFFFF;
+      } else {
+        blocks[4] = 0x00FF; // US915 has 8 500kHz channels
+        blocks[5] = 0x0000;
+      }
     }
   } else {
-      if(maxCount == 2) {
-        // En bandas de 16 ch (Ej: EU868), Block 1 es "000F", Block 2 "00F0"
+    if (maxCount == 1) {
         uint16_t val = 0;
         if(subBandMask & 0x0001) val |= 0x000F;
         if(subBandMask & 0x0002) val |= 0x00F0;
-        snprintf(maskStr, sizeof(maskStr), "%04X", val);
-      } else {
-        // En bandas 72 o 96 ch (Ej: US915), cada subBand abarca 8 canales reales (0x00FF)
-        // subBand 0: block0 = 0x00FF, subBand 1: block0 = 0xFF00, subBand 2: block1 = 0x00FF...
-        uint16_t blocks[6] = {0};
-        
-        for (int i = 0; i < maxCount; i++) {
-          if (subBandMask & (1 << i)) {
-            int blockIdx = i / 2;
-            int offsetHex = (i % 2) == 0 ? 0x00FF : 0xFF00;
-            blocks[blockIdx] |= offsetHex;
-          }
+        blocks[0] = val;
+    } else {
+        int maxSubBands = (band == LsmBand::CN470) ? 12 : 8;
+        for (int i = 0; i < maxSubBands; i++) {
+            if (subBandMask & (1 << i)) {
+                // For subband i (0 to 7 usually):
+                // 125kHz channels
+                int blockIdx = i / 2;
+                uint16_t offsetHex = ((i % 2) == 0) ? 0x00FF : 0xFF00;
+                blocks[blockIdx] |= offsetHex;
+                
+                // 500kHz channels (for US915/AU915 only)
+                if (band == LsmBand::US915 || band == LsmBand::AU915) {
+                    blocks[4] |= (1 << i);
+                }
+            }
         }
-        
-        size_t currentLen = 0;
-        for (int i = 0; i < (maxCount+1)/2; i++) {
-          int written = 0;
-          if(i > 0) written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, ":%04X", blocks[i]);
-          else written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, "%04X", blocks[i]);
-          
-          if (written > 0 && currentLen + written < sizeof(maskStr)) {
-             currentLen += written;
-          }
-        }
-      }
+    }
+  }
+
+  char maskStr[128] = {0};
+  size_t currentLen = 0;
+  for (int i = 0; i < maxCount; i++) {
+    int written = 0;
+    if (i > 0) {
+        written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, ":%04X", blocks[i]);
+    } else {
+        written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, "%04X", blocks[i]);
+    }
+    if (written > 0 && currentLen + written < sizeof(maskStr)) {
+        currentLen += written;
+    }
   }
 
   if (strlen(maskStr) == 0) return false;
