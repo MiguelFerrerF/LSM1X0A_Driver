@@ -103,7 +103,7 @@ AtError LSM1x0A_Controller::sendCommand(const char* cmd, uint32_t timeoutMs, int
   }
 
   // Si agotamos todos los reintentos (ej: timeouts constantes), ejecutamos recuperación
-  recoverModule();
+    recoverModule();
   return err;
 }
 
@@ -137,7 +137,7 @@ AtError LSM1x0A_Controller::sendCommandWithResponse(const char* cmd, char* outBu
   }
 
   // Si falló persistentemente
-  recoverModule();
+    recoverModule();
   return err;
 }
 
@@ -255,9 +255,9 @@ bool LSM1x0A_Controller::setMode(LsmMode mode)
 
   char cmd[16];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::MODE, (int)mode);
-  
+
   AtError err = _parser->sendCommand(cmd, LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
-  
+
   // Validamos que alertó el reinicio Y que el parser identificó el modo correcto
   if (err == AtError::BOOT_ALERT && _parser->getDetectedMode() == mode) {
     _currentMode = mode;
@@ -323,16 +323,21 @@ bool LSM1x0A_Controller::recoverModule()
   bool isRecovered = false;
 
   for (int i = 0; i < _maxRetries; i++) {
-    if (softwareReset())
+    if (softwareReset()) {
       isRecovered = true;
+      break;
+    }
     delay(500);
   }
 
   // 2. Intento Hardware (Si el pin está configurado) con reintentos
   if (!isRecovered && _resetPin >= 0) {
     for (int i = 0; i < _maxRetries; i++) {
-      if (hardwareReset())
+      if (hardwareReset()) {
         isRecovered = true;
+        break;
+      }
+      delay(500);
     }
   }
 
@@ -357,8 +362,6 @@ bool LSM1x0A_Controller::recoverModule()
 // =========================================================================
 // ESTADO Y SINCRONIZACIÓN NATIVA
 // =========================================================================
-
-
 
 uint32_t LSM1x0A_Controller::waitForEvent(uint32_t bitsToWaitFor, uint32_t timeoutMs, bool clearOnExit)
 {
@@ -451,8 +454,6 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
     _userCallback(type, payload, _userCtx);
   }
 }
-
-
 
 bool LSM1x0A_Controller::syncConfigToCache()
 {

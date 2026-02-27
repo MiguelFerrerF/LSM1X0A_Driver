@@ -49,6 +49,7 @@ public:
   bool setChannelMask(LsmBand band, uint16_t subBandMask = LsmSubBand::SUB_BAND_ALL);
   bool setDevNonce(int nonce);
   bool resetDevNonce();
+  bool setAbpFrameCounter(uint32_t fcnt);
 
   // 3. Modos Operacionales y Red (LoRaWAN)
   bool setJoinMode(LsmJoinMode mode);
@@ -100,6 +101,7 @@ public:
   int            getUnconfirmRetry();
   LsmNetworkType getNetworkType();
   bool           getChannelMask(uint16_t* outMasks, size_t* outArraySize);
+  int       getAbpFrameCounter();
 
 // 6. Gestión de Estado y Recuperación
   bool restoreConfig();

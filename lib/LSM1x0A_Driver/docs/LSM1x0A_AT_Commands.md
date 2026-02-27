@@ -102,7 +102,7 @@ El parser de comandos AT devuelve las siguientes respuestas comunes. Para ver el
 | `AT+CNFRETX` | `AT+CNFRETX=<NbTrans>` | Retransmisiones máximas *Confirmed* `[1..15]`. |
 | `AT+UNCNFRETX` | `AT+UNCNFRETX=<NbTrans>`| Retransmisiones máximas *Unconfirmed* `[1..15]`. |
 | `AT+CHMASK` | `AT+CHMASK=<Mask>` | Set/Get máscara de canales. |
-| `AT+ABPFCNT` | `AT+ABPFCNT` | Get ABP Frame count. |
+| `AT+ABPFCNT` | `AT+ABPFCNT=<Fcnt>` | Get/Set el contador de frames de ABP. `[0..4294967295]`. |
 
 ### 4. Modo de Pruebas y Certificación (LoRa/RF)
 *Nota: Estos son usados generalmente para test RF, certificaciones y hopping.*

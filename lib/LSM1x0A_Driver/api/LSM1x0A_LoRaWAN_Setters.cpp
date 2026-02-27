@@ -606,3 +606,13 @@ void LSM1x0A_LoRaWAN::clearCache()
   _cachedConfirmRetry   = -1;
   _cachedUnconfirmRetry = -1;
 }
+
+bool LSM1x0A_LoRaWAN::setAbpFrameCounter(uint32_t fcnt)
+{
+  if (!_controller)
+    return false;
+
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%u", LsmAtCommand::FRAME_CNT, (unsigned int)fcnt);
+  return _controller->sendCommand(cmd) == AtError::OK;
+}

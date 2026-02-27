@@ -13,6 +13,9 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
   char cmd[16];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN, joinMode);
 
+  // Guardamos el modo de join deseado para usarlo en la recuperación si es necesario
+  _joinMode = joinMode;
+
   // Limpiamos banderas anteriores
   _controller->clearEvents(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL);
 
@@ -66,38 +69,62 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   uint32_t calcTimeoutMs = timeoutMs;
 
   if (confirmed) {
-    if (calcTimeoutMs == 0) {
-      int retries = -1;
-      if (_cachedConfirmRetry >= 0)
-        retries = _cachedConfirmRetry;
-      else
-        retries = getConfirmRetry();
-      if (retries < 0)
-        retries = 5; // Fallback
-      // Base safety 5s + cada intento toma ~3.5 segundos de radio (Rx1+Rx2+Ack)
-      calcTimeoutMs = 5000 + (retries * 3500);
+    int retries = -1;
+    if (_cachedConfirmRetry >= 0)
+      retries = _cachedConfirmRetry;
+    else
+      retries = getConfirmRetry();
+    if (retries <= 0)
+      retries = 3; // Fallback
+
+    // Confirmed Retries = 1 initial + N retries. So total transmits = retries + 1.
+    // Each transmit yields 2 RX_TIMEOUTs if no ACK is received.
+    int expectedTimeouts = (retries + 1) * 2;
+    int receivedTimeouts = 0;
+
+    // Base safety 5s + cada intento toma ~4.5 segundos de radio (TX + Rx1 + Rx2 + MAC delay)
+    uint32_t dynamicTimeoutMs = 5000 + ((retries + 1) * 4500);
+    if (calcTimeoutMs == 0 || calcTimeoutMs < dynamicTimeoutMs) {
+      calcTimeoutMs = dynamicTimeoutMs;
     }
 
-    uint32_t expectedBits = LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL;
-    if (_linkCheckRequested)
-      expectedBits |= LSM_EVT_LINK_CHECK_ANS;
+    uint32_t startMs = millis();
+    _controller->clearEvents(LSM_EVT_RX_TIMEOUT);
 
-    // Para Confirmados, esperamos la ventana (TX Done o Rx Done) que lanza +EVT
-    uint32_t result = _controller->waitForEvent(expectedBits, calcTimeoutMs);
-    
-    if (result & LSM_EVT_LINK_CHECK_ANS) {
-      _linkCheckRequested = false;
-      return true;
+    while ((millis() - startMs) < calcTimeoutMs) {
+      uint32_t expectedBits = LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL | LSM_EVT_RX_TIMEOUT;
+      if (_linkCheckRequested)
+        expectedBits |= LSM_EVT_LINK_CHECK_ANS;
+
+      // Esperamos iterativamente por eventos
+      uint32_t result = _controller->waitForEvent(expectedBits, 3000, true);
+
+      if (result & LSM_EVT_LINK_CHECK_ANS) {
+        _linkCheckRequested = false;
+        return true;
+      }
+      if (result & LSM_EVT_TX_SUCCESS) {
+        if (!_linkCheckRequested)
+          return true; // Downlink interceptado o éxito rápido
+      }
+      if (result & LSM_EVT_TX_FAIL) {
+        _linkCheckRequested = false;
+        return false;
+      }
+      if (result & LSM_EVT_RX_TIMEOUT) {
+        receivedTimeouts++;
+        if (receivedTimeouts >= expectedTimeouts) {
+          if (_linkCheckRequested) {
+            _linkCheckRequested = false;
+          }
+          return false; // MAC layer exhausted retries gracefully. NO recoverModule().
+        }
+      }
     }
-    
-    if (result & LSM_EVT_TX_SUCCESS) {
-      _linkCheckRequested = false;
-      return true;
-    }
-    
-    // Si llegamos a un timeout total asíncrono, significa que el módulo dejó de responder
+
+    // Si llegamos a un timeout total asíncrono, significa que el módulo se colgó (no emitió nada)
     _controller->recoverModule();
-    return false; // Timeout o Error capa MAC
+    return false; // Error real de capa MAC (no UART output)
   }
   else {
     // Para Unconfirmed puro, esperamos los `MAC rxTimeOut` (2 por cada intento de transmisión)
@@ -144,9 +171,9 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
         receivedTimeouts++;
         if (receivedTimeouts >= expectedTimeouts) {
           if (_linkCheckRequested) {
-             _linkCheckRequested = false;
-             _controller->recoverModule();
-             return false;
+            _linkCheckRequested = false;
+            _controller->recoverModule();
+            return false;
           }
           return true;
         }

@@ -342,3 +342,17 @@ bool LSM1x0A_LoRaWAN::getChannelMask(uint16_t* outMasks, size_t* outArraySize)
   *outArraySize = 0;
   return false;
 }
+
+int LSM1x0A_LoRaWAN::getAbpFrameCounter()
+{
+  if (!_controller)
+    return -1;
+  char valStr[16] = {0};
+  char cmd[32]    = {0};
+  // Enviamos: AT+ABPFCNT=?
+  snprintf(cmd, sizeof(cmd), "%s?", LsmAtCommand::FRAME_CNT);
+  if (_controller->sendCommandWithResponse(cmd, valStr, sizeof(valStr)) == AtError::OK) {
+    return atoi(valStr);
+  }
+  return -1;
+}
