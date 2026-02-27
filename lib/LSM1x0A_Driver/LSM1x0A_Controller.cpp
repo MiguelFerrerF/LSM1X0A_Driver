@@ -244,12 +244,24 @@ bool LSM1x0A_Controller::setVerboseLevel(uint8_t level)
 
 bool LSM1x0A_Controller::setMode(LsmMode mode)
 {
+  if (!_initialized || !_parser)
+    return false;
+
+  // Optimización: si ya sabemos que está en el modo deseado, no enviamos nada
+  if (_parser->getDetectedMode() == mode) {
+    _currentMode = mode;
+    return true; // Ya estamos en el modo deseado
+  }
+
   char cmd[16];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::MODE, (int)mode);
+  
   AtError err = _parser->sendCommand(cmd, LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
-  if (err == AtError::BOOT_ALERT) {
+  
+  // Validamos que alertó el reinicio Y que el parser identificó el modo correcto
+  if (err == AtError::BOOT_ALERT && _parser->getDetectedMode() == mode) {
     _currentMode = mode;
-    return wakeUp();
+    return true;
   }
   return false;
 }

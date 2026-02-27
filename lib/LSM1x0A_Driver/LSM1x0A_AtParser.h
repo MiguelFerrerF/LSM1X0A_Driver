@@ -72,12 +72,21 @@ public:
     return _deviceType;
   }
 
+  /**
+   * @brief Obtiene el modo operativo detectado durante el arranque.
+   */
+  LsmMode getDetectedMode() const
+  {
+    return _detectedMode;
+  }
+
 private:
   UartDriver*     _driver        = nullptr;
   AtEventCallback _eventCallback = nullptr;
   void*           _eventCtx      = nullptr;
 
-  LsmModuleType _deviceType = LsmModuleType::UNKNOWN;
+  LsmModuleType _deviceType   = LsmModuleType::UNKNOWN;
+  LsmMode       _detectedMode = LsmMode::MODE_UNKNOWN;
 
   // Buffer Interno Estático (Cero asignación dinámica)
   char     _lineBuffer[AT_BUFFER_SIZE] = {0};

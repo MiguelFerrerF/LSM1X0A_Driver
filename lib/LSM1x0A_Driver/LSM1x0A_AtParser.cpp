@@ -202,6 +202,12 @@ void LSM1x0A_AtParser::processLine(char* line)
   else if (strstr(line, "LSM110A") != nullptr)
     _deviceType = LsmModuleType::LSM110A;
 
+  // Detectar modo operativo
+  if (strstr(line, "LoRa") != nullptr)
+    _detectedMode = LsmMode::LORAWAN;
+  else if (strstr(line, "SigFox") != nullptr)
+    _detectedMode = LsmMode::SIGFOX;
+
   // Interceptar MAC rxTimeOut explícitamente sin fallar el pendingCommand
   if (strstr(line, "MAC rxTimeOut") != nullptr) {
     if (_eventCallback)
@@ -355,6 +361,10 @@ AtError LSM1x0A_AtParser::sendCommandWithResponse(const char* cmd, const char* e
   // 3. Enviar Comando por UART
   _driver->sendData(cmd, strlen(cmd));
   _driver->sendData("\r\n", 2);
+
+  // Devolver el comando solo para depuración
+  if (_eventCallback)
+    _eventCallback(LsmEvent::CMD, cmd, _eventCtx);
 
   // 4. Bloquear esperando respuesta
   if (xSemaphoreTake(_syncSem, pdMS_TO_TICKS(timeoutMs)) != pdTRUE) {

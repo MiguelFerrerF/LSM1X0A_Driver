@@ -219,6 +219,7 @@ const char INFO[]       = "INFO";       // Otros
 const char LOG[]        = "LOG";        // Mensajes de Log
 const char VERBOSE[]    = "VERBOSE";
 const char CHMASK[]     = "CHMASK";
+const char CMD[]        = "CMD";
 } // namespace LsmEvent
 
 // Estados comunes de respuesta
