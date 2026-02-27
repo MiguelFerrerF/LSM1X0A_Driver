@@ -155,7 +155,8 @@ enum class LsmBand
 
 // Constantes para selección de subbandas (Channel Mask).
 // Usar un OR bit a bit para activar múltiples: (SUB_BAND_1 | SUB_BAND_2)
-enum LsmSubBand {
+enum LsmSubBand
+{
   SUB_BAND_NONE = 0x0000,
   SUB_BAND_1    = 0x0001,
   SUB_BAND_2    = 0x0002,
@@ -217,9 +218,9 @@ const char BEACON[]     = "BEACON";     // Info de Beacon
 const char NVM[]        = "NVM";        // Guardado en Flash interna
 const char INFO[]       = "INFO";       // Otros
 const char LOG[]        = "LOG";        // Mensajes de Log
-const char VERBOSE[]    = "VERBOSE";
-const char CHMASK[]     = "CHMASK";
-const char CMD[]        = "CMD";
+const char VERBOSE[]    = "VERBOSE";    // Volcado de texto
+const char CHMASK[]     = "CHMASK";     // Cambio de Channel Mask
+const char CMD[]        = "CMD";        // Comando AT
 } // namespace LsmEvent
 
 // Estados comunes de respuesta
