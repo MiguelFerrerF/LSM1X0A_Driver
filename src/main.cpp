@@ -211,7 +211,7 @@ void loop()
         Serial.println("[TEST] Ejecutando Join (OTAA) con rcon un máximo de 5 intentos...");
         for (int i = 1; i <= 5; i++) {
           Serial.printf("-> Intento de Join %d/5...\n", i);
-          ok = controller->lorawan.join(LsmJoinMode::ABP);
+          ok = controller->lorawan.join(LsmJoinMode::OTAA);
           if (ok) {
             Serial.println("-> Join (OTAA): EXITOSO");
             delay(500);

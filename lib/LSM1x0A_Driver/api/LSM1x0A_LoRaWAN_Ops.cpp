@@ -34,10 +34,13 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
     }
     return true; // Éxito completo
   }
+  else if (result & LSM_EVT_JOIN_FAIL) {
+    return false; // Fallo de Join (ej: credenciales malas, sin cobertura, etc)
+  }
 
-  // Si llegamos aquí es un fallo o Timeout inesperado de la capa MAC
+  // Si llegamos aquí es un Timeout inesperado de la capa MAC
   _controller->recoverModule();
-  return false; // Fallo o Timeout
+  return false; // Timeout
 }
 
 bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, uint32_t timeoutMs)
