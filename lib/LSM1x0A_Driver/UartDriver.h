@@ -12,6 +12,10 @@
 // Esto permite llamar métodos de clases C++ desde este driver C-style.
 using ReceiveCallback = void (*)(void* ctx, uint8_t* data, size_t len);
 
+/**
+ * @brief Simple UART hardware driver for Espressif chips using ESP-IDF.
+ * It provides asynchronous receive capabilities using FreeRTOS tasks to feed data callbacks.
+ */
 class UartDriver
 {
 public:

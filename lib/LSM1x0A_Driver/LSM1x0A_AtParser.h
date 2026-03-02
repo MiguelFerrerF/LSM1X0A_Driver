@@ -13,20 +13,29 @@
 // ctx: Contexto de usuario
 typedef void (*AtEventCallback)(const char* type, const char* payload, void* ctx);
 
+/**
+ * @brief Thread-safe AT Command Parser for the LSM100A/LSM110A modules.
+ * Handles UART communication, timeouts, async events (URC), and parsing responses.
+ */
 class LSM1x0A_AtParser
 {
 public:
   LSM1x0A_AtParser();
   ~LSM1x0A_AtParser();
 
-  // Inicialización
-  bool init(UartDriver* driver, AtEventCallback onEvent = nullptr, void* eventCtx = nullptr);
-
   /**
-   * @brief Realiza un "Ping" de activación enviando comandos AT hasta recibir OK.
-   * Maneja el estado de bajo consumo del módulo.
-   * @return true si el módulo despertó y respondió adecuadamente.
+   * @brief Initializes the AT Parser with a UART driver and an optional asynchronous event callback.
+   * @param driver Pointer to the UartDriver instance.
+   * @param onEvent Callback for asynchronous URC (Unsolicited Result Code) events.
+   * @param eventCtx Context pointer passed back in the callback.
+   * @return true if successfully initialized.
    */
+  bool init(UartDriver* driver, AtEventCallback onEvent = nullptr,
+            void* eventCtx = nullptr); /**
+                                        * @brief Realiza un "Ping" de activación enviando comandos AT hasta recibir OK.
+                                        * Maneja el estado de bajo consumo del módulo.
+                                        * @return true si el módulo despertó y respondió adecuadamente.
+                                        */
   bool wakeUp(uint8_t retries = DEFAULT_MAX_RETRIES, uint32_t delayMs = 500);
 
   /**
@@ -48,16 +57,24 @@ public:
    * @param expectedTag Etiqueta que precede al valor (ej "DevEui: ") o NULL si no hay tag.
    * @param outBuffer Buffer donde copiar el resultado (NO incluye el tag).
    * @param outSize Tamaño del buffer de salida.
+   * @param timeoutMs Timeout to wait for the expected tag result.
    * @return AtError
    */
   AtError sendCommandWithResponse(const char* cmd, const char* expectedTag, char* outBuffer, size_t outSize, uint32_t timeoutMs = 2000);
 
-  // Método público para inyección de datos desde el Driver UART
+  /**
+   * @brief Parses incoming raw data from the UART driver.
+   * @param data Pointer to the incoming byte array.
+   * @param len Number of bytes received.
+   */
   void eatBuffer(const uint8_t* data, size_t len);
 
-  // Metodo público para descripción de errores
+  /**
+   * @brief Converts an AtError enum value into a readable string.
+   * @param err The AtError to convert.
+   * @return The string representation.
+   */
   const char* atErrorToString(AtError err);
-
   /**
    * @brief Helper estático para convertir el string de metadatos en una struct usable.
    * Parsear: "+EVT:RX_1, PORT 2, DR 5, RSSI -90, SNR 10, DMODM 10, GWN 2"

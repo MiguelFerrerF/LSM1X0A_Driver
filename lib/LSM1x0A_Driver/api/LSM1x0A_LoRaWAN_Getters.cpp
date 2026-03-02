@@ -319,7 +319,8 @@ LsmNetworkType LSM1x0A_LoRaWAN::getNetworkType()
 
 bool LSM1x0A_LoRaWAN::getChannelMask(uint16_t* outMasks, size_t* outArraySize)
 {
-  if (!outMasks || !outArraySize || *outArraySize == 0) return false;
+  if (!outMasks || !outArraySize || *outArraySize == 0)
+    return false;
 
   // 1. Limpiamos buffer en clase base
   _controller->resetTempMaskBuffer();

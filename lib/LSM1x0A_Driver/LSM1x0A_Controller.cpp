@@ -103,7 +103,7 @@ AtError LSM1x0A_Controller::sendCommand(const char* cmd, uint32_t timeoutMs, int
   }
 
   // Si agotamos todos los reintentos (ej: timeouts constantes), ejecutamos recuperación
-    recoverModule();
+  recoverModule();
   return err;
 }
 
@@ -137,7 +137,7 @@ AtError LSM1x0A_Controller::sendCommandWithResponse(const char* cmd, char* outBu
   }
 
   // Si falló persistentemente
-    recoverModule();
+  recoverModule();
   return err;
 }
 

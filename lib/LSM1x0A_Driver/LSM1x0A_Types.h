@@ -26,61 +26,101 @@
 
 #define LSM_INTERNAL_PROCESS_OVERHEAD 350
 
-// Mapeo directo de lora_at.h y lora_command.c
+/**
+ * @brief Represents the parsed AT command response codes and internal states of the LSM1x0A parser.
+ * Maps directly to errors thrown by lora_at.c and lora_command.c inside the firmware.
+ */
 enum class AtError
 {
+  /** @brief Success token (e.g. \\r\\nOK\\r\\n) */
   OK = 0,
 
-  // Errores específicos de AT LoRaWAN
-  GENERIC_ERROR,       // AT_ERROR
-  PARAM_ERROR,         // AT_PARAM_ERROR
-  BUSY,                // AT_BUSY_ERROR - Importante: Reintentar
-  TEST_PARAM_OVERFLOW, // AT_TEST_PARAM_OVERFLOW - Error en consulta de parámetros
-  NO_NET_JOINED,       // AT_NO_NETWORK_JOINED - Importante: Hacer Join
-  RX_ERROR,            // AT_RX_ERROR
-  NO_CLASS_B_ENABLE,   // AT_NO_CLASS_B_ENABLED
-  DUTY_CYCLE_RESTRICT, // AT_DUTYCYCLE_RESTRICTED
-  CRYPTO_ERROR,        // AT_CRYPTO_ERROR
+  // LoRaWAN Specific AT Errors
+  /** @brief Generic LoRaWAN error (AT_ERROR) */
+  GENERIC_ERROR,       
+  /** @brief Parameter error, out of bounds or malformed (AT_PARAM_ERROR) */
+  PARAM_ERROR,         
+  /** @brief Module is busy. Important: Usually indicates a backoff/retry is needed (AT_BUSY_ERROR) */
+  BUSY,                
+  /** @brief Parameter query overflow error (AT_TEST_PARAM_OVERFLOW) */
+  TEST_PARAM_OVERFLOW, 
+  /** @brief Tried to send data without being joined to network. Important: Trigger Join (AT_NO_NETWORK_JOINED) */
+  NO_NET_JOINED,       
+  /** @brief Serial or radio reception error (AT_RX_ERROR) */
+  RX_ERROR,            
+  /** @brief Attempted Class B operation without it being enabled (AT_NO_CLASS_B_ENABLED) */
+  NO_CLASS_B_ENABLE,   
+  /** @brief Transmission restricted due to ETSI Duty Cycle limits (AT_DUTYCYCLE_RESTRICTED) */
+  DUTY_CYCLE_RESTRICT, 
+  /** @brief Cryptographic MAC error (AT_CRYPTO_ERROR) */
+  CRYPTO_ERROR,        
 
-  // Errores específicos de SigFox
-  LIBRARY_ERROR, // AT_LIB_ERROR - Error interno de la librería SigFox
-  TX_TIMEOUT,    // AT_TX_TIMEOUT - Timeout en transmisión
-  RX_TIMEOUT,    // AT_RX_TIMEOUT - Timeout en recepción
-  RECONF_ERROR,  // AT_RECONF_ERROR - Error de reconfiguración
+  // SigFox Specific Errors
+  /** @brief Internal SigFox library error (AT_LIB_ERROR) */
+  LIBRARY_ERROR, 
+  /** @brief Transmission timeout, channel busy or CS (AT_TX_TIMEOUT) */
+  TX_TIMEOUT,    
+  /** @brief Reception window timeout (AT_RX_TIMEOUT) */
+  RX_TIMEOUT,    
+  /** @brief Reconfiguration error (AT_RECONF_ERROR) */
+  RECONF_ERROR,  
 
-  // Errores de Parser
-  BOOT_ALERT, // "BOOTALERT" - Módulo reiniciado
+  // Parser specific errors
+  /** @brief Boot alert received spontaneously ("BOOTALERT"). Indicates module was restarted. */
+  BOOT_ALERT, 
 
-  // Errores locales del Driver/Parser
+  // Local Driver/Parser operational errors
+  /** @brief The parser timed out waiting for the final \\r\\nOK\\r\\n token */
   TIMEOUT,
+  /** @brief Internal string buffer overflowed */
   BUFFER_OVERFLOW,
+  /** @brief Unknown AT string returned by the module */
   UNKNOWN
 };
 
-// Estructura para almacenar datos de calidad de señal (Coverage Analysis)
+/**
+ * @brief Structure to hold signal quality data (Coverage Analysis) and payload metadata.
+ */
 struct LsmRxMetadata
 {
-  char slot[8]      = ""; // "1", "2", "C", "P_MC", etc.
-  int  port         = 0;
-  int  dataRate     = 0;
-  int  rssi         = 0;
-  int  snr          = 0;
-  bool hasLinkCheck = false; // true si el servidor mandó info de gateways
-  int  demodMargin  = 0;     // Solo válido si hasLinkCheck = true
-  int  nbGateways   = 0;     // Solo válido si hasLinkCheck = true
+  /** @brief Rx Slot ("1", "2", "C", "P_MC") */
+  char slot[8] = "";
+  /** @brief Downlink port */
+  int port = 0;
+  /** @brief Operational Data Rate */
+  int dataRate = 0;
+  /** @brief Received Signal Strength Indicator (dBm) */
+  int rssi = 0;
+  /** @brief Signal-to-Noise Ratio (dB) */
+  int snr = 0;
+  /** @brief Flag indicating if the server replied with LinkCheck info */
+  bool hasLinkCheck = false;
+  /** @brief Demodulation Margin (only valid if hasLinkCheck = true) */
+  int demodMargin = 0;
+  /** @brief Number of Gateways that received the uplink (only valid if hasLinkCheck = true) */
+  int nbGateways = 0;
 };
 
-// Niveles de Log (Jerarquía estándar)
+/**
+ * @brief Standard logging hierarchy levels for Driver Verbosity.
+ */
 enum class LsmLogLevel
 {
-  SILENCE = 0, // Silencio total
-  ERROR,       // Solo fallos críticos (Hardware, Timeouts)
-  WARN,        // Advertencias (Operación no óptima)
-  INFO,        // Estado de alto nivel (Join Success, Packet Sent)
-  LSM_DEBUG,   // Tráfico de comandos AT (TX: AT+... / RX: OK)
-  VERBOSE      // Todo (incluyendo dumps internos si los hubiera)
+  /** @brief Absolute silence, no logs emitted */
+  SILENCE = 0, 
+  /** @brief Only critical hardware failures or unrecoverable timeouts */
+  ERROR,       
+  /** @brief Warnings about non-optimal operation or retries */
+  WARN,        
+  /** @brief High-level application state (Join Success, Packet Sent) */
+  INFO,        
+  /** @brief Complete AT command traffic and flow tracing (TX: AT+... / RX: OK) */
+  LSM_DEBUG,   
+  /** @brief Absolutely everything, including internal module raw dumps if available */
+  VERBOSE      
 };
 
+/** @brief Represents the physical device model detected */
 enum class LsmModuleType
 {
   UNKNOWN = 0,
@@ -88,18 +128,23 @@ enum class LsmModuleType
   LSM110A
 };
 
+/** @brief The active network protocol stack of the dual-mode radio */
 enum class LsmMode
 {
   SIGFOX = 0,
   LORAWAN,
   MODE_UNKNOWN
 };
+
+/** @brief LoRaWAN Join strategy */
 enum class LsmJoinMode
 {
   ABP = 0,
   OTAA,
   JOIN_MODE_UNKNOWN
 };
+
+/** @brief LoRaWAN Device Class */
 enum class LsmClass
 {
   CLASS_A = 0,
@@ -107,12 +152,16 @@ enum class LsmClass
   CLASS_C,
   CLASS_UNKNOWN
 };
+
+/** @brief LoRaWAN Network Type (Public/Private Sync Word) */
 enum class LsmNetworkType
 {
   PUBLIC = 0,
   PRIVATE,
   NETWORK_TYPE_UNKNOWN
 };
+
+/** @brief LoRaWAN Data Rates (DR0-DR7) */
 enum class LsmDataRate
 {
   DR_0 = 0,
@@ -125,6 +174,8 @@ enum class LsmDataRate
   DR_7,
   DR_UNKNOWN
 };
+
+/** @brief Transmit Power levels normalized against regional max output */
 enum class LsmTxPower
 {
   TP_MAX = 0,
@@ -137,6 +188,7 @@ enum class LsmTxPower
   TP_MAX_MINUS_14,
   TP_UNKNOWN
 };
+/** @brief LoRaWAN Regional Band IDs */
 enum class LsmBand
 {
   AS923_1 = 0,
@@ -153,8 +205,10 @@ enum class LsmBand
   BAND_UNKNOWN
 };
 
-// Constantes para selección de subbandas (Channel Mask).
-// Usar un OR bit a bit para activar múltiples: (SUB_BAND_1 | SUB_BAND_2)
+/** 
+ * @brief Constants for multi-channel subband selection (Channel Mask).
+ * Bitwise OR can be used to activate multiple banks: (SUB_BAND_1 | SUB_BAND_2)
+ */
 enum LsmSubBand
 {
   SUB_BAND_NONE = 0x0000,
@@ -166,13 +220,14 @@ enum LsmSubBand
   SUB_BAND_6    = 0x0020,
   SUB_BAND_7    = 0x0040,
   SUB_BAND_8    = 0x0080,
-  SUB_BAND_9    = 0x0100, // Específico de CN470
-  SUB_BAND_10   = 0x0200, // Específico de CN470
-  SUB_BAND_11   = 0x0400, // Específico de CN470
-  SUB_BAND_12   = 0x0800, // Específico de CN470
+  SUB_BAND_9    = 0x0100, /**< CN470 specific */
+  SUB_BAND_10   = 0x0200, /**< CN470 specific */
+  SUB_BAND_11   = 0x0400, /**< CN470 specific */
+  SUB_BAND_12   = 0x0800, /**< CN470 specific */
   SUB_BAND_ALL  = 0xFFFF
 };
 
+/** @brief Periodicity for Class B Ping Slots */
 enum class LsmPingSlot
 {
   EVERY_1_SEC = 0,
@@ -185,6 +240,8 @@ enum class LsmPingSlot
   EVERY_128_SEC,
   PING_SLOT_UNKNOWN
 };
+
+/** @brief Sigfox Regional Configurations (Macro-Channels) */
 enum class LsmRCChannel
 {
   RC3A = 0,
@@ -197,6 +254,8 @@ enum class LsmRCChannel
   RC7,
   RC_UNKNOWN
 };
+
+/** @brief Payload encoding format for Sigfox transmissions */
 enum class LsmSigfoxDataType
 {
   BIT = 0,
@@ -205,32 +264,43 @@ enum class LsmSigfoxDataType
   OOB
 };
 
-// Tipos de Eventos Asíncronos que enviaremos al Callback
+/**
+ * @brief Asynchronous Event Types dispatched to the User Callback.
+ * @cond
+ */
 namespace LsmEvent
 {
 const char JOIN[]       = "JOIN";
 const char TX[]         = "TX";
-const char RX_DATA[]    = "RX_DATA";    // El payload útil (Hex)
-const char RX_META[]    = "RX_META";    // Metadatos (RSSI, SNR, DR)
-const char RX_TIMEOUT[] = "RX_TIMEOUT"; // Timeout explícito de la ventana de recepción
-const char CLASS[]      = "CLASS";      // Cambio de Clase A/B/C
-const char BEACON[]     = "BEACON";     // Info de Beacon
-const char NVM[]        = "NVM";        // Guardado en Flash interna
-const char INFO[]       = "INFO";       // Otros
-const char LOG[]        = "LOG";        // Mensajes de Log
-const char VERBOSE[]    = "VERBOSE";    // Volcado de texto
-const char CHMASK[]     = "CHMASK";     // Cambio de Channel Mask
-const char CMD[]        = "CMD";        // Comando AT
+const char RX_DATA[]    = "RX_DATA";    /**< Useful hexadecimal payload */
+const char RX_META[]    = "RX_META";    /**< Window Quality Metadata (RSSI, SNR, DR) */
+const char RX_TIMEOUT[] = "RX_TIMEOUT"; /**< Explicit reception window timeout */
+const char CLASS[]      = "CLASS";      /**< Device Class switch */
+const char BEACON[]     = "BEACON";     /**< Beacon Information */
+const char NVM[]        = "NVM";        /**< Saved context to internal flash */
+const char INFO[]       = "INFO";       /**< General module information */
+const char LOG[]        = "LOG";        /**< Logging traces */
+const char VERBOSE[]    = "VERBOSE";    /**< Standard AT verbose dumps */
+const char CHMASK[]     = "CHMASK";     /**< Channel mask setting event */
+const char CMD[]        = "CMD";        /**< AT command execution trigger */
 } // namespace LsmEvent
+/** @endcond */
 
-// Estados comunes de respuesta
+/**
+ * @brief Common event outcome status constants.
+ * @cond
+ */
 namespace LsmStatus
 {
 const char SUCCESS[] = "SUCCESS";
 const char FAILED[]  = "FAILED";
 } // namespace LsmStatus
+/** @endcond */
 
-// Commandos AT especiales para el módulo LSM1x0A
+/**
+ * @brief Raw AT commands and strings used by the module's protocol.
+ * @cond
+ */
 namespace LsmAtCommand
 {
 // General AT Commands
@@ -256,7 +326,7 @@ const char NWK_ID[]    = "AT+NWKID=";
 const char DEVNONCE[]  = "AT+DEVNONCE=";
 const char FRAME_CNT[] = "AT+ABPFCNT=";
 
-// Operaciones de Red y Configuración MAC
+// Mac Network Configuration
 const char ADAPTIVE_DR[]     = "AT+ADR=";
 const char DR[]              = "AT+DR=";
 const char TX_POWER[]        = "AT+TXP=";
@@ -307,5 +377,6 @@ const char RADIO_POWER[]        = "ATS302=";
 const char ENCRYPT_KEY[]        = "ATS410=";
 const char ENCRYPT_PAYLOAD[]    = "ATS411=";
 } // namespace LsmAtCommand
+/** @endcond */
 
 #endif // LSM1X0A_TYPES_H

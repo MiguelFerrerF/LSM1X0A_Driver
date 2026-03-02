@@ -19,8 +19,8 @@
 #define LSM_EVT_LINK_CHECK_ANS (1 << 6)
 
 /**
- * @class LSM1x0A_Controller
- * @brief Controlador intuitivo para interactuar con módulos LSM1x0A (LoRaWAN/Sigfox).
+ * @defgroup Hardware_Controller LSM1x0A Hardware & Controller
+ * @brief Core system interface, asynchronous event routing, UART management, and generic AT communication.
  *
  * Esta clase proporciona una interfaz sencilla para el usuario, abstrayendo
  * el driver UART y el parseador AT subyacentes. Permite inicializar la
@@ -237,18 +237,25 @@ public:
   /**
    * @brief Getters para los últimos metadatos de radio recibidos.
    */
+  /** @brief Gets the last RSSI received by the module. */
   int getLastRssi() const
   {
     return _lastRssi;
   }
+
+  /** @brief Gets the last SNR received by the module. */
   int getLastSnr() const
   {
     return _lastSnr;
   }
+
+  /** @brief Gets the last Demodulation Margin received by the module. */
   int getLastDemodMargin() const
   {
     return _lastDmodm;
   }
+
+  /** @brief Gets the last Gateway Count reported by LinkCheck. */
   int getLastNbGateways() const
   {
     return _lastGwn;
@@ -257,12 +264,28 @@ public:
   // =========================================================================
   // SUB-MÓDULOS (APIs LORAWAN Y SIGFOX)
   // =========================================================================
+
+  /** @brief LoRaWAN specific configuration and transmission API context. */
   LSM1x0A_LoRaWAN lorawan;
 
-  // Acceso a buffers temporales internos para submódulos
-  const uint16_t* getTempMaskBuffer() const { return _tempMaskBuffer; }
-  int getTempMaskCount() const { return _tempMaskCount; }
-  void resetTempMaskBuffer() { _tempMaskCount = 0; memset(_tempMaskBuffer, 0, sizeof(_tempMaskBuffer)); }
+  /** @brief Internal helper to return the static temporary Channel Mask buffer pointer. */
+  const uint16_t* getTempMaskBuffer() const
+  {
+    return _tempMaskBuffer;
+  }
+
+  /** @brief Internal helper to return the temporary Channel Mask active element count. */
+  int getTempMaskCount() const
+  {
+    return _tempMaskCount;
+  }
+
+  /** @brief Internal helper to zero-out the static temporary Channel Mask buffer. */
+  void resetTempMaskBuffer()
+  {
+    _tempMaskCount = 0;
+    memset(_tempMaskBuffer, 0, sizeof(_tempMaskBuffer));
+  }
 
 private:
   UartDriver*       _driver      = nullptr;
@@ -278,7 +301,7 @@ private:
   int _lastSnr   = 0;
   int _lastDmodm = 0;
   int _lastGwn   = 0;
-  
+
   // Buffers temporales para extracciones de listas de configuración
   uint16_t _tempMaskBuffer[6] = {0};
   int      _tempMaskCount     = 0;
@@ -314,5 +337,7 @@ private:
    */
   bool recoverModuleState();
 };
+
+/** @} */ // end of Hardware_Controller group
 
 #endif // LSM1X0A_CONTROLLER_H

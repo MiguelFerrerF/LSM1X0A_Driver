@@ -297,7 +297,7 @@ bool LSM1x0A_LoRaWAN::setUnconfirmRetry(int retries)
 
 bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
 {
-  _cachedBand = band;
+  _cachedBand        = band;
   _cachedSubBandMask = subBandMask;
 
   if (!isJoined()) {
@@ -306,7 +306,7 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
   }
 
   _pendingChannelMask = false;
-  int maxCount = 0;
+  int maxCount        = 0;
 
   switch (band) {
     case LsmBand::EU868:
@@ -329,11 +329,12 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
   }
 
   uint16_t blocks[6] = {0};
-  
+
   if (subBandMask == 0xFFFF) {
     if (maxCount == 1) {
       blocks[0] = 0x00FF; // Default 16 channels? Or FFFF? Actually in EU868 standard is 00FF (first 8) or 000F. We will use 00FF to be safe.
-    } else if (maxCount == 6) {
+    }
+    else if (maxCount == 6) {
       blocks[0] = 0xFFFF;
       blocks[1] = 0xFFFF;
       blocks[2] = 0xFFFF;
@@ -341,51 +342,58 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
       if (band == LsmBand::CN470) {
         blocks[4] = 0xFFFF;
         blocks[5] = 0xFFFF;
-      } else {
+      }
+      else {
         blocks[4] = 0x00FF; // US915 has 8 500kHz channels
         blocks[5] = 0x0000;
       }
     }
-  } else {
+  }
+  else {
     if (maxCount == 1) {
-        uint16_t val = 0;
-        if(subBandMask & 0x0001) val |= 0x000F;
-        if(subBandMask & 0x0002) val |= 0x00F0;
-        blocks[0] = val;
-    } else {
-        int maxSubBands = (band == LsmBand::CN470) ? 12 : 8;
-        for (int i = 0; i < maxSubBands; i++) {
-            if (subBandMask & (1 << i)) {
-                // For subband i (0 to 7 usually):
-                // 125kHz channels
-                int blockIdx = i / 2;
-                uint16_t offsetHex = ((i % 2) == 0) ? 0x00FF : 0xFF00;
-                blocks[blockIdx] |= offsetHex;
-                
-                // 500kHz channels (for US915/AU915 only)
-                if (band == LsmBand::US915 || band == LsmBand::AU915) {
-                    blocks[4] |= (1 << i);
-                }
-            }
+      uint16_t val = 0;
+      if (subBandMask & 0x0001)
+        val |= 0x000F;
+      if (subBandMask & 0x0002)
+        val |= 0x00F0;
+      blocks[0] = val;
+    }
+    else {
+      int maxSubBands = (band == LsmBand::CN470) ? 12 : 8;
+      for (int i = 0; i < maxSubBands; i++) {
+        if (subBandMask & (1 << i)) {
+          // For subband i (0 to 7 usually):
+          // 125kHz channels
+          int      blockIdx  = i / 2;
+          uint16_t offsetHex = ((i % 2) == 0) ? 0x00FF : 0xFF00;
+          blocks[blockIdx] |= offsetHex;
+
+          // 500kHz channels (for US915/AU915 only)
+          if (band == LsmBand::US915 || band == LsmBand::AU915) {
+            blocks[4] |= (1 << i);
+          }
         }
+      }
     }
   }
 
-  char maskStr[128] = {0};
-  size_t currentLen = 0;
+  char   maskStr[128] = {0};
+  size_t currentLen   = 0;
   for (int i = 0; i < maxCount; i++) {
     int written = 0;
     if (i > 0) {
-        written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, ":%04X", blocks[i]);
-    } else {
-        written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, "%04X", blocks[i]);
+      written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, ":%04X", blocks[i]);
+    }
+    else {
+      written = snprintf(maskStr + currentLen, sizeof(maskStr) - currentLen, "%04X", blocks[i]);
     }
     if (written > 0 && currentLen + written < sizeof(maskStr)) {
-        currentLen += written;
+      currentLen += written;
     }
   }
 
-  if (strlen(maskStr) == 0) return false;
+  if (strlen(maskStr) == 0)
+    return false;
 
   char cmd[128];
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, maskStr);
@@ -502,51 +510,68 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
   bool success = true;
 
   // Restaurar identificadores si estaban en caché
-  if (_cachedDevEui[0] != '\0') 
-    if (!setDevEUI(_cachedDevEui)) success = false;
-  if (_cachedDevAddr[0] != '\0') 
-    if (!setDevAddr(_cachedDevAddr)) success = false;
-  if (_cachedNwkID[0] != '\0') 
-    if (!setNwkID((int)strtol(_cachedNwkID, NULL, 16))) success = false;
+  if (_cachedDevEui[0] != '\0')
+    if (!setDevEUI(_cachedDevEui))
+      success = false;
+  if (_cachedDevAddr[0] != '\0')
+    if (!setDevAddr(_cachedDevAddr))
+      success = false;
+  if (_cachedNwkID[0] != '\0')
+    if (!setNwkID((int)strtol(_cachedNwkID, NULL, 16)))
+      success = false;
 
   // Restaurar Band y SubBand si es posible
   if (_cachedBand != LsmBand::BAND_UNKNOWN) {
-    if (!setBand(_cachedBand)) success = false;
-    if (_cachedSubBandMask != 0xFFFF && _cachedBand == LsmBand::US915) 
-      if (!setChannelMask(_cachedBand, _cachedSubBandMask)) success = false;
+    if (!setBand(_cachedBand))
+      success = false;
+    if (_cachedSubBandMask != 0xFFFF && _cachedBand == LsmBand::US915)
+      if (!setChannelMask(_cachedBand, _cachedSubBandMask))
+        success = false;
   }
 
   // Restaurar configuraciones de red
-  if (_cachedAdrEnabled != -1) 
-    if (!setADR(_cachedAdrEnabled == 1)) success = false;
-  if (_cachedDataRate != LsmDataRate::DR_UNKNOWN) 
-    if (!setDataRate(_cachedDataRate)) success = false;
-  if (_cachedTxPower != LsmTxPower::TP_UNKNOWN) 
-    if (!setTxPower(_cachedTxPower)) success = false;
-  if (_cachedDutyCycle != -1) 
-    if (!setDutyCycle(_cachedDutyCycle == 1)) success = false;
+  if (_cachedAdrEnabled != -1)
+    if (!setADR(_cachedAdrEnabled == 1))
+      success = false;
+  if (_cachedDataRate != LsmDataRate::DR_UNKNOWN)
+    if (!setDataRate(_cachedDataRate))
+      success = false;
+  if (_cachedTxPower != LsmTxPower::TP_UNKNOWN)
+    if (!setTxPower(_cachedTxPower))
+      success = false;
+  if (_cachedDutyCycle != -1)
+    if (!setDutyCycle(_cachedDutyCycle == 1))
+      success = false;
 
   // Restaurar delays
-  if (_cachedJoin1Delay != -1) 
-    if (!setJoin1Delay(_cachedJoin1Delay)) success = false;
-  if (_cachedJoin2Delay != -1) 
-    if (!setJoin2Delay(_cachedJoin2Delay)) success = false;
-  if (_cachedRx1Delay != -1) 
-    if (!setRx1Delay(_cachedRx1Delay)) success = false;
-  if (_cachedRx2Delay != -1) 
-    if (!setRx2Delay(_cachedRx2Delay)) success = false;
+  if (_cachedJoin1Delay != -1)
+    if (!setJoin1Delay(_cachedJoin1Delay))
+      success = false;
+  if (_cachedJoin2Delay != -1)
+    if (!setJoin2Delay(_cachedJoin2Delay))
+      success = false;
+  if (_cachedRx1Delay != -1)
+    if (!setRx1Delay(_cachedRx1Delay))
+      success = false;
+  if (_cachedRx2Delay != -1)
+    if (!setRx2Delay(_cachedRx2Delay))
+      success = false;
 
   // Restaurar frecuencias / data rates de RX2
-  if (_cachedRx2DataRate != LsmDataRate::DR_UNKNOWN) 
-    if (!setRx2DataRate(_cachedRx2DataRate)) success = false;
-  if (_cachedRx2Frequency > 0) 
-    if (!setRx2Frequency(_cachedRx2Frequency)) success = false;
+  if (_cachedRx2DataRate != LsmDataRate::DR_UNKNOWN)
+    if (!setRx2DataRate(_cachedRx2DataRate))
+      success = false;
+  if (_cachedRx2Frequency > 0)
+    if (!setRx2Frequency(_cachedRx2Frequency))
+      success = false;
 
   // Restaurar reintentos
-  if (_cachedConfirmRetry >= 0) 
-    if (!setConfirmRetry(_cachedConfirmRetry)) success = false;
-  if (_cachedUnconfirmRetry >= 0) 
-    if (!setUnconfirmRetry(_cachedUnconfirmRetry)) success = false;
+  if (_cachedConfirmRetry >= 0)
+    if (!setConfirmRetry(_cachedConfirmRetry))
+      success = false;
+  if (_cachedUnconfirmRetry >= 0)
+    if (!setUnconfirmRetry(_cachedUnconfirmRetry))
+      success = false;
 
   return success;
 }
@@ -556,32 +581,48 @@ bool LSM1x0A_LoRaWAN::loadConfigFromModule()
   bool success = true;
 
   // Llama a los getters internos para forzar que sus valores se sobreescriban en la caché actual
-  if (!getDevEUI(_cachedDevEui, sizeof(_cachedDevEui))) success = false;
-  if (!getDevAddr(_cachedDevAddr, sizeof(_cachedDevAddr))) success = false;
-  
+  if (!getDevEUI(_cachedDevEui, sizeof(_cachedDevEui)))
+    success = false;
+  if (!getDevAddr(_cachedDevAddr, sizeof(_cachedDevAddr)))
+    success = false;
+
   int nwkId = getNwkID();
   if (nwkId >= 0) {
     snprintf(_cachedNwkID, sizeof(_cachedNwkID), "%08X", (unsigned int)nwkId);
-  } else {
+  }
+  else {
     success = false;
   }
 
-  if (getADR() < 0) success = false;
-  if (getDataRate() == LsmDataRate::DR_UNKNOWN) success = false;
-  if (getTxPower() == LsmTxPower::TP_UNKNOWN) success = false;
-  if (getBand() == LsmBand::BAND_UNKNOWN) success = false;
-  if (getDutyCycle() < 0) success = false;
-  
-  if (getJoin1Delay() < 0) success = false;
-  if (getJoin2Delay() < 0) success = false;
-  if (getRx1Delay() < 0) success = false;
-  if (getRx2Delay() < 0) success = false;
-  
-  if (getRx2DataRate() == LsmDataRate::DR_UNKNOWN) success = false;
-  if (getRx2Frequency() < 0) success = false;
+  if (getADR() < 0)
+    success = false;
+  if (getDataRate() == LsmDataRate::DR_UNKNOWN)
+    success = false;
+  if (getTxPower() == LsmTxPower::TP_UNKNOWN)
+    success = false;
+  if (getBand() == LsmBand::BAND_UNKNOWN)
+    success = false;
+  if (getDutyCycle() < 0)
+    success = false;
 
-  if (getConfirmRetry() < 0) success = false;
-  if (getUnconfirmRetry() < 0) success = false;
+  if (getJoin1Delay() < 0)
+    success = false;
+  if (getJoin2Delay() < 0)
+    success = false;
+  if (getRx1Delay() < 0)
+    success = false;
+  if (getRx2Delay() < 0)
+    success = false;
+
+  if (getRx2DataRate() == LsmDataRate::DR_UNKNOWN)
+    success = false;
+  if (getRx2Frequency() < 0)
+    success = false;
+
+  if (getConfirmRetry() < 0)
+    success = false;
+  if (getUnconfirmRetry() < 0)
+    success = false;
 
   return success;
 }

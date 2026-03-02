@@ -1,74 +1,76 @@
-# Guía de la API LSM1x0A_LoRaWAN
+\page lsm1x0a_lorawan_api_page LoRaWAN API Architecture
 
-Este documento describe las funciones disponibles en el submódulo `LSM1x0A_LoRaWAN`, encargado de la configuración y operación LoRaWAN para el controlador LSM1x0A. Sirve como referencia para desarrolladores y agentes que deseen mantener, extender o integrar nuevas funcionalidades en el firmware.
+# LSM1x0A_LoRaWAN API Guide
 
-## Estructura General
+This document describes the functions available in the `LSM1x0A_LoRaWAN` submodule, which handles LoRaWAN configuration and operation for the LSM1x0A controller. It serves as a reference for developers and agents wishing to maintain, extend, or integrate new features into the firmware.
 
-La clase `LSM1x0A_LoRaWAN` está diseñada para separar la lógica específica de LoRaWAN del controlador principal, evitando el antipatrón God Object. Todas las operaciones requieren una instancia de `LSM1x0A_Controller` para interactuar con el hardware.
+## General Structure
+
+The `LSM1x0A_LoRaWAN` class is designed to separate LoRaWAN-specific logic from the main controller, avoiding the God Object anti-pattern. All operations require an instance of `LSM1x0A_Controller` to interact with the hardware.
 
 ---
 
-## 1. Gestión de Llaves, IDs y EUIs
-Permiten configurar y consultar los identificadores y llaves necesarias para la autenticación y operación LoRaWAN.
+## 1. Keys, IDs, and EUIs Management
+Allow for compiling and querying the identifiers and keys necessary for authentication and LoRaWAN operation.
 - **Setters:**
   - `setDevEUI`, `setAppEUI`, `setAppKey`, `setNwkKey`, `setDevAddr`, `setAppSKey`, `setNwkSKey`, `setNwkID`
-  - Validan formato y longitud, formatean a hexadecimal con delimitadores y envían el comando AT correspondiente.
+  - They validate format and length, format logic into hex with delimiters, and send the corresponding AT command.
 - **Getters:**
   - `getDevEUI`, `getAppEUI`, `getAppKey`, `getNwkKey`, `getDevAddr`, `getAppSKey`, `getNwkSKey`, `getNwkID`
-  - Recuperan el valor actual desde el módulo y lo devuelven como string o entero.
+  - Retrieve the current value from the module and return it as string or integer.
 
 ---
 
-## 2. Configuración de Red Mac (LoRaWAN)
-Permiten ajustar parámetros de red y operación del stack LoRaWAN.
+## 2. LoRaWAN MAC Network Configuration
+Allow adjusting network parameters and operation of the LoRaWAN stack.
 - **Setters:**
   - `setBand`, `setClass`, `setADR`, `setDataRate`, `setDutyCycle`, `setRx1Delay`, `setRx2Delay`, `setRx2DataRate`, `setRx2Frequency`, `setJoin1Delay`, `setJoin2Delay`, `setTxPower`, `setPingSlot`, `setNetworkType`, `setConfirmRetry`, `setUnconfirmRetry`, `setChannelMask`, `setDevNonce`, `resetDevNonce`
-  - Cada función valida los argumentos y envía el comando AT adecuado.
+  - Each function validates the arguments and sends the proper AT command.
 - **Getters:**
   - `getADR`, `getDataRate`, `getTxPower`, `getBand`, `getClass`, `getDutyCycle`, `getJoin1Delay`, `getJoin2Delay`, `getRx1Delay`, `getRx2Delay`, `getRx2DataRate`, `getRx2Frequency`, `getPingSlot`, `getConfirmRetry`, `getUnconfirmRetry`, `getNetworkType`, `getDevNonce`
-  - Devuelven el valor actual del parámetro solicitado.
+  - They return the current value of the requested parameter.
 
 ---
 
-## 3. Modos Operacionales y Red (LoRaWAN)
-Permiten controlar el modo de unión y la transmisión de datos.
-- `setJoinMode`: Define el modo de unión (OTAA/ABP).
-- `join`: Inicia el proceso de unión a la red, espera eventos de éxito o fallo y recupera el módulo si hay error.
-- `sendData`: Envía datos por LoRaWAN, soporta mensajes confirmados y no confirmados, calcula timeouts dinámicamente y recupera el módulo en caso de fallo.
-- `requestLinkCheck`: Solicita un chequeo de enlace, la respuesta se recibe en el siguiente uplink.
+## 3. Operational and Network Modes (LoRaWAN)
+Allow controlling the join mode and data transmission.
+- `setJoinMode`: Defines the join mode (OTAA/ABP).
+- `join`: Starts the network join process, waits for success/failure events, and recovers the module upon error.
+- `sendData`: Sends data over LoRaWAN, supports confirmed and unconfirmed messages, dynamically calculates timeouts, and recovers the module in case of failure.
+- `requestLinkCheck`: Requests a link check; the response is received on the next uplink.
 
 ---
 
-## 4. Modo de Pruebas y Certificación (RF Test)
-Permiten configurar y ejecutar pruebas de radiofrecuencia y certificación.
+## 4. Test and Certification Mode (RF Test)
+Allow configuring and executing radiofrequency tests and certification.
 - `setRfTestConfig`, `startTxTest`, `startRxTest`, `startTxTone`, `startRxRssiTone`, `stopTest`, `setCertificationMode`, `startTxHoppingTest`, `startContinuousModulationTx`, `startContinuousModulationRx`, `sendCertificationPacket`
-- Permiten configurar frecuencias, potencias, modos de modulación y ejecutar pruebas específicas para certificación.
+- Allow configuring frequencies, powers, modulation modes, and executing specific tests for certification.
 
 ---
 
-## 5. Modo P2P (Punto a Punto)
-Permiten configurar y operar en modo punto a punto, fuera del stack LoRaWAN.
+## 5. P2P (Point-to-Point) Mode
+Allow configuring and operating in point-to-point mode, outside the LoRaWAN stack.
 - `setP2pConfig`, `sendP2pData`, `receiveP2pData`
-- Permiten establecer parámetros de comunicación directa y enviar/recibir datos en modo P2P.
+- Allow setting direct communication parameters and sending/receiving data in P2P mode.
 
 ---
 
-## 6. Utilidades y Mantenimiento
-- `loadConfigFromModule`: Lee todos los parámetros actuales usando los getters internos al módulo y puebla la RAM caché. Útil instanciarlo a través de `controller->syncConfigToCache()` después de iniciar.
-- `restoreConfig`: Restaura al módulo la configuración de sesión almacenada en su caché intermedio en la memoria RAM del controlador (solo aplica las variables previamente modificadas, saltándose las no inicializadas `UNKNOWN`).
-- `clearCache`: Limpia la caché interna (volviendo todo a `UNKNOWN`) para evitar inconsistencias u obligar a no sobreescribir configuraciones en un `restoreConfig`.
+## 6. Utilities and Maintenance
+- `loadConfigFromModule`: Reads all current parameters using the internal module getters and populates the RAM cache. Useful to instantiate via `controller->syncConfigToCache()` after boot up.
+- `restoreConfig`: Restores session configuration to the module stored in its intermediate cache on the controller's RAM memory (only applies previously modified variables, ignoring uninitialized `UNKNOWN` ones).
+- `clearCache`: Clears the internal cache (returning everything to `UNKNOWN`) to avoid inconsistencies or to force not overriding configurations upon a `restoreConfig`.
 
 ---
 
-## Consideraciones de Diseño
-- Todas las funciones validan argumentos y devuelven un valor booleano o entero según el éxito de la operación.
-- Los setters formatean los datos según el estándar LoRaWAN y los comandos AT del módulo.
-- Los getters extraen y limpian la respuesta del módulo para entregar datos listos para usar.
-- El diseño modular permite añadir nuevos comandos o modificar los existentes de forma sencilla.
+## Design Considerations
+- All functions validate arguments and return a boolean or integer depending on the operation's success.
+- Setters format the data according to the LoRaWAN standard and the module's AT commands.
+- Getters parse and clean the module's response to supply ready-to-use data.
+- The modular design makes it easy to add new commands or modify existing ones.
 
 ---
 
-## Ejemplo de Uso
+## Usage Example
 ```cpp
 LSM1x0A_Controller controller;
 LSM1x0A_LoRaWAN lorawan(&controller);
@@ -81,11 +83,11 @@ lorawan.sendData(1, "48656C6C6F", true);
 
 ---
 
-## Extensión y Mantenimiento
-Para añadir nuevas funciones:
-1. Definir el método en el header (`LSM1x0A_LoRaWAN.h`).
-2. Implementar la lógica en el archivo correspondiente (`Setters`, `Getters` u `Ops`).
-3. Documentar el propósito, argumentos y posibles valores de retorno.
-4. Validar el impacto en la caché y la sincronización de eventos.
+## Extension and Maintenance
+To add new features:
+1. Define the method in the header (`LSM1x0A_LoRaWAN.h`).
+2. Implement the logic in the corresponding file (`Setters`, `Getters`, or `Ops`).
+3. Document the purpose, arguments, and possible return values.
+4. Validate the impact on cache and event synchronization.
 
-Este documento debe mantenerse actualizado con cada cambio relevante en la API para asegurar la mantenibilidad y facilitar futuras mejoras.
+This document must be kept updated with every relevant API change to ensure maintainability and facilitate future enhancements.
