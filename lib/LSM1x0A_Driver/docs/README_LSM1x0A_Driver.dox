@@ -1,0 +1,42 @@
+/**
+ * @mainpage LSM1x0A Driver Documentation
+ *
+ * @section intro_sec Introduction
+ *
+ * Welcome to the official C++ Driver Documentation for the **Seongji LSM1x0A Module**.
+ * This library provides a robust, asynchronous, and event-driven interface to control the LSM1x0A radio module, 
+ * utilizing its AT command architecture for both LoRaWAN and Sigfox networks over a serial link (UART).
+ *
+ * ---
+ *
+ * @section features_sec Key Features
+ *
+ * - **Dual-Stack Support:** Seamlessly switch and operate between LoRaWAN and Sigfox modes.
+ * - **Asynchronous Event Handling:** Non-blocking `handleEvent()` loop to process incoming radio events.
+ * - **Robust AT Parser:** Intelligent queueing and recovery on UART timeouts or unresponsive hardware.
+ * - **Modern C++ API:** Strongly typed Enums, clear Structs, and encapsulated Object-Oriented design.
+ *
+ * ---
+ *
+ * @section nav_sec Navigation Hub
+ *
+ * Explore the documentation using the tabs above or the tree-view on the side. 
+ * The documentation is logically divided into these core modules:
+ *
+ * - @ref Hardware_Controller : The `LSM1x0A_Controller` class. Handles UART, AT commands, hardware resets, and the generic event loop.
+ * - @ref LoRaWAN_API : The `LSM1x0A_LoRaWAN` API class. Handles OTAA/ABP Joins, Channels, Port routing, Confirmed/Unconfirmed payloads.
+ *
+ * <br><b>Detailed Guides & Context</b>
+ * You can also read our deep-dive architecture markdowns:
+ * - \subpage lsm1x0a_context_page "Architecture & Context"
+ * - \subpage lsm1x0a_at_commands_page "AT Commands Reference"
+ * - \subpage lsm1x0a_lorawan_api_page "LoRaWAN Concept Guide"
+ *
+ * ---
+ *
+ * @section hardware_sec Hardware Overview
+ * The LSM100A is a compact, low-power, dual-mode LPWAN module based on the STMicroelectronics STM32WL chipset.
+ * It natively supports LoRaWAN® Class A/C operations as well as Sigfox (RC1/RC2/RC3/RC4) protocol stacks.
+ * 
+ * *Author: inBiot* | *Version: 1.0.0*
+ */
