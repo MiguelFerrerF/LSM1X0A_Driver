@@ -119,6 +119,7 @@ void loop()
         else {
           Serial.println("Error al obtener Channel Mask");
         }
+        Serial.printf("ABP Frame Counter: %d\n", controller->lorawan.getAbpFrameCounter());
 
         // TEST SETTERS
         Serial.println("\n--- Probando Setters ---");
@@ -156,8 +157,8 @@ void loop()
         ok = controller->lorawan.setClass(LsmClass::CLASS_A);
         Serial.printf("Set Class: %s\n", ok ? "OK" : "ERROR");
 
-        ok = controller->lorawan.setChannelMask(LsmBand::EU868);
-        Serial.printf("Set Channel Mask SubBand 0: %s\n", ok ? "OK" : "ERROR");
+        ok = controller->lorawan.setChannelMask(LsmBand::EU868, LsmSubBand::SUB_BAND_1);
+        Serial.printf("Set Channel Mask SubBand 1: %s\n", ok ? "OK" : "ERROR");
 
         ok = controller->lorawan.setADR(true);
         Serial.printf("Set ADR: %s\n", ok ? "OK" : "ERROR");

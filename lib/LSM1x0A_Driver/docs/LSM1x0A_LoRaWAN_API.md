@@ -59,6 +59,8 @@ Allow configuring and operating in point-to-point mode, outside the LoRaWAN stac
 - `loadConfigFromModule`: Reads all current parameters using the internal module getters and populates the RAM cache. Useful to instantiate via `controller->syncConfigToCache()` after boot up.
 - `restoreConfig`: Restores session configuration to the module stored in its intermediate cache on the controller's RAM memory (only applies previously modified variables, ignoring uninitialized `UNKNOWN` ones).
 - `clearCache`: Clears the internal cache (returning everything to `UNKNOWN`) to avoid inconsistencies or to force not overriding configurations upon a `restoreConfig`.
+- `getLocalTime`: Retrieves the UTC time (seconds since Epoch) from the network via Downlink mapping.
+- `getBaudrate` / `setBaudrate`: Gets or sets the module's target Baudrate, a property exclusively supported by LoRaWAN firmware variants.
 
 ---
 

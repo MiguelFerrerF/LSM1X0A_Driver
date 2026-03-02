@@ -37,6 +37,16 @@ LSM1x0A_LoRaWAN::LSM1x0A_LoRaWAN(LSM1x0A_Controller* controller) : _controller(c
 {
 }
 
+bool LSM1x0A_LoRaWAN::setBaudrate(uint32_t baudrate)
+{
+  if (baudrate != 9600 && baudrate != 115200) {
+    return false;
+  }
+  char cmd[32];
+  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::BAUDRATE, baudrate);
+  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+}
+
 bool LSM1x0A_LoRaWAN::setDevEUI(const char* devEui)
 {
   if (!devEui || strlen(devEui) < 16)

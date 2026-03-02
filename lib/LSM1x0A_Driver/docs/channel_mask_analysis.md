@@ -40,7 +40,7 @@ In regions like **US915** and **AU915**, subbands are not changed by altering th
 
 ### Channel Mask Structure
 The `enable_chmask[6]` variable is an array of 6 unsigned 16-bit integers (`uint16_t`). 
-This allows addressing a maximum of $6 \times 16 = 96$ channels.
+This allows addressing a maximum of 6 x 16 = 96 channels.
 
 - `enable_chmask[0]`: Channels 0 to 15
 - `enable_chmask[1]`: Channels 16 to 31

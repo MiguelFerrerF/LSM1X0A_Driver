@@ -205,7 +205,7 @@ void LSM1x0A_AtParser::processLine(char* line)
   // Detectar modo operativo
   if (strstr(line, "LoRa") != nullptr)
     _detectedMode = LsmMode::LORAWAN;
-  else if (strstr(line, "SigFox") != nullptr)
+  else if (strstr(line, "Sigfox") != nullptr)
     _detectedMode = LsmMode::SIGFOX;
 
   // Interceptar MAC rxTimeOut explícitamente sin fallar el pendingCommand

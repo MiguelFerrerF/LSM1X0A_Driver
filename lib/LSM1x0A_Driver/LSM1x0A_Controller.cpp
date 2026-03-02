@@ -1,7 +1,7 @@
 #include "LSM1x0A_Controller.h"
 #include <Arduino.h>
 
-LSM1x0A_Controller::LSM1x0A_Controller() : lorawan(this)
+LSM1x0A_Controller::LSM1x0A_Controller() : lorawan(this), sigfox(this)
 {
   _driver      = new UartDriver();
   _parser      = new LSM1x0A_AtParser();
@@ -183,53 +183,6 @@ bool LSM1x0A_Controller::getSigfoxVersion(char* buffer, size_t size)
     return false;
   AtError err = sendCommandWithResponse(LsmAtCommand::SSW_VERSION, buffer, size, "SW_VERSION:", 2000);
   return err == AtError::OK;
-}
-
-bool LSM1x0A_Controller::getLocalTime(struct tm* timeinfo)
-{
-  if (!timeinfo)
-    return false;
-
-  char buffer[64];
-  if (sendCommandWithResponse(LsmAtCommand::LOCAL_TIME, buffer, sizeof(buffer), "LTIME:", 1000) != AtError::OK)
-    return false;
-
-  // El parser remueve los prefijos, por lo que buffer debería contener algo como "12h34m56s on 23/02/2026"
-  int h = 0, m = 0, s = 0, D = 0, M = 0, Y = 0;
-  if (sscanf(buffer, "%dh%dm%ds on %d/%d/%d", &h, &m, &s, &D, &M, &Y) == 6) {
-    timeinfo->tm_hour = h;
-    timeinfo->tm_min  = m;
-    timeinfo->tm_sec  = s;
-    timeinfo->tm_mday = D;
-    timeinfo->tm_mon  = M - 1;    // struct tm usa 0-11 para los meses
-    timeinfo->tm_year = Y - 1900; // struct tm usa años desde 1900
-    return true;
-  }
-
-  return false;
-}
-
-int LSM1x0A_Controller::getBaudrate()
-{
-
-  char cmd[32];
-  snprintf(cmd, sizeof(cmd), "%s?", LsmAtCommand::BAUDRATE);
-  char buf[32];
-  if (sendCommandWithResponse(cmd, buf, sizeof(buf), "Set BaudRate: ", 1000) != AtError::OK) {
-    return -1;
-  }
-
-  return atoi(buf);
-}
-
-bool LSM1x0A_Controller::setBaudrate(uint32_t baudrate)
-{
-  if (baudrate != 9600 && baudrate != 115200) {
-    return false;
-  }
-  char cmd[32];
-  snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::BAUDRATE, baudrate);
-  return sendCommand(cmd, 1000) == AtError::OK;
 }
 
 bool LSM1x0A_Controller::setVerboseLevel(uint8_t level)
@@ -460,6 +413,11 @@ bool LSM1x0A_Controller::syncConfigToCache()
   if (!_initialized || !_parser)
     return false;
 
-  // En un futuro se podría llamar a sigfox.loadConfigFromModule() también
-  return lorawan.loadConfigFromModule();
+  bool success = true;
+  if (_currentMode == LsmMode::SIGFOX) {
+    success &= sigfox.loadConfigFromModule();
+  } else {
+    success &= lorawan.loadConfigFromModule();
+  }
+  return success;
 }

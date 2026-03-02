@@ -4,6 +4,7 @@
 #include "LSM1x0A_AtParser.h"
 #include "UartDriver.h"
 #include "api/LSM1x0A_LoRaWAN.h"
+#include "api/LSM1x0A_Sigfox.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include <Arduino.h>
@@ -21,6 +22,12 @@
 /**
  * @defgroup Hardware_Controller LSM1x0A Hardware & Controller
  * @brief Core system interface, asynchronous event routing, UART management, and generic AT communication.
+ * @{
+ */
+
+/**
+ * @class LSM1x0A_Controller
+ * @brief Main class for coordinating the LSM100A/LSM110A module.
  *
  * Esta clase proporciona una interfaz sencilla para el usuario, abstrayendo
  * el driver UART y el parseador AT subyacentes. Permite inicializar la
@@ -142,13 +149,6 @@ public:
   // =========================================================================
 
   /**
-   * @brief Configura el baudrate del módulo (por defecto suele ser 9600).
-   * @param baudrate 9600, 19200, 38400, 57600, 115200.
-   * @return true si tuvo éxito.
-   */
-  bool setBaudrate(uint32_t baudrate);
-
-  /**
    * @brief Configura el nivel de verbosidad del módulo.
    * @param level El nivel de log deseado.
    * @return true si tuvo éxito.
@@ -212,19 +212,6 @@ public:
   bool getVersion(char* outBuffer, size_t size);
 
   /**
-   * @brief Obtiene el tiempo local del módulo (ej. "2024-01-01 12:00:00").
-   * @param timeinfo Puntero a la estructura estandar tm donde se guardará el resultado
-   * @return true si se obtuvo y parseó correctamente.
-   */
-  bool getLocalTime(struct tm* timeinfo);
-
-  /**
-   * @brief Obtiene el baudrate actual configurado en el módulo.
-   * @return El baudrate (ej. 9600) o -1 si falla.
-   */
-  int getBaudrate();
-
-  /**
    * @brief Obtiene la versión del stack de Sigfox.
    */
   bool getSigfoxVersion(char* buffer, size_t size);
@@ -267,6 +254,9 @@ public:
 
   /** @brief LoRaWAN specific configuration and transmission API context. */
   LSM1x0A_LoRaWAN lorawan;
+
+  /** @brief Sigfox specific configuration and transmission API context. */
+  LSM1x0A_Sigfox sigfox;
 
   /** @brief Internal helper to return the static temporary Channel Mask buffer pointer. */
   const uint16_t* getTempMaskBuffer() const

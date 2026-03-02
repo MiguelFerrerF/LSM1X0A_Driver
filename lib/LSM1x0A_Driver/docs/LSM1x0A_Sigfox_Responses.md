@@ -1,3 +1,5 @@
+\page lsm1x0a_sigfox_responses_page AT Responses: Sigfox
+
 # Detailed AT Responses Analysis: Sigfox
 
 This document details the responses returned by the firmware for each AT command, including messages sent via the serial port (`AT_PRINTF`) and the internal error codes that ultimately translate into responses like `\r\nOK\r\n` or `\r\nAT_ERROR\r\n`.

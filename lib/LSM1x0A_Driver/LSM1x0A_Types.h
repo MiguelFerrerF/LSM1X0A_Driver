@@ -264,6 +264,8 @@ enum class LsmSigfoxDataType
   OOB
 };
 
+
+
 /**
  * @brief Asynchronous Event Types dispatched to the User Callback.
  * @cond
@@ -365,7 +367,7 @@ const char P2P_SEND[]     = "AT+PSEND=";
 const char P2P_RECV[]     = "AT+PRECV=";
 
 // SigFox Specific Commands
-const char DEV_ID[]             = "AT$ID";
+const char DEV_ID[]             = "AT$ID=";
 const char DEV_PAC[]            = "AT$PAC=";
 const char RC_CHANNEL[]         = "AT$RC=";
 const char SEND_BIT[]           = "AT$SB=";
@@ -376,6 +378,16 @@ const char SEND_OOB[]           = "ATS300";
 const char RADIO_POWER[]        = "ATS302=";
 const char ENCRYPT_KEY[]        = "ATS410=";
 const char ENCRYPT_PAYLOAD[]    = "ATS411=";
+
+// SigFox RF Test & Scan Commands
+const char TEST_CW[]      = "AT$CW=";
+const char TEST_PRBS9[]   = "AT$PN=";
+const char TEST_MONARCH[] = "AT$MN=";
+const char TEST_MODE[]    = "AT$TM=";
+const char TEST_RL[]      = "AT$RL";
+const char TEST_SL[]      = "AT$SL";
+const char TEST_SP2P[]    = "AT$SP2P";
+const char TEST_RP2P[]    = "AT$RP2P";
 } // namespace LsmAtCommand
 /** @endcond */
 

@@ -94,6 +94,13 @@ public:
   // =========================================================================
 
   /**
+   * @brief Configura el baudrate del módulo (por defecto suele ser 9600).
+   * @param baudrate 9600, 19200, 38400, 57600, 115200.
+   * @return true si tuvo éxito.
+   */
+  bool setBaudrate(uint32_t baudrate);
+
+  /**
    * @brief Sets the LoRaWAN operational frequency band.
    * @param band The desired LsmBand (e.g., LsmBand::EU868, LsmBand::US915).
    * @return true if successful.
@@ -376,6 +383,19 @@ public:
   // =========================================================================
   // 5. Configuration Getters (LoRaWAN)
   // =========================================================================
+
+  /**
+   * @brief Obtiene el tiempo local del módulo (ej. "2024-01-01 12:00:00").
+   * @param timeinfo Puntero a la estructura estandar tm donde se guardará el resultado
+   * @return true si se obtuvo y parseó correctamente.
+   */
+  bool getLocalTime(struct tm* timeinfo);
+
+  /**
+   * @brief Obtiene el baudrate actual configurado en el módulo.
+   * @return El baudrate (ej. 9600) o -1 si falla.
+   */
+  int getBaudrate();
 
   /**
    * @brief Retrieves the Device EUI.

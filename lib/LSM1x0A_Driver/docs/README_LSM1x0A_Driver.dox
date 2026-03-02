@@ -25,12 +25,16 @@
  *
  * - @ref Hardware_Controller : The `LSM1x0A_Controller` class. Handles UART, AT commands, hardware resets, and the generic event loop.
  * - @ref LoRaWAN_API : The `LSM1x0A_LoRaWAN` API class. Handles OTAA/ABP Joins, Channels, Port routing, Confirmed/Unconfirmed payloads.
+ * - @ref Sigfox_API : The `LSM1x0A_Sigfox` API class. Handles Sigfox Network Joins, Send Bits/Frames, OOB, and RF Tests.
  *
  * <br><b>Detailed Guides & Context</b>
  * You can also read our deep-dive architecture markdowns:
  * - \subpage lsm1x0a_context_page "Architecture & Context"
  * - \subpage lsm1x0a_at_commands_page "AT Commands Reference"
  * - \subpage lsm1x0a_lorawan_api_page "LoRaWAN Concept Guide"
+ * - \subpage lsm1x0a_sigfox_api_page "Sigfox Concept Guide"
+ * - \subpage lsm1x0a_lorawan_responses_page "AT Responses: LoRaWAN"
+ * - \subpage lsm1x0a_sigfox_responses_page "AT Responses: Sigfox"
  *
  * ---
  *
