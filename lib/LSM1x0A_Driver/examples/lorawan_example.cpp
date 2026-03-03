@@ -50,7 +50,7 @@ void loop()
         int bat = controller->getBattery();
         Serial.printf("Battery: %d mV\n", bat);
 
-        int baud = controller->getBaudrate();
+        int baud = controller->lorawan.getBaudrate();
         Serial.printf("Baudrate Actual: %d\n", baud);
 
         char versionBuf[64];
@@ -60,7 +60,7 @@ void loop()
           Serial.println("Version: Error al obtener");
 
         struct tm timeinfo;
-        if (controller->getLocalTime(&timeinfo))
+        if (controller->lorawan.getLocalTime(&timeinfo))
           Serial.printf("Local Time: %02d:%02d:%02d %02d/%02d/%04d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday,
                         timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
         else
