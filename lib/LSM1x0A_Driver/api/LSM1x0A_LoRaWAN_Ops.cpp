@@ -2,7 +2,7 @@
 #include "LSM1x0A_LoRaWAN.h"
 
 // =========================================================================
-// OPERACIONES DE RED LORAWAN (JOIN, SEND, LINKCHECK)
+// NETWORK LORAWAN OPERATIONS (JOIN, SEND, LINKCHECK)
 // =========================================================================
 
 bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
@@ -13,32 +13,32 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
   char cmd[16];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN, joinMode);
 
-  // Guardamos el modo de join deseado para usarlo en la recuperación si es necesario
+  // Save the desired join mode to use it in recovery if necessary
   _joinMode = joinMode;
 
-  // Limpiamos banderas anteriores
+  // Clear previous flags
   _controller->clearEvents(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL);
 
-  // Enviamos el comando y esperamos el OK inicial
+  // Send the command and wait for the initial OK
   AtError err = _controller->sendCommand(cmd, 2000, 1);
   if (err != AtError::OK) {
     return false;
   }
 
-  // Ahora esperamos asíncronamente a que llegue el evento URC
+  // Now wait asynchronously for the URC event
   uint32_t result = _controller->waitForEvent(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL, timeoutMs);
 
   if (result & LSM_EVT_JOIN_SUCCESS) {
     if (_pendingChannelMask) {
       setChannelMask(_cachedBand, _cachedSubBandMask);
     }
-    return true; // Éxito completo
+    return true; // Complete success
   }
   else if (result & LSM_EVT_JOIN_FAIL) {
-    return false; // Fallo de Join (ej: credenciales malas, sin cobertura, etc)
+    return false; // Join failure (e.g., bad credentials, no coverage, etc.)
   }
 
-  // Si llegamos aquí es un Timeout inesperado de la capa MAC
+  // If we reach here, it's an unexpected MAC layer timeout
   _controller->recoverModule();
   return false; // Timeout
 }
@@ -59,16 +59,16 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   char cmd[256];
   snprintf(cmd, sizeof(cmd), "AT+SEND=%d:%d:%s", port, confirmed ? 1 : 0, data);
 
-  // Limpiamos banderas
+  // Clear previous flags
   _controller->clearEvents(LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL | LSM_EVT_RX_TIMEOUT);
 
-  // Enviamos el payload (esto responde OK rápido si está bien formateado y no está ocupado)
+  // Send the payload (this responds OK quickly if well-formatted and not busy)
   AtError err = _controller->sendCommand(cmd, 3000, 1);
   if (err != AtError::OK) {
     return false;
   }
 
-  // Si timeoutMs es 0 (Auto), calculamos dinámicamente en función de los reintentos
+  // If timeoutMs is 0 (Auto), calculate dynamically based on retries
   uint32_t calcTimeoutMs = timeoutMs;
 
   if (confirmed) {
@@ -85,7 +85,7 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     int expectedTimeouts = (retries + 1) * 2;
     int receivedTimeouts = 0;
 
-    // Base safety 5s + cada intento toma ~4.5 segundos de radio (TX + Rx1 + Rx2 + MAC delay)
+    // Base safety 5s + each attempt takes ~4.5 seconds of radio (TX + Rx1 + Rx2 + MAC delay)
     uint32_t dynamicTimeoutMs = 5000 + ((retries + 1) * 4500);
     if (calcTimeoutMs == 0 || calcTimeoutMs < dynamicTimeoutMs) {
       calcTimeoutMs = dynamicTimeoutMs;
@@ -99,7 +99,7 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       if (_linkCheckRequested)
         expectedBits |= LSM_EVT_LINK_CHECK_ANS;
 
-      // Esperamos iterativamente por eventos
+      // Wait iteratively for events
       uint32_t result = _controller->waitForEvent(expectedBits, 3000, true);
 
       if (result & LSM_EVT_LINK_CHECK_ANS) {
@@ -108,7 +108,7 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       }
       if (result & LSM_EVT_TX_SUCCESS) {
         if (!_linkCheckRequested)
-          return true; // Downlink interceptado o éxito rápido
+          return true; // Downlink intercepted or quick success
       }
       if (result & LSM_EVT_TX_FAIL) {
         _linkCheckRequested = false;
@@ -125,49 +125,49 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       }
     }
 
-    // Si llegamos a un timeout total asíncrono, significa que el módulo se colgó (no emitió nada)
+    // If we reach a total asynchronous timeout, it means the module hung (no output)
     _controller->recoverModule();
-    return false; // Error real de capa MAC (no UART output)
+    return false; // Real MAC layer error (no UART output)
   }
   else {
-    // Para Unconfirmed puro, esperamos los `MAC rxTimeOut` (2 por cada intento de transmisión)
+    // For pure Unconfirmed, we wait for `MAC rxTimeOut` (2 per transmission attempt)
     int retries = -1;
     if (_cachedUnconfirmRetry >= 0)
       retries = _cachedUnconfirmRetry;
     else
       retries = getUnconfirmRetry();
     if (retries < 0)
-      retries = 5; // Fallback si dio error
+      retries = 5; // Fallback if error occurred
 
-    // (N reintentos) * 2 ventanas RX
+    // (N retries) * 2 RX windows
     int expectedTimeouts = retries * 2;
     int receivedTimeouts = 0;
 
-    // Como los reintentos pueden tardar, extendemos el timeout base por seguridad dinámica
+    // As retries can take time, extend the base timeout for dynamic safety
     uint32_t dynamicTimeoutMs = 5000 + (retries * 3500);
     if (calcTimeoutMs == 0 || calcTimeoutMs < dynamicTimeoutMs) {
       calcTimeoutMs = dynamicTimeoutMs;
     }
 
     uint32_t startMs = millis();
-    _controller->clearEvents(LSM_EVT_RX_TIMEOUT); // limpiar antes de empezar
+    _controller->clearEvents(LSM_EVT_RX_TIMEOUT); // clear before starting
 
     while ((millis() - startMs) < calcTimeoutMs) {
       uint32_t expectedBits = LSM_EVT_TX_SUCCESS | LSM_EVT_RX_TIMEOUT;
       if (_linkCheckRequested)
         expectedBits |= LSM_EVT_LINK_CHECK_ANS;
 
-      // Esperamos por un timeout de RX de MAC, o si mágicamente llega un SUCCESS (por ejemplo, LinkCheck piggyback)
+      // Wait for a MAC RX timeout, or if magically a SUCCESS arrives (e.g., LinkCheck piggyback)
       uint32_t result = _controller->waitForEvent(expectedBits, 3000, true);
 
       if (result & LSM_EVT_LINK_CHECK_ANS) {
         _linkCheckRequested = false;
-        return true; // Éxito total: metadatos recibidos
+        return true; // Total success: metadata received
       }
 
       if (result & LSM_EVT_TX_SUCCESS) {
         if (!_linkCheckRequested)
-          return true; // Downlink interceptado o MAC terminó temprano
+          return true; // Downlink intercepted or MAC finished early
       }
 
       if (result & LSM_EVT_RX_TIMEOUT) {
@@ -183,9 +183,9 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       }
     }
 
-    // Si llegamos a un timeout total asíncrono, significa que el módulo dejó de responder
+    // If we reach a total asynchronous timeout, it means the module hung (no output)
     _controller->recoverModule();
-    return false; // Timeout de espera global
+    return false; // Global wait timeout
   }
 }
 
@@ -196,7 +196,7 @@ bool LSM1x0A_LoRaWAN::requestLinkCheck()
   if (!isJoined())
     return false;
 
-  // AT+LINKC no genera evento inmediato, sólo agenda el request para el próximo Uplink
+  // AT+LINKC does not generate an immediate event, it only schedules the request for the next Uplink
   AtError err = _controller->sendCommand(LsmAtCommand::LINK_CHECK, 2000, 1);
   if (err == AtError::OK) {
     _linkCheckRequested = true;
@@ -218,11 +218,11 @@ void LSM1x0A_LoRaWAN::setJoined(bool joined)
 bool LSM1x0A_LoRaWAN::recoverConnection(int maxRetries)
 {
   for (int i = 0; i < maxRetries; i++) {
-    // Aquí asumimos OTAA por defecto, aunque en un futuro se podría cachear el modo
+    // Here we assume OTAA by default, although in the future the mode could be cached
     if (join(_joinMode)) {
       return true;
     }
-    delay(2000); // Pausa entre intentos
+    delay(2000); // Pause between attempts
   }
   return false;
 }

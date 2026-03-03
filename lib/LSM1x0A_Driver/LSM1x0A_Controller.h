@@ -10,7 +10,7 @@
 #include <Arduino.h>
 #include <time.h>
 
-// Definición de bits para el EventGroup interno de sincronización
+// Definition of bits for the internal EventGroup synchronization
 #define LSM_EVT_JOIN_SUCCESS (1 << 0)
 #define LSM_EVT_JOIN_FAIL (1 << 1)
 #define LSM_EVT_TX_SUCCESS (1 << 2)
@@ -29,118 +29,117 @@
  * @class LSM1x0A_Controller
  * @brief Main class for coordinating the LSM100A/LSM110A module.
  *
- * Esta clase proporciona una interfaz sencilla para el usuario, abstrayendo
- * el driver UART y el parseador AT subyacentes. Permite inicializar la
- * comunicación, gestionar callbacks de eventos y enviar comandos generales
- * obteniendo sus respuestas fácilmente.
+ * This class provides a simple interface for the user, abstracting
+ * the underlying UART driver and AT parser. It allows initializing
+ * communication, managing event callbacks, and sending general commands
+ * obtaining their responses easily.
  */
 class LSM1x0A_Controller
 {
 public:
   // =========================================================================
-  // CONSTRUCTORES Y DESTRUCTORES
+  // CONSTRUCTORS AND DESTRUCTORS
   // =========================================================================
 
   /**
-   * @brief Constructor por defecto.
-   * Crea las instancias internas de UartDriver y LSM1x0A_AtParser,
-   * listas para ser inicializadas mediante begin().
+   * @brief Default constructor.
+   * Creates the internal instances of UartDriver and LSM1x0A_AtParser,
+   * ready to be initialized via begin().
    */
   LSM1x0A_Controller();
 
   /**
    * @brief Destructor.
-   * Libera recursos y de-inicializa los componentes internos.
+   * Releases resources and de-initializes internal components.
    */
   ~LSM1x0A_Controller();
 
   // =========================================================================
-  // INICIALIZACIÓN Y CONTROL DE COMUNICACIÓN
+  // INITIALIZATION AND COMMUNICATION CONTROL
   // =========================================================================
 
   /**
-   * @brief Inicializa el hardware UART y el Parser interno.
-   *
-   * @param callback Función de callback (ej. onLoRaEvent) que el usuario
-   * defina para procesar eventos asíncronos (+EVT:...).
-   * @param ctx Un puntero de contexto opcional para el callback (puede ser this o nullptr).
-   * @return true si la UART se inició con éxito y la memoria fue alocada, false en otro caso.
+   * @brief Initializes the UART hardware and the internal Parser.
+
+   * @param callback Callback function (e.g. onLoRaEvent) defined by the user
+   * to process asynchronous events (+EVT:...).
+   * @param ctx An optional context pointer for the callback (can be this or nullptr).
+   * @return true if UART started successfully and memory was allocated, false otherwise.
    */
   bool begin(AtEventCallback callback, void* ctx = nullptr);
 
   /**
-   * @brief Detiene el hardware y desvincula los event listeners.
+   * @brief Stops the hardware and unbinds event listeners.
    */
   void end();
 
   /**
-   * @brief Despierta al módulo e intenta sincronizar su estado inicial.
-   * Envía comandos AT o caracteres 'Wake-Up' básicos.
-   *
-   * @return true si el módulo responde "OK" a la orden básica.
+   * @brief Wakes up the module and tries to synchronize its initial state.
+   * Sends basic AT commands or 'Wake-Up' characters.
+
+   * @return true if the module responds "OK" to the basic command.
    */
   bool wakeUp();
-
   /**
-   * @brief Envía cualquier comando AT al módulo, devolviendo error si falla.
-   * Utiliza internamente la lógica del LsmAtParser.
-   *
-   * @param cmd El comando AT exacto (ej. "ATZ" o "AT+MODE=1").
-   * @param timeoutMs Tiempo máximo bloqueante de espera (por defecto 2000 ms).
-   * @param retries Número de reintentos en caso de error temporal o timeout (por defecto _maxRetries).
-   * @return AtError::OK si el módulo respondió OK de forma síncrona, otro Enum si no.
+   * @brief Sends any AT command to the module, returning error if it fails.
+   * Internally uses the LsmAtParser logic.
+
+   * @param cmd The exact AT command (e.g. "ATZ" or "AT+MODE=1").
+   * @param timeoutMs Maximum blocking wait time (default 2000 ms).
+   * @param retries Number of retries in case of temporary error or timeout (default _maxRetries).
+   * @return AtError::OK if the module responded OK synchronously, another Enum if not.
    */
   AtError sendCommand(const char* cmd, uint32_t timeoutMs = 2000, int8_t retries = -1);
 
   /**
-   * @brief Envía un comando AT y captura su respuesta en un bloque de texto.
-   * Ideal para getters (ej. "AT+DEUI=?", "AT+BAT=?").
-   *
-   * @param cmd El comando AT exacto.
-   * @param outBuffer El buffer donde el usuario quiere guardar la respuesta (sin el comando de eco o el OK).
-   * @param outSize Capacidad del outBuffer.
-   * @param expectedTag Si se espera que el módulo prefije la respuesta con un tag (ej. "APP_VERSION:" o "DevEui:"), esto lo filtra. Usa nullptr para
-   * cadena en bruto.
-   * @param timeoutMs Tiempo de espera.
-   * @param retries Número de reintentos en caso de error temporal o timeout (por defecto _maxRetries).
-   * @return AtError::OK si se completó y se copió algo en outBuffer.
+   * @brief Sends an AT command and captures its response in a text block.
+   * Ideal for getters (e.g. "AT+DEUI=?", "AT+BAT=?").
+
+   * @param cmd The exact AT command.
+   * @param outBuffer The buffer where the user wants to store the response (without echo command or OK).
+   * @param outSize Capacity of outBuffer.
+   * @param expectedTag If the module is expected to prefix the response with a tag (e.g. "APP_VERSION:" or "DevEui:"), this filters it. Use nullptr
+   for raw string.
+   * @param timeoutMs Wait time.
+   * @param retries Number of retries in case of temporary error or timeout (default _maxRetries).
+   * @return AtError::OK if completed and something was copied to outBuffer.
    */
   AtError sendCommandWithResponse(const char* cmd, char* outBuffer, size_t outSize, const char* expectedTag = nullptr, uint32_t timeoutMs = 2000,
                                   int8_t retries = -1);
 
   // =========================================================================
-  // COMANDOS AT BÁSICOS / GENERALES
+  // BASIC / GENERAL AT COMMANDS
   // =========================================================================
 
   /**
-   * @brief Ejecuta un factory reset devolviendo al módulo a su estado de fábrica.
-   * Cuidado: Esto borra todas las llaves LoRaWAN/Sigfox escritas.
-   * @return true si el módulo responde afirmativamente.
+   * @brief Executes a factory reset returning the module to its factory state.
+   * Warning: This erases all written LoRaWAN/Sigfox keys.
+   * @return true if the module responds affirmatively.
    */
   bool factoryReset();
 
   /**
-   * @brief Realiza un reinicio por software (Comando ATZ).
-   * @return true si el reinicio y boot alert fueron exitosos.
+   * @brief Performs a software reset (ATZ Command).
+   * @return true if the reset and boot alert were successful.
    */
   bool softwareReset();
 
   /**
-   * @brief Realiza un reinicio por hardware usando el pin de reset.
-   * @return true si el reinicio y boot alert fueron exitosos.
+   * @brief Performs a hardware reset using the reset pin.
+   * @return true if the reset and boot alert were successful.
    */
   bool hardwareReset();
 
   /**
-   * @brief Ejecuta el protocolo de recuperación. Primero Soft-Reset (ATZ), luego Hard-Reset si hay pin.
-   * @return true si logró recuperar el módulo y recibir el Boot Alert.
+   * @brief Executes the recovery protocol. First Soft-Reset (ATZ), then Hard-Reset if there is a pin.
+   * @return true if the module was recovered and Boot Alert received.
    */
   bool recoverModule();
 
   /**
-   * @brief Sincroniza la caché RAM interna leyendo los parámetros clave operativos del firmware del módulo.
-   * Útil tras arrancar por primera vez para alinear el estado del hardware con la rutina software.
-   * @return true si tuvo éxito comunicándose con el módulo.
+   * @brief Synchronizes the internal RAM cache by reading the key operational parameters from the module's firmware.
+   * Useful after first boot to align hardware state with software routine.
+   * @return true if communication with the module was successful.
    */
   bool syncConfigToCache();
 
@@ -149,47 +148,47 @@ public:
   // =========================================================================
 
   /**
-   * @brief Configura el nivel de verbosidad del módulo.
-   * @param level El nivel de log deseado.
-   * @return true si tuvo éxito.
+   * @brief Sets the module's verbosity level.
+   * @param level Desired log level.
+   * @return true if successful.
    */
   bool setVerboseLevel(uint8_t level);
 
   /**
-   * @brief Configura el modo de comunicación.
-   * @param mode LsmMode::SIGFOX o LsmMode::LORAWAN
-   * @return true si tuvo éxito.
+   * @brief Sets the communication mode.
+   * @param mode LsmMode::SIGFOX or LsmMode::LORAWAN
+   * @return true if successful.
    */
   bool setMode(LsmMode mode);
 
   /**
-   * @brief Configura el pin de reset del módulo (si es que se usa alguno).
-   * @param pin El número de pin GPIO conectado al reset del módulo.
+   * @brief Sets the module's reset pin (if any is used).
+   * @param pin The GPIO pin number connected to the module's reset.
    */
   void setResetPin(int pin);
 
   /**
-   * @brief Establece el número máximo de reintentos para un comando en caso de error temporal o timeout.
-   * @param retries Número de reintentos (mínimo 1).
+   * @brief Sets the maximum number of retries for a command in case of temporary error or timeout.
+   * @param retries Number of retries (minimum 1).
    */
   void setMaxRetries(int retries);
 
   // =========================================================================
-  // ESTADO Y SINCRONIZACIÓN NATIVA
+  // NATIVE STATE AND SYNCHRONIZATION
   // =========================================================================
 
   /**
-   * @brief Espera de forma síncrona/bloqueante a que ocurra un evento asíncrono.
-   * Útil para envolver comandos como Join o Send.
-   * @param bitsToWaitFor Máscara de bits (ej. LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL)
-   * @param timeoutMs Tiempo de espera máximo
-   * @param clearOnExit Si debe limpiar los bits al salir
-   * @return Los bits que desencadenaron la salida, o 0 si fue timeout.
+   * @brief Synchronously/blockingly waits for an asynchronous event to occur.
+   * Useful for wrapping commands like Join or Send.
+   * @param bitsToWaitFor Bitmask (e.g. LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL)
+   * @param timeoutMs Maximum wait time
+   * @param clearOnExit Whether to clear the bits on exit
+   * @return The bits that triggered the exit, or 0 if timeout.
    */
   uint32_t waitForEvent(uint32_t bitsToWaitFor, uint32_t timeoutMs, bool clearOnExit = true);
 
   /**
-   * @brief Limpia los bits del EventGroup interno manualmente.
+   * @brief Manually clears bits from the internal EventGroup.
    */
   void clearEvents(uint32_t bitsToClear);
 
@@ -198,26 +197,26 @@ public:
   // =========================================================================
 
   /**
-   * @brief Obtiene el voltaje de la batería en mV.
-   * @return El voltaje >= 0 (ej. 3300 para 3.3V) o -1 si hubo error.
+   * @brief Gets the battery voltage in mV.
+   * @return Voltage >= 0 (e.g. 3300 for 3.3V) or -1 if error.
    */
   int getBattery();
 
   /**
-   * @brief Obtiene la versión del firmware del módulo "APP_VERSION".
-   * @param outBuffer Buffer donde copiar el string (ej. "V1.0.4").
-   * @param size Capacidad máxima del buffer.
-   * @return true si tiene éxito.
+   * @brief Gets the module firmware version "APP_VERSION".
+   * @param outBuffer Buffer to copy the string (e.g. "V1.0.4").
+   * @param size Maximum buffer capacity.
+   * @return true if successful.
    */
   bool getVersion(char* outBuffer, size_t size);
 
   /**
-   * @brief Obtiene la versión del stack de Sigfox.
+   * @brief Gets the Sigfox stack version.
    */
   bool getSigfoxVersion(char* buffer, size_t size);
 
   /**
-   * @brief Obtiene el tipo de dispositivo detectado (ej LSM100A).
+   * @brief Gets the detected device type (e.g. LSM100A).
    */
   LsmModuleType getDeviceType() const;
 
@@ -249,7 +248,7 @@ public:
   }
 
   // =========================================================================
-  // SUB-MÓDULOS (APIs LORAWAN Y SIGFOX)
+  // SUBMODULES (LORAWAN AND SIGFOX APIs)
   // =========================================================================
 
   /** @brief LoRaWAN specific configuration and transmission API context. */
@@ -286,20 +285,20 @@ private:
   int _resetPin   = LSM1X0A_RESET_PIN;
   int _maxRetries = DEFAULT_MAX_RETRIES;
 
-  // Últimos metadatos de red / radio recibidos
+  // Last received network / radio metadata
   int _lastRssi  = 0;
   int _lastSnr   = 0;
   int _lastDmodm = 0;
   int _lastGwn   = 0;
 
-  // Buffers temporales para extracciones de listas de configuración
+  // Temporary buffers for extracting configuration lists
   uint16_t _tempMaskBuffer[6] = {0};
   int      _tempMaskCount     = 0;
 
-  // Sincronización asíncrona
+  // Asynchronous synchronization
   EventGroupHandle_t _syncEventGroup = nullptr;
 
-  // Callback del usuario
+  // User callback
   AtEventCallback _userCallback = nullptr;
   void*           _userCtx      = nullptr;
 
@@ -308,22 +307,22 @@ private:
   void        handleEvent(const char* type, const char* payload);
 
   // =========================================================================
-  // MÉTODOS DE RECUPERACIÓN DE CONFIGURACIÓN Y ESTADO
+  // CONFIGURATION AND STATE RECOVERY METHODS
   // =========================================================================
 
   /**
-   * @brief  Recupera la configuración del módulo después de un reinicio inesperado, re-aplicando los parámetros guardados.
-   * Esto es útil para mantener la consistencia del estado del módulo incluso si se pierde la comunicación o el módulo se reinicia por sí solo.
-   * @return true si logró recuperar la configuración (ej. re-aplicar parámetros clave como DevEUI, AppKey, Band, Class, etc.) y el módulo respondió a
-   * los comandos de configuración, false si no pudo recuperarla (ej. no respondió a los comandos de configuración o hubo un error crítico).
+   * @brief  Recovers the module configuration after an unexpected reset, re-applying the saved parameters.
+   * This is useful to maintain module state consistency even if communication is lost or the module resets itself.
+   * @return true if configuration was recovered (e.g. re-applied key parameters like DevEUI, AppKey, Band, Class, etc.) and the module responded to
+   * configuration commands, false if not (e.g. did not respond to configuration commands or there was a critical error).
    */
   bool recoverModuleConfig();
 
   /**
-   * @brief Recupera el estado operativo del módulo después de un reinicio inesperado, re-ejecutando acciones como Join si el módulo estaba unido
-   * antes del reinicio.
-   *  @return true si logró recuperar el estado operativo (ej. volver a unirlo si estaba unido antes), false si no pudo recuperarlo (ej. no respondió
-   * a los comandos de configuración o no se pudo unir de nuevo).
+   * @brief Recovers the module's operational state after an unexpected reset, re-executing actions like Join if the module was joined before the
+   * reset.
+   *  @return true if operational state was recovered (e.g. re-joined if it was joined before), false if not (e.g. did not respond to configuration
+   * commands or could not rejoin).
    */
   bool recoverModuleState();
 };

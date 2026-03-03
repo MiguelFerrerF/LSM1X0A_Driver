@@ -7,10 +7,10 @@
 #include <cstdio>
 #include <cstring>
 
-// Callback para eventos asíncronos (URC)
+// Callback for asynchronous events (URC) from the module. Examples:
 // type: "RX", "JOIN", etc.
-// payload: El resto de la linea
-// ctx: Contexto de usuario
+// payload: The rest of the line
+// ctx: User context
 typedef void (*AtEventCallback)(const char* type, const char* payload, void* ctx);
 
 /**
@@ -32,31 +32,31 @@ public:
    */
   bool init(UartDriver* driver, AtEventCallback onEvent = nullptr,
             void* eventCtx = nullptr); /**
-                                        * @brief Realiza un "Ping" de activación enviando comandos AT hasta recibir OK.
-                                        * Maneja el estado de bajo consumo del módulo.
-                                        * @return true si el módulo despertó y respondió adecuadamente.
+                                        * @brief Performs a "Ping" activation by sending AT commands until OK is received.
+                                        * Handles the module's low-power state.
+                                        * @return true if the module woke up and responded correctly.
                                         */
   bool wakeUp(uint8_t retries = DEFAULT_MAX_RETRIES, uint32_t delayMs = 500);
 
   /**
-   * @brief Envía comando simple y espera OK/ERROR.
-   * Ejemplo: sendCommand("AT+JOIN");
+   * @brief Sends a simple command and waits for OK/ERROR.
+   * Example: sendCommand("AT+JOIN");
    */
   AtError sendCommand(const char* cmd, uint32_t timeoutMs = 2000);
 
   /**
-   * @brief Espera a que ocurra un evento (como BOOTALERT) sin enviar ningún comando.
-   * Útil para reset por hardware donde el módulo habla solo.
-   * @return El AtError correspondiente al evento (ej. AtError::BOOT_ALERT).
+   * @brief Waits for an event (like BOOTALERT) without sending any command.
+   * Useful for hardware reset where the module speaks on its own.
+   * @return The AtError corresponding to the event (e.g., AtError::BOOT_ALERT).
    */
   AtError waitForEvent(uint32_t timeoutMs = LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
 
   /**
-   * @brief Envía comando y extrae un valor de la respuesta.
-   * * @param cmd Comando a enviar (ej "AT+DEUI")
-   * @param expectedTag Etiqueta que precede al valor (ej "DevEui: ") o NULL si no hay tag.
-   * @param outBuffer Buffer donde copiar el resultado (NO incluye el tag).
-   * @param outSize Tamaño del buffer de salida.
+   * @brief Sends a command and extracts a value from the response.
+   * @param cmd Command to send (e.g., "AT+DEUI")
+   * @param expectedTag Tag that precedes the value (e.g., "DevEui: ") or NULL if no tag.
+   * @param outBuffer Buffer to copy the result into (does NOT include the tag).
+   * @param outSize Size of the output buffer.
    * @param timeoutMs Timeout to wait for the expected tag result.
    * @return AtError
    */
@@ -76,13 +76,16 @@ public:
    */
   const char* atErrorToString(AtError err);
   /**
-   * @brief Helper estático para convertir el string de metadatos en una struct usable.
-   * Parsear: "+EVT:RX_1, PORT 2, DR 5, RSSI -90, SNR 10, DMODM 10, GWN 2"
+   * @brief Static helper to convert the metadata string into a usable struct.
+   * Parses: "+EVT:RX_1, PORT 2, DR 5, RSSI -90, SNR 10, DMODM 10, GWN 2"
    */
   static bool parseRxMetadata(const char* payload, LsmRxMetadata* outMeta);
 
   /**
-   * @brief Obtiene el modelo de dispositivo detectado durante el arranque.
+   * @brief Obtain the module type detected during boot. This is useful to adapt the controller's behavior to differences between LSM100A and LSM110A.
+   * The type is determined by analyzing responses to specific AT commands during the initialization phase. If the module does not respond or cannot
+   * be identified, it returns LsmModuleType::UNKNOWN.
+   * @return The detected LsmModuleType (LSM100A, LSM110A, or UNKNOWN).
    */
   LsmModuleType getDeviceType() const
   {
@@ -90,7 +93,11 @@ public:
   }
 
   /**
-   * @brief Obtiene el modo operativo detectado durante el arranque.
+   * @brief Obtains the operating mode detected during boot. This is useful to adapt the controller's behavior to differences between LoRaWAN and
+   * SigFox modes. The mode is determined by analyzing responses to specific AT commands during the initialization phase. If the module does not
+   * respond or cannot  be identified, it returns LsmMode::MODE_UNKNOWN.
+   * @return The detected LsmMode (LORAWAN, SIGFOX, or MODE_UNKNOWN).
+   *
    */
   LsmMode getDetectedMode() const
   {
@@ -105,27 +112,27 @@ private:
   LsmModuleType _deviceType   = LsmModuleType::UNKNOWN;
   LsmMode       _detectedMode = LsmMode::MODE_UNKNOWN;
 
-  // Buffer Interno Estático (Cero asignación dinámica)
+  // Internal line buffer for assembling incoming UART data until a full line is received
   char     _lineBuffer[AT_BUFFER_SIZE] = {0};
   uint16_t _lineIdx                    = 0;
 
-  // Sincronización
+  // Synchronization
   SemaphoreHandle_t _syncSem = nullptr;
 
-  // Estado de la Transacción Actual
+  // Current transaction state
   bool    _pendingCommand  = false;
   AtError _lastResultError = AtError::UNKNOWN;
 
-  // Punteros para parsing "Zero-Copy" durante la transacción
-  const char* _expectedTag   = nullptr; // El tag que esperamos en la respuesta (ej. "DevEui: ")
-  char*       _userOutBuffer = nullptr; // Donde el usuario quiere que copiemos el resultado (ej. un buffer local o global)
-  size_t      _userOutSize   = 0;       // Tamaño del buffer de salida para evitar sobreescrituras
+  // Pointers for "Zero-Copy" parsing during the transaction
+  const char* _expectedTag   = nullptr; // The tag we expect in the response (e.g., "DevEui: ")
+  char*       _userOutBuffer = nullptr; // Where the user wants us to copy the result (e.g., a local or global buffer)
+  size_t      _userOutSize   = 0;       // Size of the output buffer to prevent overwrites
 
-  // Métodos internos
+  // Internal methods
   void    processLine(char* line);
   AtError parseErrorString(const char* line);
 
-  // Puente estático
+  // Static bridge
   static void staticRxCallback(void* ctx, uint8_t* data, size_t len);
 };
 

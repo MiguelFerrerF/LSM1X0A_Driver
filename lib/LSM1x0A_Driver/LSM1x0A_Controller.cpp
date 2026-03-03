@@ -46,9 +46,9 @@ bool LSM1x0A_Controller::begin(AtEventCallback callback, void* ctx)
   _userCallback = callback;
   _userCtx      = ctx;
 
-  // Inicializamos el parser pasándole el UartDriver que construimos.
-  // El parser internamente llama a _driver->init()
-  // Pasamos internalEventCallback como callback, y apuntamos ctx a 'this'
+  // Initialize the AT parser by passing the UartDriver we constructed.
+  // The parser internally calls _driver->init()
+  // We pass internalEventCallback as the callback, and point ctx to 'this' controller so we can route events back to the user callback.
   if (!_parser->init(_driver, internalEventCallback, this)) {
     return false;
   }
@@ -91,18 +91,18 @@ AtError LSM1x0A_Controller::sendCommand(const char* cmd, uint32_t timeoutMs, int
     if (err == AtError::OK)
       return err;
 
-    // Errores definitorios por los que NO tiene sentido reintentar (sintaxis mala, etc)
+    // Errors that indicate no point in retrying (bad syntax, etc)
     if (err == AtError::PARAM_ERROR || err == AtError::TEST_PARAM_OVERFLOW || err == AtError::NO_NET_JOINED) {
       return err;
     }
 
-    // Si no es el último intento, hacemos una breve pausa
+    // If not the last attempt, make a brief pause
     if (i < retries - 1) {
       delay(200);
     }
   }
 
-  // Si agotamos todos los reintentos (ej: timeouts constantes), ejecutamos recuperación
+  // If all retries are exhausted (e.g., constant timeouts), perform recovery
   recoverModule();
   return err;
 }
@@ -122,7 +122,7 @@ AtError LSM1x0A_Controller::sendCommandWithResponse(const char* cmd, char* outBu
 
   AtError err = AtError::GENERIC_ERROR;
   for (int i = 0; i < retries; i++) {
-    outBuffer[0] = '\0'; // Limpiar buffer en cada intento
+    outBuffer[0] = '\0'; // Clear buffer on each attempt
     err          = _parser->sendCommandWithResponse(cmd, expectedTag, outBuffer, outSize, timeoutMs);
     if (err == AtError::OK)
       return err;
@@ -136,13 +136,13 @@ AtError LSM1x0A_Controller::sendCommandWithResponse(const char* cmd, char* outBu
     }
   }
 
-  // Si falló persistentemente
+  // If it failed persistently
   recoverModule();
   return err;
 }
 
 // =========================================================================
-// COMANDOS AT BÁSICOS / GENERALES
+// BASIC / GENERAL AT COMMANDS
 // =========================================================================
 
 int LSM1x0A_Controller::getBattery()
@@ -151,7 +151,7 @@ int LSM1x0A_Controller::getBattery()
   if (sendCommandWithResponse(LsmAtCommand::BATTERY, buf, sizeof(buf), nullptr, 1000) != AtError::OK) {
     return -1;
   }
-  // Convertir de char "3300" a int
+  // Convert from char "3300" to int
   return atoi(buf);
 }
 
@@ -160,12 +160,12 @@ bool LSM1x0A_Controller::getVersion(char* outBuffer, size_t size)
   if (!outBuffer || size == 0)
     return false;
 
-  // Comando AT+VER=?
-  // Puede venir con "APP_VERSION:" o nada, este módulo devuelve múltiples líneas
-  // usaremos el base parser que agarra la respuesta principal.
+  // AT+VER=? command
+  // It may come with "APP_VERSION:" or nothing, this module returns multiple lines
+  // We use the base parser which captures the main response.
   AtError err = sendCommandWithResponse(LsmAtCommand::FW_VERSION, outBuffer, size, "APP_VERSION:", 2000);
 
-  // Si la etiqueta APP_VERSION no se encontraba, capturamos todo
+  // If the APP_VERSION tag was not found, capture everything
   if (err != AtError::OK) {
     err = sendCommandWithResponse(LsmAtCommand::FW_VERSION, outBuffer, size, nullptr, 2000);
   }
@@ -200,10 +200,10 @@ bool LSM1x0A_Controller::setMode(LsmMode mode)
   if (!_initialized || !_parser)
     return false;
 
-  // Optimización: si ya sabemos que está en el modo deseado, no enviamos nada
+  // Optimization: if we already know it's in the desired mode, don't send anything
   if (_parser->getDetectedMode() == mode) {
     _currentMode = mode;
-    return true; // Ya estamos en el modo deseado
+    return true; // Already in the desired mode
   }
 
   char cmd[16];
@@ -211,7 +211,7 @@ bool LSM1x0A_Controller::setMode(LsmMode mode)
 
   AtError err = _parser->sendCommand(cmd, LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
 
-  // Validamos que alertó el reinicio Y que el parser identificó el modo correcto
+  // Validate that it triggered a reboot AND that the parser identified the correct mode
   if (err == AtError::BOOT_ALERT && _parser->getDetectedMode() == mode) {
     _currentMode = mode;
     return true;
@@ -271,7 +271,7 @@ bool LSM1x0A_Controller::hardwareReset()
 bool LSM1x0A_Controller::recoverModule()
 {
 
-  // 1. Intento Software (ATZ) con reintentos
+  // 1. Software attempt (ATZ) with retries
   bool wasJoined   = lorawan.isJoined();
   bool isRecovered = false;
 
@@ -283,7 +283,7 @@ bool LSM1x0A_Controller::recoverModule()
     delay(500);
   }
 
-  // 2. Intento Hardware (Si el pin está configurado) con reintentos
+  // 2. Hardware attempt (if the pin is configured) with retries
   if (!isRecovered && _resetPin >= 0) {
     for (int i = 0; i < _maxRetries; i++) {
       if (hardwareReset()) {
@@ -297,7 +297,7 @@ bool LSM1x0A_Controller::recoverModule()
   if (isRecovered) {
     if (_currentMode == LsmMode::LORAWAN) {
       lorawan.setJoined(false);
-      // Volver a configurar los parámetros del módulo
+      // Reconfigure the module parameters
       if (lorawan.restoreConfig()) {
         if (wasJoined) {
           lorawan.recoverConnection(_maxRetries);
@@ -313,7 +313,7 @@ bool LSM1x0A_Controller::recoverModule()
 }
 
 // =========================================================================
-// ESTADO Y SINCRONIZACIÓN NATIVA
+// NATIVE STATE AND SYNCHRONIZATION
 // =========================================================================
 
 uint32_t LSM1x0A_Controller::waitForEvent(uint32_t bitsToWaitFor, uint32_t timeoutMs, bool clearOnExit)
@@ -331,7 +331,7 @@ void LSM1x0A_Controller::clearEvents(uint32_t bitsToClear)
 }
 
 // =========================================================================
-// INTERCEPTOR DE EVENTOS ASÍNCRONOS
+// ASYNCHRONOUS EVENT INTERCEPTOR
 // =========================================================================
 
 void LSM1x0A_Controller::internalEventCallback(const char* type, const char* payload, void* ctx)
@@ -344,7 +344,7 @@ void LSM1x0A_Controller::internalEventCallback(const char* type, const char* pay
 
 void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
 {
-  // 1. Interceptar para cambiar el estado interno y liberar semáforos
+  // 1. Intercept to change internal state and release semaphores
   if (strcmp(type, LsmEvent::JOIN) == 0) {
     if (strstr(payload, "SUCCESS") || strstr(payload, "Network joined")) {
       lorawan.setJoined(true);
@@ -402,7 +402,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
     }
   }
 
-  // 2. Pasar el evento hacia arriba al callback del usuario
+  // 2. Pass the event up to the user's callback
   if (_userCallback) {
     _userCallback(type, payload, _userCtx);
   }
@@ -416,7 +416,8 @@ bool LSM1x0A_Controller::syncConfigToCache()
   bool success = true;
   if (_currentMode == LsmMode::SIGFOX) {
     success &= sigfox.loadConfigFromModule();
-  } else {
+  }
+  else {
     success &= lorawan.loadConfigFromModule();
   }
   return success;

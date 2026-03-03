@@ -6,9 +6,9 @@
 #include <stdint.h>
 #include <time.h>
 
-// Baudrate común para módulos LSM1x0A
+// Common baudrate for LSM1x0A modules
 #define LSM1X0A_BAUDRATE 9600
-// RX/TX pins comunes para módulos LSM1x0A
+// Common RX/TX pins for LSM1x0A modules
 #define LSM1X0A_RX_PIN 14
 #define LSM1X0A_TX_PIN 33
 #define LSM1X0A_RESET_PIN 15
@@ -16,7 +16,7 @@
 
 #define DEFAULT_MAX_RETRIES 3
 
-// Tamaños de buffer para comandos AT
+// Buffer sizes for AT commands
 #define AT_BUFFER_SIZE 256
 #define AT_LORA_BUFFER_SIZE 512
 #define AT_SIGFOX_BUFFER_SIZE 64

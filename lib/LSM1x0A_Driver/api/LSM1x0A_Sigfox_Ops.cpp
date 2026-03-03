@@ -1,9 +1,10 @@
-#include "LSM1x0A_Sigfox.h"
 #include "../LSM1x0A_Controller.h"
-#include <sys/time.h>
+#include "LSM1x0A_Sigfox.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <sys/time.h>
+
 
 LSM1x0A_Sigfox::LSM1x0A_Sigfox(LSM1x0A_Controller* controller) : _controller(controller)
 {
@@ -57,19 +58,20 @@ bool LSM1x0A_Sigfox::sendBit(bool bit, bool downlink, uint8_t txRepeat)
   char cmd[32];
   if (downlink || txRepeat != 2) {
     snprintf(cmd, sizeof(cmd), "%s%d,%d,%d", LsmAtCommand::SEND_BIT, bit ? 1 : 0, downlink ? 1 : 0, txRepeat);
-  } else {
+  }
+  else {
     snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::SEND_BIT, bit ? 1 : 0);
   }
-  
+
   if (downlink) {
-    char rxBuffer[32] = {0};
-    AtError err = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
+    char    rxBuffer[32] = {0};
+    AtError err          = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
     if (err == AtError::OK) {
       parseSigfoxDownlink(rxBuffer);
       return true;
     }
-    // En Sigfox el downlink suele perderse con más facilidad, o el timeout ocurre.
-    // Retornamos false para indicar que NO hubo downlink, pero la red sí consumió la solicitud OOB/Uplink.
+    // In Sigfox, the downlink is often lost more easily, or the timeout occurs.
+    // We return false to indicate that there was NO downlink, but the network did consume the OOB/Uplink request.
     return false;
   }
 
@@ -79,19 +81,21 @@ bool LSM1x0A_Sigfox::sendBit(bool bit, bool downlink, uint8_t txRepeat)
 
 bool LSM1x0A_Sigfox::sendString(const char* text, bool downlink, uint8_t txRepeat)
 {
-  if (!isValidAscii(text, 12)) return false;
+  if (!isValidAscii(text, 12))
+    return false;
 
   size_t length = strlen(text);
-  char cmd[64];
+  char   cmd[64];
   if (downlink || txRepeat != 2) {
     snprintf(cmd, sizeof(cmd), "%s%zu,%s,%d,%d", LsmAtCommand::SEND_STRING, length, text, downlink ? 1 : 0, txRepeat);
-  } else {
+  }
+  else {
     snprintf(cmd, sizeof(cmd), "%s%zu,%s", LsmAtCommand::SEND_STRING, length, text);
   }
 
   if (downlink) {
-    char rxBuffer[32] = {0};
-    AtError err = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
+    char    rxBuffer[32] = {0};
+    AtError err          = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
     if (err == AtError::OK) {
       parseSigfoxDownlink(rxBuffer);
       return true;
@@ -104,9 +108,10 @@ bool LSM1x0A_Sigfox::sendString(const char* text, bool downlink, uint8_t txRepea
 
 bool LSM1x0A_Sigfox::sendPayload(const uint8_t* payload, size_t len, bool downlink, uint8_t txRepeat)
 {
-  if (len > 12) return false;
+  if (len > 12)
+    return false;
 
-  char hexStr[25];  // 12 bytes * 2 + null terminator
+  char hexStr[25]; // 12 bytes * 2 + null terminator
   for (size_t i = 0; i < len; i++) {
     sprintf(hexStr + (i * 2), "%02X", payload[i]);
   }
@@ -114,13 +119,14 @@ bool LSM1x0A_Sigfox::sendPayload(const uint8_t* payload, size_t len, bool downli
   char cmd[64];
   if (downlink || txRepeat != 2) {
     snprintf(cmd, sizeof(cmd), "%s%s,%d,%d", LsmAtCommand::SEND_PAYLOAD, hexStr, downlink ? 1 : 0, txRepeat);
-  } else {
+  }
+  else {
     snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::SEND_PAYLOAD, hexStr);
   }
 
   if (downlink) {
-    char rxBuffer[32] = {0};
-    AtError err = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
+    char    rxBuffer[32] = {0};
+    AtError err          = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
     if (err == AtError::OK) {
       parseSigfoxDownlink(rxBuffer);
       return true;
@@ -131,8 +137,6 @@ bool LSM1x0A_Sigfox::sendPayload(const uint8_t* payload, size_t len, bool downli
   return _controller->sendCommand(cmd, 30000) == AtError::OK;
 }
 
-
-
 bool LSM1x0A_Sigfox::sendOutOfBand()
 {
   // ATS300 Out of band message. Usually takes standard TX time (approx 6 seconds).
@@ -141,25 +145,26 @@ bool LSM1x0A_Sigfox::sendOutOfBand()
 
 bool LSM1x0A_Sigfox::parseSigfoxDownlink(const char* rxBuffer)
 {
-  if (!rxBuffer || strlen(rxBuffer) < 12) return false;
+  if (!rxBuffer || strlen(rxBuffer) < 12)
+    return false;
 
   char hexTemp[9];
-  // Parsear TIMESTAMP (Primeros 8 caracteres)
+  // Parse TIMESTAMP (First 8 characters)
   memcpy(hexTemp, rxBuffer, 8);
   hexTemp[8]  = '\0';
   uint32_t ts = strtoul(hexTemp, NULL, 16);
 
-  // Ajustar el reloj interno del ESP32 con esta hora
+  // Adjust the ESP32 internal clock with this time
   time_t         rawTime = (time_t)ts;
   struct timeval tv      = {.tv_sec = static_cast<long>(rawTime), .tv_usec = 0};
   settimeofday(&tv, NULL);
 
   _lastDownlinkTime = rawTime;
 
-  // Parsear RSSI (Siguientes 4 caracteres)
+  // Parse RSSI (Next 4 characters)
   char rssiTemp[5];
   memcpy(rssiTemp, rxBuffer + 8, 4);
-  rssiTemp[4]  = '\0';
+  rssiTemp[4]      = '\0';
   uint32_t rawRssi = strtoul(rssiTemp, NULL, 16);
   _lastRxRSSI      = (int16_t)rawRssi;
 
@@ -191,7 +196,8 @@ bool LSM1x0A_Sigfox::testPRBS9(long freqHz, int bitrate)
     char cmd[32];
     if (bitrate > 0) {
       snprintf(cmd, sizeof(cmd), "%s%ld,%d", LsmAtCommand::TEST_PRBS9, freqHz, bitrate);
-    } else {
+    }
+    else {
       snprintf(cmd, sizeof(cmd), "%s%ld", LsmAtCommand::TEST_PRBS9, freqHz);
     }
     return _controller->sendCommand(cmd, 2000) == AtError::OK;
@@ -209,7 +215,8 @@ bool LSM1x0A_Sigfox::testMonarchScan(int timeoutSecs)
 
 bool LSM1x0A_Sigfox::testMode(int mode)
 {
-  if (mode < 0 || mode > 12) return false;
+  if (mode < 0 || mode > 12)
+    return false;
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::TEST_MODE, mode);
   return _controller->sendCommand(cmd, 10000) == AtError::OK;
@@ -244,7 +251,7 @@ bool LSM1x0A_Sigfox::isValidHex(const char* str, size_t maxLen)
   size_t length = 0;
   while (*str && length < maxLen) {
     if (!((*str >= '0' && *str <= '9') || (*str >= 'A' && *str <= 'F') || (*str >= 'a' && *str <= 'f'))) {
-      return false; // Caracter no-hexadecimal detectado
+      return false; // Non-hexadecimal character detected
     }
     str++;
     length++;
@@ -264,9 +271,9 @@ bool LSM1x0A_Sigfox::isValidAscii(const char* str, size_t maxLen)
 
   size_t length = 0;
   while (*str && length < maxLen) {
-    // Aceptamos rango de caracteres imprimibles ASCII (incluyendo espacio)
+    // Acceptable range of printable ASCII characters (including space)
     if (*str < 32 || *str > 126) {
-      return false; // Caracter de control o no estándar detectado
+      return false; // Control or non-standard character detected
     }
     str++;
     length++;

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// Helper auxiliar local para formatear cadenas hexadecimales añadiendo delimitadores (:)
+// Helper function to format hex strings with colons (e.g. "0011223344556677" -> "00:11:22:33:44:55:66:77")
 static bool formatHexWithColons(const char* in, char* out, size_t outSize, size_t expectedBytes)
 {
   if (strlen(in) != expectedBytes * 2)
@@ -21,17 +21,6 @@ static bool formatHexWithColons(const char* in, char* out, size_t outSize, size_
   out[outIdx] = '\0';
   return true;
 }
-
-// Mácaras fijas para optimizar memoria flash y consumo (Progmem style)
-static const char* const M_8CH[]  = {"000F", "00F0", "00FF"};
-static const char* const M_72CH[] = {"00FF:0000:0000:0000:0000", "FF00:0000:0000:0000:0000", "0000:00FF:0000:0000:0000", "0000:FF00:0000:0000:0000",
-                                     "0000:0000:00FF:0000:0000", "0000:0000:FF00:0000:0000", "0000:0000:0000:00FF:0000", "0000:0000:0000:FF00:0000",
-                                     "0000:0000:0000:0000:00FF", "FFFF:FFFF:FFFF:FFFF:00FF"};
-static const char* const M_96CH[] = {"00FF:0000:0000:0000:0000:0000", "FF00:0000:0000:0000:0000:0000", "0000:00FF:0000:0000:0000:0000",
-                                     "0000:FF00:0000:0000:0000:0000", "0000:0000:00FF:0000:0000:0000", "0000:0000:FF00:0000:0000:0000",
-                                     "0000:0000:0000:00FF:0000:0000", "0000:0000:0000:FF00:0000:0000", "0000:0000:0000:0000:00FF:0000",
-                                     "0000:0000:0000:0000:FF00:0000", "0000:0000:0000:0000:0000:00FF", "0000:0000:0000:0000:0000:FF00",
-                                     "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF"};
 
 LSM1x0A_LoRaWAN::LSM1x0A_LoRaWAN(LSM1x0A_Controller* controller) : _controller(controller)
 {
@@ -342,7 +331,7 @@ bool LSM1x0A_LoRaWAN::setChannelMask(LsmBand band, uint16_t subBandMask)
 
   if (subBandMask == 0xFFFF) {
     if (maxCount == 1) {
-      blocks[0] = 0x00FF; // Default 16 channels? Or FFFF? Actually in EU868 standard is 00FF (first 8) or 000F. We will use 00FF to be safe.
+      blocks[0] = 0x00FF;
     }
     else if (maxCount == 6) {
       blocks[0] = 0xFFFF;
@@ -427,7 +416,7 @@ bool LSM1x0A_LoRaWAN::resetDevNonce()
 bool LSM1x0A_LoRaWAN::setRfTestConfig(long freqHz, int power, int bw, int sf_dr, int cr, int lna)
 {
   char cmd[64];
-  // Formato: AT+TCONF=<Freq>:<Power>:<BW>:<SF/Dr>:<CR>:<Lna>
+  // Format: AT+TCONF=<Freq>:<Power>:<BW>:<SF/Dr>:<CR>:<Lna>
   snprintf(cmd, sizeof(cmd), "%s%ld:%d:%d:%d:%d:%d", LsmAtCommand::TTEST_CONF, freqHz, power, bw, sf_dr, cr, lna);
   return _controller->sendCommand(cmd, 1000) == AtError::OK;
 }
@@ -519,7 +508,7 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
 {
   bool success = true;
 
-  // Restaurar identificadores si estaban en caché
+  // Restore identifiers if they were cached
   if (_cachedDevEui[0] != '\0')
     if (!setDevEUI(_cachedDevEui))
       success = false;
@@ -530,7 +519,7 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
     if (!setNwkID((int)strtol(_cachedNwkID, NULL, 16)))
       success = false;
 
-  // Restaurar Band y SubBand si es posible
+  // Restore Band and SubBand if possible
   if (_cachedBand != LsmBand::BAND_UNKNOWN) {
     if (!setBand(_cachedBand))
       success = false;
@@ -539,7 +528,7 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
         success = false;
   }
 
-  // Restaurar configuraciones de red
+  // Restore network configurations
   if (_cachedAdrEnabled != -1)
     if (!setADR(_cachedAdrEnabled == 1))
       success = false;
@@ -553,7 +542,7 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
     if (!setDutyCycle(_cachedDutyCycle == 1))
       success = false;
 
-  // Restaurar delays
+  // Restore delays
   if (_cachedJoin1Delay != -1)
     if (!setJoin1Delay(_cachedJoin1Delay))
       success = false;
@@ -567,7 +556,7 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
     if (!setRx2Delay(_cachedRx2Delay))
       success = false;
 
-  // Restaurar frecuencias / data rates de RX2
+  // Restore RX2 frequencies / data rates
   if (_cachedRx2DataRate != LsmDataRate::DR_UNKNOWN)
     if (!setRx2DataRate(_cachedRx2DataRate))
       success = false;
@@ -575,7 +564,7 @@ bool LSM1x0A_LoRaWAN::restoreConfig()
     if (!setRx2Frequency(_cachedRx2Frequency))
       success = false;
 
-  // Restaurar reintentos
+  // Restore retries
   if (_cachedConfirmRetry >= 0)
     if (!setConfirmRetry(_cachedConfirmRetry))
       success = false;
@@ -590,7 +579,7 @@ bool LSM1x0A_LoRaWAN::loadConfigFromModule()
 {
   bool success = true;
 
-  // Llama a los getters internos para forzar que sus valores se sobreescriban en la caché actual
+  // Call internal getters to force their values to be overwritten in the current cache
   if (!getDevEUI(_cachedDevEui, sizeof(_cachedDevEui)))
     success = false;
   if (!getDevAddr(_cachedDevAddr, sizeof(_cachedDevAddr)))

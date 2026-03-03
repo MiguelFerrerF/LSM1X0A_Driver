@@ -4,19 +4,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Helper local para extraer una cadena tras cierto prefijo en un buffer,
-// o si no hay prefijo sólo copiarla quitando salto de línea.
+// Local helper to extract a string after a certain prefix in a buffer, or if no prefix just copy it trimming newlines.
 static void extractString(const char* response, char* outBuffer, size_t size)
 {
   if (!response || !outBuffer || size == 0)
     return;
 
-  // El puerto serie del módulo a veces contesta "DevEUI: 01020304..." pero en LsmAtParser ya limpiamos
-  // Generalmente para getters es la cadena cruda más \r\n. Por ejemplo "0102030405060708"
+  // The module's serial port sometimes responds with "DevEUI: 01020304..." but in LsmAtParser we already clean it
+  // Generally for getters, it's the raw string plus \r\n. For example "0102030405060708"
   strncpy(outBuffer, response, size - 1);
   outBuffer[size - 1] = '\0';
 
-  // Eliminar \r o \n finales si los hubiera
+  // Trim any trailing newline characters
   char* newline = strpbrk(outBuffer, "\r\n");
   if (newline)
     *newline = '\0';
@@ -31,15 +30,15 @@ bool LSM1x0A_LoRaWAN::getLocalTime(struct tm* timeinfo)
   if (_controller->sendCommandWithResponse(LsmAtCommand::LOCAL_TIME, buffer, sizeof(buffer), "LTIME:", 1000) != AtError::OK)
     return false;
 
-  // El parser remueve los prefijos, por lo que buffer debería contener algo como "12h34m56s on 23/02/2026"
+  // The parser removes the prefixes, so buffer should contain something like "12h34m56s on 23/02/2026"
   int h = 0, m = 0, s = 0, D = 0, M = 0, Y = 0;
   if (sscanf(buffer, "%dh%dm%ds on %d/%d/%d", &h, &m, &s, &D, &M, &Y) == 6) {
     timeinfo->tm_hour = h;
     timeinfo->tm_min  = m;
     timeinfo->tm_sec  = s;
     timeinfo->tm_mday = D;
-    timeinfo->tm_mon  = M - 1;    // struct tm usa 0-11 para los meses
-    timeinfo->tm_year = Y - 1900; // struct tm usa años desde 1900
+    timeinfo->tm_mon  = M - 1;    // struct tm uses 0-11 for months
+    timeinfo->tm_year = Y - 1900; // struct tm uses years since 1900
     return true;
   }
 
@@ -215,7 +214,7 @@ LsmClass LSM1x0A_LoRaWAN::getClass()
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CLASS, "?");
-  // Formato puede ser A, B o C
+  // Format can be A, B, or C
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
     if (strchr(rx, 'B'))
       return LsmClass::CLASS_B;
@@ -359,15 +358,14 @@ bool LSM1x0A_LoRaWAN::getChannelMask(uint16_t* outMasks, size_t* outArraySize)
   if (!outMasks || !outArraySize || *outArraySize == 0)
     return false;
 
-  // 1. Limpiamos buffer en clase base
+  // Clear any previous data in the controller's temporary mask buffer before sending the command
   _controller->resetTempMaskBuffer();
 
-  // 2. Ejecutar AT+CHMASK?
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CHANNEL_MASK, "?");
 
-  // Ejecutamos AT+CHMASK? con sendCommand, esto asegura que el parser espera al 'OK'
-  // Mientras esperamos, el parser iterará las líneas e irá rellenando evt->tempMaskBuffer
+  // Execute AT+CHMASK? with sendCommand, this ensures the parser waits for 'OK'
+  // While waiting, the parser will iterate through the lines and fill evt->tempMaskBuffer
   if (_controller->sendCommand(cmd, 2000) == AtError::OK) {
     int count = _controller->getTempMaskCount();
     if (count > 0 && count <= (int)(*outArraySize)) {
@@ -387,7 +385,6 @@ int LSM1x0A_LoRaWAN::getAbpFrameCounter()
     return -1;
   char valStr[16] = {0};
   char cmd[32]    = {0};
-  // Enviamos: AT+ABPFCNT=?
   snprintf(cmd, sizeof(cmd), "%s?", LsmAtCommand::FRAME_CNT);
   if (_controller->sendCommandWithResponse(cmd, valStr, sizeof(valStr)) == AtError::OK) {
     return atoi(valStr);
