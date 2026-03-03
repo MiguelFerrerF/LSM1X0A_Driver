@@ -138,8 +138,8 @@ The AT command parser returns the following common responses. To see the exact d
 | Command | Set Format | Description |
 | :--- | :--- | :--- |
 | `AT$SB` | `AT$SB=<Bit>,<Downlink>,<TxRepeat>` | Sends a dynamic status **bit** to the Sigfox network. |
-| `AT$SF` | `AT$SF=<TextoASCII>,<Down>,<TxRpt>` | Sends an **ASCII Data frame** (E.g., `AT$SF=Hello`). |
-| `AT$SH` | `AT$SH=<Len>,<HexPayload>,<Dwn>,<Rpt>` | Sends an **Hex frame** (Raw hex data). |
+| `AT$SF` | `AT$SF=<HexPayload>,<Down>,<TxRpt>` | Sends a **Hex Data frame** (E.g., `AT$SF=DEADBEEF`). |
+| `AT$SH` | `AT$SH=<Len>,<ASCII/Raw>,<Dwn>,<Rpt>` | Sends a **Raw/ASCII Data frame** (E.g., `AT$SH=5,Hello`). |
 | `ATS300` | `ATS300` | Sends an *Out of Band* message exactly once. |
 
 ### 3. Regional Configuration (Macro-Channels) Sigfox MAC

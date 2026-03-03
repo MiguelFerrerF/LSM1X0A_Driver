@@ -77,13 +77,16 @@ bool LSM1x0A_Sigfox::sendBit(bool bit, bool downlink, uint8_t txRepeat)
   return _controller->sendCommand(cmd, 30000) == AtError::OK;
 }
 
-bool LSM1x0A_Sigfox::sendFrame(const char* text, bool downlink, uint8_t txRepeat)
+bool LSM1x0A_Sigfox::sendString(const char* text, bool downlink, uint8_t txRepeat)
 {
+  if (!isValidAscii(text, 12)) return false;
+
+  size_t length = strlen(text);
   char cmd[64];
   if (downlink || txRepeat != 2) {
-    snprintf(cmd, sizeof(cmd), "%s%s,%d,%d", LsmAtCommand::SEND_FRAME, text, downlink ? 1 : 0, txRepeat);
+    snprintf(cmd, sizeof(cmd), "%s%zu,%s,%d,%d", LsmAtCommand::SEND_STRING, length, text, downlink ? 1 : 0, txRepeat);
   } else {
-    snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::SEND_FRAME, text);
+    snprintf(cmd, sizeof(cmd), "%s%zu,%s", LsmAtCommand::SEND_STRING, length, text);
   }
 
   if (downlink) {
@@ -99,21 +102,20 @@ bool LSM1x0A_Sigfox::sendFrame(const char* text, bool downlink, uint8_t txRepeat
   return _controller->sendCommand(cmd, 30000) == AtError::OK;
 }
 
-bool LSM1x0A_Sigfox::sendHexFrame(const uint8_t* payload, size_t len, bool downlink, uint8_t txRepeat)
+bool LSM1x0A_Sigfox::sendPayload(const uint8_t* payload, size_t len, bool downlink, uint8_t txRepeat)
 {
   if (len > 12) return false;
 
   char hexStr[25];  // 12 bytes * 2 + null terminator
   for (size_t i = 0; i < len; i++) {
-    // Arduino's sprintf doesn't have secure alternatives but we know size is safe here
     sprintf(hexStr + (i * 2), "%02X", payload[i]);
   }
 
   char cmd[64];
   if (downlink || txRepeat != 2) {
-    snprintf(cmd, sizeof(cmd), "%s%s,%d,%d", LsmAtCommand::SEND_HEX, hexStr, downlink ? 1 : 0, txRepeat);
+    snprintf(cmd, sizeof(cmd), "%s%s,%d,%d", LsmAtCommand::SEND_PAYLOAD, hexStr, downlink ? 1 : 0, txRepeat);
   } else {
-    snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::SEND_HEX, hexStr);
+    snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::SEND_PAYLOAD, hexStr);
   }
 
   if (downlink) {
@@ -128,6 +130,8 @@ bool LSM1x0A_Sigfox::sendHexFrame(const uint8_t* payload, size_t len, bool downl
 
   return _controller->sendCommand(cmd, 30000) == AtError::OK;
 }
+
+
 
 bool LSM1x0A_Sigfox::sendOutOfBand()
 {
@@ -164,7 +168,7 @@ bool LSM1x0A_Sigfox::parseSigfoxDownlink(const char* rxBuffer)
 
 bool LSM1x0A_Sigfox::join()
 {
-  return sendBit(true, true, 1);
+  return sendBit(true, true, 2);
 }
 
 // =========================================================================
@@ -229,4 +233,47 @@ bool LSM1x0A_Sigfox::testSendP2P()
 bool LSM1x0A_Sigfox::testReceiveP2P()
 {
   return _controller->sendCommand(LsmAtCommand::TEST_RP2P, 5000) == AtError::OK;
+}
+
+bool LSM1x0A_Sigfox::isValidHex(const char* str, size_t maxLen)
+{
+  if (str == nullptr) {
+    return false;
+  }
+
+  size_t length = 0;
+  while (*str && length < maxLen) {
+    if (!((*str >= '0' && *str <= '9') || (*str >= 'A' && *str <= 'F') || (*str >= 'a' && *str <= 'f'))) {
+      return false; // Caracter no-hexadecimal detectado
+    }
+    str++;
+    length++;
+  }
+
+  if (length >= maxLen && *str != '\0') {
+    return false;
+  }
+  return true;
+}
+
+bool LSM1x0A_Sigfox::isValidAscii(const char* str, size_t maxLen)
+{
+  if (str == nullptr) {
+    return false;
+  }
+
+  size_t length = 0;
+  while (*str && length < maxLen) {
+    // Aceptamos rango de caracteres imprimibles ASCII (incluyendo espacio)
+    if (*str < 32 || *str > 126) {
+      return false; // Caracter de control o no estándar detectado
+    }
+    str++;
+    length++;
+  }
+
+  if (length >= maxLen && *str != '\0') {
+    return false;
+  }
+  return true;
 }

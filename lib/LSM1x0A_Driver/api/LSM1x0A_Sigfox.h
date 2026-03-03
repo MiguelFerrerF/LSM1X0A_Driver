@@ -138,23 +138,23 @@ public:
   bool sendBit(bool bit, bool downlink = false, uint8_t txRepeat = 2);
 
   /**
-   * @brief Sends standard ASCII frame.
+   * @brief Sends standard ASCII string literal.
    * @param text String up to 12 characters.
    * @param downlink Requests downlink from network.
    * @param txRepeat Number of repetitions.
    * @return true upon success.
    */
-  bool sendFrame(const char* text, bool downlink = false, uint8_t txRepeat = 2);
+  bool sendString(const char* text, bool downlink = false, uint8_t txRepeat = 2);
 
   /**
-   * @brief Sends raw hex payload.
+   * @brief Sends raw hex payload bytes.
    * @param payload Byte array (up to 12 bytes).
    * @param len Length.
    * @param downlink Requests downlink.
    * @param txRepeat Number of repetitions.
    * @return true upon success.
    */
-  bool sendHexFrame(const uint8_t* payload, size_t len, bool downlink = false, uint8_t txRepeat = 2);
+  bool sendPayload(const uint8_t* payload, size_t len, bool downlink = false, uint8_t txRepeat = 2);
 
   /**
    * @brief Sends an Out-Of-Band (OOB) administrative message to the Sigfox Operator.
@@ -243,7 +243,7 @@ public:
 private:
   LSM1x0A_Controller* _controller;
   
-  // Cache variables instead of LsmSigfoxConfig struct
+  // Cache variables to minimize redundant AT queries. Updated on successful sets and gets.
   char         _cachedDeviceID[12] = {0};
   char         _cachedPAC[20]      = {0};
   LsmRCChannel _cachedRcChannel    = LsmRCChannel::RC_UNKNOWN;
@@ -253,6 +253,9 @@ private:
 
   int16_t      _lastRxRSSI         = 0;
   time_t       _lastDownlinkTime   = 0;
+
+  bool isValidHex(const char* str, size_t maxLen);
+  bool isValidAscii(const char* str, size_t maxLen);
 
   bool parseSigfoxDownlink(const char* rxBuffer);
 };

@@ -32,8 +32,8 @@ Allow adjusting network parameters and operation of the Sigfox stack.
 ## 3. Operations and Transmissions
 Allow querying Sigfox network features.
 - `sendBit`: Sends a single payload bit. Frame type 0. Includes optional `downlink` parameter to enable network response matching.
-- `sendFrame`: Sends an ASCII frame up to 12 bytes. Includes optional `downlink` parameter to enable network response matching.
-- `sendHexFrame`: Sends a generic hexadecimal payload. Includes optional `downlink` parameter to enable network response matching.
+- `sendString`: Sends an ASCII string up to 12 bytes. Includes optional `downlink` parameter to enable network response matching.
+- `sendPayload`: Sends a generic hexadecimal payload (byte array). Includes optional `downlink` parameter to enable network response matching.
 - `sendOutOfBand`: Sends an Out-Of-Band (OOB) administrative message to the Sigfox Operator.
 - `join`: Emulates a generic Join command by dispatching an empty `sendBit(true, true)` configuration sequence and tracking network state.
 

@@ -19,7 +19,7 @@ To achieve fail-safe communication, driver development must adhere to the follow
 2. **Buffer Flushing:** Before sending any new command, the driver must flush the UART RX buffer to discard "garbage" data or previous asynchronous echoes that could misalign the parser.
 3. **Dynamic Timeout Management:** 
    - *Fast Commands* (e.g., `AT+BAT`, `AT+DEUI=?`): Respond almost instantaneously. Short timeout (~500ms).
-   - *Network Commands* (e.g., `AT+JOIN`, `AT$SF`, `AT+SEND`): Respond after involving radio transmission and reception windows. They can take anywhere from a few seconds to minutes. Long timeout.
+   - *Network Commands* (e.g., `AT+JOIN`, `AT$SH`/`AT$SF`, `AT+SEND`): Respond after involving radio transmission and reception windows. They can take anywhere from a few seconds to minutes. Long timeout.
 4. **Error Strategy and Retries:** Handle the `\r\nAT_BUSY_ERROR\r\n` response by implementing a *Backoff* (delay before retry) instead of aborting or failing immediately.
 5. **Asynchronous Events (URC):** The module generates spontaneous events (e.g., `+EVT:JOINED`, `+EVT:RX_1...`). The driver should have an RX interrupt routine or task that catches and routes these events to the upper application layer, separating them from the standard synchronous flow.
 
