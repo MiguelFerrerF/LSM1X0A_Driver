@@ -1,5 +1,6 @@
 #include "../LSM1x0A_Controller.h"
-#include "LSM1x0A_LoRaWAN.h"
+#include "esp_timer.h"
+
 
 // =========================================================================
 // NETWORK LORAWAN OPERATIONS (JOIN, SEND, LINKCHECK)
@@ -19,11 +20,16 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
   // Clear previous flags
   _controller->clearEvents(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL);
 
+  LSM_LOG_INFO("LORA", "Initiating LoRaWAN Join (%s)", joinMode == LsmJoinMode::OTAA ? "OTAA" : "ABP");
+
   // Send the command and wait for the initial OK
   AtError err = _controller->sendCommand(cmd, 2000, 1);
   if (err != AtError::OK) {
+    LSM_LOG_ERROR("LORA", "Failed to dispatch Join request.");
     return false;
   }
+  
+  LSM_LOG_INFO("LORA", "Join request dispatched successfully.");
 
   // Now wait asynchronously for the URC event
   uint32_t result = _controller->waitForEvent(LSM_EVT_JOIN_SUCCESS | LSM_EVT_JOIN_FAIL, timeoutMs);
@@ -32,13 +38,16 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
     if (_pendingChannelMask) {
       setChannelMask(_cachedBand, _cachedSubBandMask);
     }
+    LSM_LOG_INFO("LORA", "Join SUCCESS.");
     return true; // Complete success
   }
   else if (result & LSM_EVT_JOIN_FAIL) {
+    LSM_LOG_ERROR("LORA", "Join FAILED (e.g. bad credentials or no coverage).");
     return false; // Join failure (e.g., bad credentials, no coverage, etc.)
   }
 
   // If we reach here, it's an unexpected MAC layer timeout
+  LSM_LOG_ERROR("LORA", "Join TIMEOUT. Module hung without emitting failure event. Forcing recovery.");
   _controller->recoverModule();
   return false; // Timeout
 }
@@ -62,9 +71,13 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   // Clear previous flags
   _controller->clearEvents(LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL | LSM_EVT_RX_TIMEOUT);
 
+  LSM_LOG_INFO("LORA", "Sending LoRaWAN package (Port: %d, Confirmed: %d)", port, confirmed);
+  LSM_LOG_VERBOSE("LORA", "Payload: %s", data);
+
   // Send the payload (this responds OK quickly if well-formatted and not busy)
   AtError err = _controller->sendCommand(cmd, 3000, 1);
   if (err != AtError::OK) {
+    LSM_LOG_ERROR("LORA", "Failed to dispatch LoRaWAN transmission request.");
     return false;
   }
 
@@ -91,10 +104,10 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       calcTimeoutMs = dynamicTimeoutMs;
     }
 
-    uint32_t startMs = millis();
+    uint32_t startMs = (uint32_t)(esp_timer_get_time() / 1000);
     _controller->clearEvents(LSM_EVT_RX_TIMEOUT);
 
-    while ((millis() - startMs) < calcTimeoutMs) {
+    while (((uint32_t)(esp_timer_get_time() / 1000) - startMs) < calcTimeoutMs) {
       uint32_t expectedBits = LSM_EVT_TX_SUCCESS | LSM_EVT_TX_FAIL | LSM_EVT_RX_TIMEOUT;
       if (_linkCheckRequested)
         expectedBits |= LSM_EVT_LINK_CHECK_ANS;
@@ -126,6 +139,7 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     }
 
     // If we reach a total asynchronous timeout, it means the module hung (no output)
+    LSM_LOG_ERROR("LORA", "MAC transmission timeout: Module hung without outputting result.");
     _controller->recoverModule();
     return false; // Real MAC layer error (no UART output)
   }
@@ -149,10 +163,10 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       calcTimeoutMs = dynamicTimeoutMs;
     }
 
-    uint32_t startMs = millis();
+    uint32_t startMs = (uint32_t)(esp_timer_get_time() / 1000);
     _controller->clearEvents(LSM_EVT_RX_TIMEOUT); // clear before starting
 
-    while ((millis() - startMs) < calcTimeoutMs) {
+    while (((uint32_t)(esp_timer_get_time() / 1000) - startMs) < calcTimeoutMs) {
       uint32_t expectedBits = LSM_EVT_TX_SUCCESS | LSM_EVT_RX_TIMEOUT;
       if (_linkCheckRequested)
         expectedBits |= LSM_EVT_LINK_CHECK_ANS;
@@ -184,6 +198,7 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     }
 
     // If we reach a total asynchronous timeout, it means the module hung (no output)
+    LSM_LOG_ERROR("LORA", "MAC transmission timeout: Module hung without outputting result.");
     _controller->recoverModule();
     return false; // Global wait timeout
   }
@@ -197,6 +212,7 @@ bool LSM1x0A_LoRaWAN::requestLinkCheck()
     return false;
 
   // AT+LINKC does not generate an immediate event, it only schedules the request for the next Uplink
+  LSM_LOG_INFO("LORA", "Requesting LinkCheck for the next uplink.");
   AtError err = _controller->sendCommand(LsmAtCommand::LINK_CHECK, 2000, 1);
   if (err == AtError::OK) {
     _linkCheckRequested = true;
@@ -222,7 +238,7 @@ bool LSM1x0A_LoRaWAN::recoverConnection(int maxRetries)
     if (join(_joinMode)) {
       return true;
     }
-    delay(2000); // Pause between attempts
+    vTaskDelay(pdMS_TO_TICKS(2000)); // Pause between attempts
   }
   return false;
 }

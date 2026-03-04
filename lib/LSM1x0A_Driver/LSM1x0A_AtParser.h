@@ -1,11 +1,8 @@
 #ifndef LSM1X0A_AT_PARSER_H
 #define LSM1X0A_AT_PARSER_H
 
-#include "LSM1x0A_Types.h"
 #include "UartDriver.h"
 #include "freertos/semphr.h"
-#include <cstdio>
-#include <cstring>
 
 // Callback for asynchronous events (URC) from the module. Examples:
 // type: "RX", "JOIN", etc.

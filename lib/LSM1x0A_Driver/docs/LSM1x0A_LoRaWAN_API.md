@@ -4,6 +4,36 @@
 
 This document describes the functions available in the `LSM1x0A_LoRaWAN` submodule, which handles LoRaWAN configuration and operation for the LSM1x0A controller. It serves as a reference for developers and agents wishing to maintain, extend, or integrate new features into the firmware.
 
+## Visual Overview
+
+### Operational State Machine (OTAA)
+@mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Configuring: Set Keys/Band
+    Configuring --> Joining: join
+    Joining --> Joining: Event JOIN_FAILED Retry
+    Joining --> Connected: Event JOINED
+    Connected --> Transmitting: sendData
+    Transmitting --> Waiting: Request Downlink
+    Waiting --> Connected: Event RX_DONE/Timeout
+    Transmitting --> Connected: No Downlink
+    Connected --> Idle: clearCache
+@endmermaid
+
+### Initialization & Join Flow
+@mermaid
+graph LR
+    Start((Start)) --> Init[Instantiate LSM1x0A_LoRaWAN]
+    Init --> Keys[Set DevEUI, AppEUI, AppKey]
+    Keys --> Band[Set Band: EU868/US915/...]
+    Band --> Join{join?}
+    Join -->|OTAA| OTAA[Wait for +EVT:JOINED]
+    Join -->|ABP| Connected
+    OTAA --> Connected[Ready to Send]
+    Connected --> Send[sendData]
+@endmermaid
+
 ## General Structure
 
 The `LSM1x0A_LoRaWAN` class is designed to separate LoRaWAN-specific logic from the main controller, avoiding the God Object anti-pattern. All operations require an instance of `LSM1x0A_Controller` to interact with the hardware.

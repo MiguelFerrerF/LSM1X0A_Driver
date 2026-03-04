@@ -7,6 +7,9 @@
 #include "freertos/task.h"
 #include <cstdint>
 #include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include "LSM1x0A_Logger.h"
 
 // We define the callback to include a context (void*).
 // This allows calling C++ class methods from this C-style driver.

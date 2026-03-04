@@ -1,5 +1,4 @@
 #include "LSM1x0A_AtParser.h"
-#include <Arduino.h>
 
 LSM1x0A_AtParser::LSM1x0A_AtParser()
 {
@@ -104,9 +103,7 @@ void LSM1x0A_AtParser::processLine(char* line)
   if (len == 0)
     return;
 
-  // Verbose logging of all received lines
-  if (_eventCallback)
-    _eventCallback(LsmEvent::VERBOSE, line, _eventCtx);
+  LSM_LOG_VERBOSE("UART", "RX Line: %s", line);
 
   // 2. DETECTION OF ASYNCHRONOUS EVENTS (+EVT)
   // Based on the functions: AT_event_join, AT_event_receive, AT_event_confirm
@@ -358,16 +355,15 @@ AtError LSM1x0A_AtParser::sendCommandWithResponse(const char* cmd, const char* e
   if (outBuffer)
     outBuffer[0] = '\0';
 
+  LSM_LOG_VERBOSE("UART", "TX: %s", cmd);
+
   // 3. Send Command via UART
   _driver->sendData(cmd, strlen(cmd));
   _driver->sendData("\r\n", 2);
 
-  // Return the command only for debugging
-  if (_eventCallback)
-    _eventCallback(LsmEvent::CMD, cmd, _eventCtx);
-
   // 4. Block waiting for response
   if (xSemaphoreTake(_syncSem, pdMS_TO_TICKS(timeoutMs)) != pdTRUE) {
+    LSM_LOG_DEBUG("UART", "sendCommandWithResponse timeout");
     _pendingCommand = false;
     return AtError::TIMEOUT;
   }

@@ -1,6 +1,4 @@
 #include "UartDriver.h"
-#include <cstdio>
-#include <cstring>
 
 #define RX_BUF_SIZE 1024
 #define TX_BUF_SIZE 1024
@@ -9,7 +7,7 @@
 bool UartDriver::init(uart_port_t uart_num, int baud_rate, int rx_pin, int tx_pin, ReceiveCallback callback, void* context)
 {
   if (callback == nullptr) {
-    printf("UartDriver ERROR: Receive callback cannot be null.\n");
+    LSM_LOG_ERROR("UART", "UartDriver ERROR: Receive callback cannot be null.");
     return false;
   }
 
@@ -28,24 +26,24 @@ bool UartDriver::init(uart_port_t uart_num, int baud_rate, int rx_pin, int tx_pi
 
   // Initialize the UART driver with the specified parameters and set up the RX task to handle incoming data asynchronously.
   if (uart_param_config(_uart_port, &uart_config) != ESP_OK) {
-    printf("UartDriver ERROR: Could not configure port %d.\n", uart_num);
+    LSM_LOG_ERROR("UART", "UartDriver ERROR: Could not configure port %d.", uart_num);
     return false;
   }
 
   if (uart_set_pin(_uart_port, tx_pin, rx_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE) != ESP_OK) {
-    printf("UartDriver ERROR: Could not configure pins for port %d.\n", uart_num);
+    LSM_LOG_ERROR("UART", "UartDriver ERROR: Could not configure pins for port %d.", uart_num);
     return false;
   }
 
   if (uart_driver_install(_uart_port, RX_BUF_SIZE, TX_BUF_SIZE, EVENT_QUEUE_SIZE, &uart_event_queue, 0) != ESP_OK) {
-    printf("UartDriver ERROR: Could not install driver for port %d.\n", uart_num);
+    LSM_LOG_ERROR("UART", "UartDriver ERROR: Could not install driver for port %d.", uart_num);
     return false;
   }
 
   // Create the task with a slightly higher priority to avoid losing bytes in case the user task is busy
   xTaskCreate(rx_task_entry, "uart_rx_task", 4096, this, 12, &rx_task_handle);
 
-  printf("UartDriver: Initialized on port %d, Baudrate %d.\n", uart_num, baud_rate);
+  LSM_LOG_INFO("UART", "UartDriver: Initialized on port %d, Baudrate %d.", uart_num, baud_rate);
   return true;
 }
 
@@ -61,10 +59,10 @@ bool UartDriver::deinit()
     vTaskDelete(rx_task_handle);
   }
   if (uart_driver_delete(_uart_port) != ESP_OK) {
-    printf("UartDriver ERROR: Could not uninstall driver for port %d.\n", _uart_port);
+    LSM_LOG_ERROR("UART", "UartDriver ERROR: Could not uninstall driver for port %d.", _uart_port);
     return false;
   }
-  printf("UartDriver: Port %d uninitialized.\n", _uart_port);
+  LSM_LOG_INFO("UART", "UartDriver: Port %d uninitialized.", _uart_port);
   return true;
 }
 
@@ -112,13 +110,13 @@ void UartDriver::rx_task_loop()
 
         // --- ERROR CASES (Robustness) ---
         case UART_FIFO_OVF:
-          printf("Error: UART FIFO Overflow. Hardware saturated.\n");
+          LSM_LOG_ERROR("UART", "Error: UART FIFO Overflow. Hardware saturated.");
           uart_flush_input(_uart_port); // Clear to recover state
           xQueueReset(uart_event_queue);
           break;
 
         case UART_BUFFER_FULL:
-          printf("Error: UART Ring Buffer Full. Software too slow.\n");
+          LSM_LOG_ERROR("UART", "Error: UART Ring Buffer Full. Software too slow.");
           uart_flush_input(_uart_port);
           xQueueReset(uart_event_queue);
           break;
@@ -129,7 +127,7 @@ void UartDriver::rx_task_loop()
 
         case UART_PARITY_ERR:
         case UART_FRAME_ERR:
-          printf("Error: Line noise (Parity/Frame error).\n");
+          LSM_LOG_ERROR("UART", "Error: Line noise (Parity/Frame error).");
           break;
 
         default:

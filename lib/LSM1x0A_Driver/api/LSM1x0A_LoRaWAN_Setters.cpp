@@ -1,5 +1,4 @@
 #include "../LSM1x0A_Controller.h"
-#include "LSM1x0A_LoRaWAN.h"
 #include <stdio.h>
 #include <string.h>
 

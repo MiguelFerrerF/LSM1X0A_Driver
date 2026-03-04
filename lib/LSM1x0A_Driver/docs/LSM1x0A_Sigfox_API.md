@@ -4,6 +4,39 @@
 
 This document describes the functions available in the `LSM1x0A_Sigfox` submodule, which handles Sigfox configuration and operation for the LSM1x0A controller. It serves as a reference for developers and agents wishing to maintain, extend, or integrate new features into the firmware.
 
+## Visual Overview
+
+### Operational Flow
+@mermaid
+graph LR
+    Start((Start)) --> Config[Set RC Channel]
+    Config --> Power[Set Radio Power]
+    Power --> Payload[sendPayload / sendString]
+    Payload --> DL{Downlink?}
+    DL -->|Yes| Wait[Wait for +RX_H=...]
+    Wait --> Extract[Extract RSSI / Time]
+    DL -->|No| Ready[Ready for next Send]
+    Extract --> Ready
+@endmermaid
+
+### Downlink & RSSI Extraction
+@mermaid
+sequenceDiagram
+    participant User as App Code
+    participant API as LSM1x0A_Sigfox
+    participant Mod as Module (Sigfox)
+
+    User->>API: sendPayload(data, true)
+    API->>Mod: AT$SF=... ,1
+    Mod-->>API: OK
+    Note over API: Waiting for downlink...
+    Mod-->>API: +RX_H= [RSSI, Timestamp, Data...]
+    API-->>User: true (Transmission Finished)
+    
+    User->>API: getLastRxRSSI()
+    API-->>User: -120 (dBm)
+@endmermaid
+
 ## General Structure
 
 The `LSM1x0A_Sigfox` class is designed to separate Sigfox-specific logic from the main controller, avoiding the God Object anti-pattern. All operations require an instance of `LSM1x0A_Controller` to interact with the hardware.

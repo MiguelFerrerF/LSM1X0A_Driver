@@ -37,37 +37,37 @@ enum class AtError
 
   // LoRaWAN Specific AT Errors
   /** @brief Generic LoRaWAN error (AT_ERROR) */
-  GENERIC_ERROR,       
+  GENERIC_ERROR,
   /** @brief Parameter error, out of bounds or malformed (AT_PARAM_ERROR) */
-  PARAM_ERROR,         
+  PARAM_ERROR,
   /** @brief Module is busy. Important: Usually indicates a backoff/retry is needed (AT_BUSY_ERROR) */
-  BUSY,                
+  BUSY,
   /** @brief Parameter query overflow error (AT_TEST_PARAM_OVERFLOW) */
-  TEST_PARAM_OVERFLOW, 
+  TEST_PARAM_OVERFLOW,
   /** @brief Tried to send data without being joined to network. Important: Trigger Join (AT_NO_NETWORK_JOINED) */
-  NO_NET_JOINED,       
+  NO_NET_JOINED,
   /** @brief Serial or radio reception error (AT_RX_ERROR) */
-  RX_ERROR,            
+  RX_ERROR,
   /** @brief Attempted Class B operation without it being enabled (AT_NO_CLASS_B_ENABLED) */
-  NO_CLASS_B_ENABLE,   
+  NO_CLASS_B_ENABLE,
   /** @brief Transmission restricted due to ETSI Duty Cycle limits (AT_DUTYCYCLE_RESTRICTED) */
-  DUTY_CYCLE_RESTRICT, 
+  DUTY_CYCLE_RESTRICT,
   /** @brief Cryptographic MAC error (AT_CRYPTO_ERROR) */
-  CRYPTO_ERROR,        
+  CRYPTO_ERROR,
 
   // SigFox Specific Errors
   /** @brief Internal SigFox library error (AT_LIB_ERROR) */
-  LIBRARY_ERROR, 
+  LIBRARY_ERROR,
   /** @brief Transmission timeout, channel busy or CS (AT_TX_TIMEOUT) */
-  TX_TIMEOUT,    
+  TX_TIMEOUT,
   /** @brief Reception window timeout (AT_RX_TIMEOUT) */
-  RX_TIMEOUT,    
+  RX_TIMEOUT,
   /** @brief Reconfiguration error (AT_RECONF_ERROR) */
-  RECONF_ERROR,  
+  RECONF_ERROR,
 
   // Parser specific errors
   /** @brief Boot alert received spontaneously ("BOOTALERT"). Indicates module was restarted. */
-  BOOT_ALERT, 
+  BOOT_ALERT,
 
   // Local Driver/Parser operational errors
   /** @brief The parser timed out waiting for the final \\r\\nOK\\r\\n token */
@@ -107,17 +107,17 @@ struct LsmRxMetadata
 enum class LsmLogLevel
 {
   /** @brief Absolute silence, no logs emitted */
-  SILENCE = 0, 
+  SILENCE = 0,
   /** @brief Only critical hardware failures or unrecoverable timeouts */
-  ERROR,       
+  ERROR,
   /** @brief Warnings about non-optimal operation or retries */
-  WARN,        
+  WARN,
   /** @brief High-level application state (Join Success, Packet Sent) */
-  INFO,        
+  INFO,
   /** @brief Complete AT command traffic and flow tracing (TX: AT+... / RX: OK) */
-  LSM_DEBUG,   
+  DEBUG,
   /** @brief Absolutely everything, including internal module raw dumps if available */
-  VERBOSE      
+  VERBOSE
 };
 
 /** @brief Represents the physical device model detected */
@@ -205,7 +205,7 @@ enum class LsmBand
   BAND_UNKNOWN
 };
 
-/** 
+/**
  * @brief Constants for multi-channel subband selection (Channel Mask).
  * Bitwise OR can be used to activate multiple banks: (SUB_BAND_1 | SUB_BAND_2)
  */
@@ -264,8 +264,6 @@ enum class LsmSigfoxDataType
   OOB
 };
 
-
-
 /**
  * @brief Asynchronous Event Types dispatched to the User Callback.
  * @cond
@@ -280,11 +278,7 @@ const char RX_TIMEOUT[] = "RX_TIMEOUT"; /**< Explicit reception window timeout *
 const char CLASS[]      = "CLASS";      /**< Device Class switch */
 const char BEACON[]     = "BEACON";     /**< Beacon Information */
 const char NVM[]        = "NVM";        /**< Saved context to internal flash */
-const char INFO[]       = "INFO";       /**< General module information */
-const char LOG[]        = "LOG";        /**< Logging traces */
-const char VERBOSE[]    = "VERBOSE";    /**< Standard AT verbose dumps */
 const char CHMASK[]     = "CHMASK";     /**< Channel mask setting event */
-const char CMD[]        = "CMD";        /**< AT command execution trigger */
 } // namespace LsmEvent
 /** @endcond */
 

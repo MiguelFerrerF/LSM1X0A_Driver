@@ -1,5 +1,4 @@
 #include "LSM1x0A_Controller.h"
-#include <Arduino.h>
 
 LSM1x0A_Controller::LSM1x0A_Controller() : lorawan(this), sigfox(this)
 {
@@ -34,7 +33,7 @@ LSM1x0A_Controller::~LSM1x0A_Controller()
   }
 }
 
-bool LSM1x0A_Controller::begin(AtEventCallback callback, void* ctx)
+bool LSM1x0A_Controller::begin()
 {
   if (_initialized)
     return true;
@@ -42,9 +41,6 @@ bool LSM1x0A_Controller::begin(AtEventCallback callback, void* ctx)
   if (!_driver || !_parser) {
     return false;
   }
-
-  _userCallback = callback;
-  _userCtx      = ctx;
 
   // Initialize the AT parser by passing the UartDriver we constructed.
   // The parser internally calls _driver->init()
@@ -98,11 +94,13 @@ AtError LSM1x0A_Controller::sendCommand(const char* cmd, uint32_t timeoutMs, int
 
     // If not the last attempt, make a brief pause
     if (i < retries - 1) {
-      delay(200);
+      LSM_LOG_WARN("CTRL", "sendCommand retrying (%d/%d)", i+1, retries);
+      vTaskDelay(pdMS_TO_TICKS(200));
     }
   }
 
   // If all retries are exhausted (e.g., constant timeouts), perform recovery
+  LSM_LOG_ERROR("CTRL", "sendCommand failed after %d retries", retries);
   recoverModule();
   return err;
 }
@@ -132,11 +130,13 @@ AtError LSM1x0A_Controller::sendCommandWithResponse(const char* cmd, char* outBu
     }
 
     if (i < retries - 1) {
-      delay(200);
+      LSM_LOG_WARN("CTRL", "sendCommandWithResponse retrying (%d/%d)", i+1, retries);
+      vTaskDelay(pdMS_TO_TICKS(200));
     }
   }
 
   // If it failed persistently
+  LSM_LOG_ERROR("CTRL", "sendCommandWithResponse failed after %d retries", retries);
   recoverModule();
   return err;
 }
@@ -240,6 +240,13 @@ void LSM1x0A_Controller::setMaxRetries(int retries)
   _maxRetries = (retries > 0) ? retries : 1;
 }
 
+void LSM1x0A_Controller::setLogCallback(LsmLogCallback callback, LsmLogLevel runtimeLevel)
+{
+  LsmLogger::setCallback(callback);
+  LsmLogger::setLevel(runtimeLevel);
+  LSM_LOG_DEBUG("CTRL", "Logger callback registered, level: %d", (int)runtimeLevel);
+}
+
 bool LSM1x0A_Controller::softwareReset()
 {
   if (!_initialized || !_parser)
@@ -256,10 +263,11 @@ bool LSM1x0A_Controller::hardwareReset()
   if (!_initialized || !_parser || _resetPin < 0)
     return false;
 
-  pinMode(_resetPin, OUTPUT);
-  digitalWrite(_resetPin, LOW);
-  delay(100);
-  digitalWrite(_resetPin, HIGH);
+  gpio_reset_pin((gpio_num_t)_resetPin);
+  gpio_set_direction((gpio_num_t)_resetPin, GPIO_MODE_OUTPUT);
+  gpio_set_level((gpio_num_t)_resetPin, 0);
+  vTaskDelay(pdMS_TO_TICKS(100));
+  gpio_set_level((gpio_num_t)_resetPin, 1);
 
   AtError err = _parser->waitForEvent(LSM1X0A_BOOT_ALERT_TIMEOUT_MS);
   if (err == AtError::BOOT_ALERT) {
@@ -270,6 +278,7 @@ bool LSM1x0A_Controller::hardwareReset()
 
 bool LSM1x0A_Controller::recoverModule()
 {
+  LSM_LOG_WARN("CTRL", "Starting module recovery procedure...");
 
   // 1. Software attempt (ATZ) with retries
   bool wasJoined   = lorawan.isJoined();
@@ -280,7 +289,7 @@ bool LSM1x0A_Controller::recoverModule()
       isRecovered = true;
       break;
     }
-    delay(500);
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
 
   // 2. Hardware attempt (if the pin is configured) with retries
@@ -290,7 +299,7 @@ bool LSM1x0A_Controller::recoverModule()
         isRecovered = true;
         break;
       }
-      delay(500);
+      vTaskDelay(pdMS_TO_TICKS(500));
     }
   }
 
@@ -344,6 +353,7 @@ void LSM1x0A_Controller::internalEventCallback(const char* type, const char* pay
 
 void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
 {
+  LSM_LOG_VERBOSE("CTRL", "Received internal event: %s -> %s", type, payload);
   // 1. Intercept to change internal state and release semaphores
   if (strcmp(type, LsmEvent::JOIN) == 0) {
     if (strstr(payload, "SUCCESS") || strstr(payload, "Network joined")) {
@@ -402,10 +412,8 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
     }
   }
 
-  // 2. Pass the event up to the user's callback
-  if (_userCallback) {
-    _userCallback(type, payload, _userCtx);
-  }
+  // 2. Log the event locally
+  LSM_LOG_INFO("EVENT", "Type: %s | Payload: %s", type, payload ? payload : "N/A");
 }
 
 bool LSM1x0A_Controller::syncConfigToCache()

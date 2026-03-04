@@ -12,9 +12,29 @@ void setup()
   delay(3000);
 }
 
-void verboseEventCallback(const char* type, const char* payload, void* ctx)
+void globalLogCallback(LsmLogLevel level, const char* component, const char* message)
 {
-  Serial.printf("[EVENT] Type: %s | Payload: %s\n", type, payload);
+  const char* levelStr = "UNK";
+  switch (level) {
+    case LsmLogLevel::ERROR:
+      levelStr = "ERR";
+      break;
+    case LsmLogLevel::WARN:
+      levelStr = "WRN";
+      break;
+    case LsmLogLevel::INFO:
+      levelStr = "INF";
+      break;
+    case LsmLogLevel::DEBUG:
+      levelStr = "DBG";
+      break;
+    case LsmLogLevel::VERBOSE:
+      levelStr = "VRB";
+      break;
+    default:
+      break;
+  }
+  Serial.printf("[%s][%s] %s\n", levelStr, component, message);
 }
 
 void loop()
@@ -31,8 +51,13 @@ void loop()
 
   Serial.println("[APP] Inicializando controlador...");
   // Intentar init
-  if (controller->begin(verboseEventCallback, nullptr)) {
-    Serial.println("[APP] Controlador inicializado OK. Probando WakeUp...");
+  if (controller->begin()) {
+    Serial.println("[APP] Controlador inicializado OK.");
+
+    // Registrar el callback de Logs globales (nivel VERBOSE para maxima verbosidad)
+    controller->setLogCallback(globalLogCallback, LsmLogLevel::VERBOSE);
+
+    Serial.println("[APP] Probando WakeUp...");
 
     for (int i = 0; i < 5; i++) {
       if (controller->wakeUp()) {

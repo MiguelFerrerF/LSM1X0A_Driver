@@ -2,9 +2,6 @@
 #define LSM1X0A_SIGFOX_H
 
 #include "LSM1x0A_Types.h"
-#include <stddef.h>
-#include <stdint.h>
-#include <time.h>
 // Forward declaration of the main controller to avoid circular includes
 class LSM1x0A_Controller;
 
@@ -242,7 +239,7 @@ public:
 
 private:
   LSM1x0A_Controller* _controller;
-  
+
   // Cache variables to minimize redundant AT queries. Updated on successful sets and gets.
   char         _cachedDeviceID[12] = {0};
   char         _cachedPAC[20]      = {0};
@@ -251,8 +248,8 @@ private:
   int8_t       _cachedPublicKey    = -1; // -1 unknowns, 0 false, 1 true
   int8_t       _cachedEncrypt      = -1;
 
-  int16_t      _lastRxRSSI         = 0;
-  time_t       _lastDownlinkTime   = 0;
+  int16_t _lastRxRSSI       = 0;
+  time_t  _lastDownlinkTime = 0;
 
   bool isValidHex(const char* str, size_t maxLen);
   bool isValidAscii(const char* str, size_t maxLen);

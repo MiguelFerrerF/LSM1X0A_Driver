@@ -2,13 +2,10 @@
 #define LSM1X0A_CONTROLLER_H
 
 #include "LSM1x0A_AtParser.h"
-#include "UartDriver.h"
 #include "api/LSM1x0A_LoRaWAN.h"
 #include "api/LSM1x0A_Sigfox.h"
-#include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include <Arduino.h>
-#include <time.h>
+#include "driver/gpio.h"
 
 // Definition of bits for the internal EventGroup synchronization
 #define LSM_EVT_JOIN_SUCCESS (1 << 0)
@@ -59,14 +56,10 @@ public:
   // =========================================================================
 
   /**
-   * @brief Initializes the UART hardware and the internal Parser.
-
-   * @param callback Callback function (e.g. onLoRaEvent) defined by the user
-   * to process asynchronous events (+EVT:...).
-   * @param ctx An optional context pointer for the callback (can be this or nullptr).
-   * @return true if UART started successfully and memory was allocated, false otherwise.
+   * @brief Initializes the driver, AT parser, and internal EventGroup.
+   * @return true if successful.
    */
-  bool begin(AtEventCallback callback, void* ctx = nullptr);
+  bool begin();
 
   /**
    * @brief Stops the hardware and unbinds event listeners.
@@ -172,6 +165,13 @@ public:
    * @param retries Number of retries (minimum 1).
    */
   void setMaxRetries(int retries);
+
+  /**
+   * @brief Configures the callback and level for the external logger system.
+   * @param callback Function to be called with log events
+   * @param runtimeLevel The maximum severity level that will trigger the callback (e.g. VERBOSE, INFO).
+   */
+  void setLogCallback(LsmLogCallback callback, LsmLogLevel runtimeLevel = LsmLogLevel::INFO);
 
   // =========================================================================
   // NATIVE STATE AND SYNCHRONIZATION
@@ -297,10 +297,6 @@ private:
 
   // Asynchronous synchronization
   EventGroupHandle_t _syncEventGroup = nullptr;
-
-  // User callback
-  AtEventCallback _userCallback = nullptr;
-  void*           _userCtx      = nullptr;
 
   // Interceptor
   static void internalEventCallback(const char* type, const char* payload, void* ctx);

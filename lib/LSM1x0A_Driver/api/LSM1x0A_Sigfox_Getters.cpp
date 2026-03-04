@@ -1,6 +1,4 @@
 #include "../LSM1x0A_Controller.h"
-#include "LSM1x0A_Sigfox.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

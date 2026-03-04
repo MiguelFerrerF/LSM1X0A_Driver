@@ -1,4 +1,3 @@
-#include "LSM1x0A_Sigfox.h"
 #include "../LSM1x0A_Controller.h"
 
 bool LSM1x0A_Sigfox::setRcChannel(LsmRCChannel rc)
