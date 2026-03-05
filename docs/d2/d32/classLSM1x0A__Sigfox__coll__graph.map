@@ -1,0 +1,14 @@
+<map id="LSM1x0A_Sigfox" name="LSM1x0A_Sigfox">
+<area shape="rect" id="Node000001" title="Submodule handling all Sigfox&#45;specific AT commands and operations." alt="" coords="5,427,164,923"/>
+<area shape="rect" id="Node000002" href="$d8/d92/classLSM1x0A__Controller.html" title="Main class for coordinating the LSM100A/LSM110A module." alt="" coords="84,1040,290,1664"/>
+<area shape="poly" id="edge4_Node000002_Node000001" title=" " alt="" coords="77,922,86,1016,87,1023,82,1024,81,1016,72,923"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="138,1041,122,940,128,939,143,1040"/>
+<area shape="rect" id="Node000003" href="$d5/d72/classLSM1x0A__LoRaWAN.html" title="Submódulo de configuración y operación LoRaWAN del LSM1x0A." alt="" coords="108,1728,266,2224"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="135,1664,137,1704,138,1711,132,1711,132,1704,129,1664"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="204,1728,205,1704,205,1681,211,1681,210,1704,209,1728"/>
+<area shape="rect" id="Node000004" href="$d5/d8b/classUartDriver.html" title="Simple UART hardware driver for Espressif chips using ESP&#45;IDF. It provides asynchronous receive capab..." alt="" coords="188,5,317,309"/>
+<area shape="poly" id="edge5_Node000002_Node000004" title=" " alt="" coords="249,309,213,1016,212,1023,207,1023,208,1016,243,309"/>
+<area shape="rect" id="Node000005" href="$d6/d3c/classLSM1x0A__AtParser.html" title="Thread&#45;safe AT Command Parser for the LSM100A/LSM110A modules. Handles UART communication,..." alt="" coords="303,373,509,976"/>
+<area shape="poly" id="edge7_Node000005_Node000004" title=" " alt="" coords="300,308,315,356,309,358,295,310"/>
+<area shape="poly" id="edge6_Node000002_Node000005" title=" " alt="" coords="312,977,296,1025,291,1024,306,975"/>
+</map>

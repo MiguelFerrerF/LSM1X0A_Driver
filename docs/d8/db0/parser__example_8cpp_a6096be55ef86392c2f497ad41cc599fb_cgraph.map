@@ -1,0 +1,5 @@
+<map id="onLoRaEvent" name="onLoRaEvent">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,13,106,40"/>
+<area shape="rect" id="Node000002" href="$d6/d3c/classLSM1x0A__AtParser.html#a73de1e403c724bebefe4e54f84747bb8" title="Static helper to convert the metadata string into a usable struct. Parses: &quot;+EVT:RX_1,..." alt="" coords="154,5,347,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="106,24,138,24,138,29,106,29"/>
+</map>

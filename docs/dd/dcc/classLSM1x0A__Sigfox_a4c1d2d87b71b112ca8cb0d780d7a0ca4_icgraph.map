@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Sigfox::setPublicKeyMode" name="LSM1x0A_Sigfox::setPublicKeyMode">
+<area shape="rect" id="Node000001" title="Toggles the use of the Public Key." alt="" coords="262,23,446,65"/>
+<area shape="rect" id="Node000002" href="$d0/df5/sigfox__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="87,5,132,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="246,36,132,24,133,18,246,30"/>
+<area shape="rect" id="Node000003" href="$dd/dcc/classLSM1x0A__Sigfox.html#a5b2511322c80ef7ae07c3260fcf9ef06" title="Uploads locally defined cache (e.g. from user code) to the hardware." alt="" coords="5,56,214,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="246,58,214,61,214,56,246,52"/>
+</map>

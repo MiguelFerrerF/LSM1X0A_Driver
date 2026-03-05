@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Client::getModuleType" name="LSM1x0A_Client::getModuleType">
+<area shape="rect" id="Node000001" title="Gets the detected hardware module type." alt="" coords="5,13,221,40"/>
+<area shape="rect" id="Node000002" href="$d8/d92/classLSM1x0A__Controller.html#a1f754d4f43c5fa4dbb7de1713953f531" title="Gets the detected device type (e.g. LSM100A)." alt="" coords="269,5,410,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="221,24,253,24,253,29,221,29"/>
+<area shape="rect" id="Node000003" href="$d6/d3c/classLSM1x0A__AtParser.html#aef4b760349cb8caf41b35d2a1db2b403" title="Obtain the module type detected during boot. This is useful to adapt the controller&#39;s behavior to dif..." alt="" coords="458,13,689,40"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="410,24,442,24,442,29,410,29"/>
+</map>

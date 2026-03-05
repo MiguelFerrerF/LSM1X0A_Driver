@@ -1,0 +1,17 @@
+<map id="UartDriver::flushRx" name="UartDriver::flushRx">
+<area shape="rect" id="Node000001" title="Empties the hardware RX buffer and any queued events, discarding all obsolete received data." alt="" coords="711,31,846,57"/>
+<area shape="rect" id="Node000002" href="$d5/d7f/uart__driver_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="540,5,594,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="696,37,594,24,595,19,696,31"/>
+<area shape="rect" id="Node000003" href="$d6/d3c/classLSM1x0A__AtParser.html#aa8806eeffdfb50c84daff85cefab497b" title="Performs a &quot;Ping&quot; activation by sending AT commands until OK is received. Handles the module&#39;s low&#45;po..." alt="" coords="471,56,663,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="696,57,664,60,664,55,696,51"/>
+<area shape="rect" id="Node000004" href="$d8/db0/parser__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="326,27,379,53"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="456,57,379,46,380,41,456,51"/>
+<area shape="rect" id="Node000005" href="$d8/d92/classLSM1x0A__Controller.html#a3a8bd660f73d714060fa7259f46d9feb" title="Wakes up the module and tries to synchronize its initial state. Sends basic AT commands or &#39;Wake&#45;Up&#39; ..." alt="" coords="282,77,423,120"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="456,87,423,92,423,86,455,82"/>
+<area shape="rect" id="Node000006" href="$d2/d4d/classLSM1x0A__Client.html#ac6db3250b50d7a4b8c010e4a9f19dc06" title="Sets the runtime log level for the internal controller&#39;s logger. Messages with a level higher than th..." alt="" coords="40,35,199,61"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="266,83,184,65,185,59,267,77"/>
+<area shape="rect" id="Node000007" href="$d2/d4d/classLSM1x0A__Client.html#adc07c393edeed2e5d16cec9211fa34aa" title="Pings the module or checks the battery to verify communication is still active." alt="" coords="5,85,234,112"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="266,101,234,101,234,96,266,96"/>
+<area shape="rect" id="Node000008" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="97,136,142,163"/>
+<area shape="poly" id="edge7_Node000005_Node000008" title=" " alt="" coords="267,120,143,147,142,142,266,115"/>
+</map>

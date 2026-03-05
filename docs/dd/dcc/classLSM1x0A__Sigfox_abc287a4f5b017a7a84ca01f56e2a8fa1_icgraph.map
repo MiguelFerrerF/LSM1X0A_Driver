@@ -1,0 +1,9 @@
+<map id="LSM1x0A_Sigfox::getRadioPower" name="LSM1x0A_Sigfox::getRadioPower">
+<area shape="rect" id="Node000001" title="Gets the configured TX power for Sigfox." alt="" coords="441,35,623,77"/>
+<area shape="rect" id="Node000002" href="$dd/dcc/classLSM1x0A__Sigfox.html#a799f1a89db839066883e78d0c9cb0a49" title="Downloads variables from the module and caches them locally." alt="" coords="201,5,393,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="426,45,393,41,394,36,426,40"/>
+<area shape="rect" id="Node000004" href="$d0/df5/sigfox__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="274,72,320,99"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="426,72,320,85,320,80,425,67"/>
+<area shape="rect" id="Node000003" href="$d8/d92/classLSM1x0A__Controller.html#abdd8a00eb5697bbd25cd0330c11c919e" title="Synchronizes the internal RAM cache by reading the key operational parameters from the module&#39;s firmw..." alt="" coords="5,5,153,48"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="185,29,153,29,153,24,185,24"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="LSM1x0A_Client::isJoined" name="LSM1x0A_Client::isJoined">
+<area shape="rect" id="Node000001" title="Checks if the module is successfully joined to the LoRaWAN network." alt="" coords="5,5,181,32"/>
+<area shape="rect" id="Node000002" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a1892801e37c8cd67d37c76108d6f7d49" title="Validates if the device is currently Joined to the network. (Either confirmed by OTAA or statically a..." alt="" coords="229,5,432,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="181,16,213,16,213,21,181,21"/>
+</map>

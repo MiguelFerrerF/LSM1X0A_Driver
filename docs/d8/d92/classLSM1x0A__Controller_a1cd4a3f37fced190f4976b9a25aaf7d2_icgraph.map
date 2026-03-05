@@ -1,0 +1,9 @@
+<map id="LSM1x0A_Controller::getVersion" name="LSM1x0A_Controller::getVersion">
+<area shape="rect" id="Node000001" title="Gets the module firmware version &quot;APP_VERSION&quot;." alt="" coords="354,35,495,77"/>
+<area shape="rect" id="Node000002" href="$d2/d4d/classLSM1x0A__Client.html#ad67bc7b28cd2bf120b39429dedc9c8f6" title="Retrieves the firmware version of the module." alt="" coords="107,5,306,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="339,47,306,43,307,37,339,42"/>
+<area shape="rect" id="Node000004" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="184,72,229,99"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="339,70,230,85,229,80,339,65"/>
+<area shape="rect" id="Node000003" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,13,59,40"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="91,29,59,29,59,24,91,24"/>
+</map>

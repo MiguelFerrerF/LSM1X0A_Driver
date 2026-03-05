@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Sigfox::sendPayload" name="LSM1x0A_Sigfox::sendPayload">
+<area shape="rect" id="Node000001" title="Sends raw hex payload bytes." alt="" coords="256,31,461,57"/>
+<area shape="rect" id="Node000002" href="$d0/df5/sigfox__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="84,5,129,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="240,35,129,24,130,18,241,29"/>
+<area shape="rect" id="Node000003" href="$d2/d4d/classLSM1x0A__Client.html#a44af5182d8b70d47369b96662270292c" title="Sends maximum length data payload to the currently configured network. Routing (LoRaWAN vs Sigfox) is..." alt="" coords="5,56,208,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="240,59,208,62,208,56,240,53"/>
+</map>

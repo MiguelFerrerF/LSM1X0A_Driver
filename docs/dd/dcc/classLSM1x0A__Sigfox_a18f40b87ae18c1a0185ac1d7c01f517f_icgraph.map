@@ -1,0 +1,9 @@
+<map id="LSM1x0A_Sigfox::clearCache" name="LSM1x0A_Sigfox::clearCache">
+<area shape="rect" id="Node000001" title="Invalidates local volatile cache (forces queries to module hardware on next get)." alt="" coords="441,47,637,73"/>
+<area shape="rect" id="Node000002" href="$dd/dcc/classLSM1x0A__Sigfox.html#a799f1a89db839066883e78d0c9cb0a49" title="Downloads variables from the module and caches them locally." alt="" coords="201,5,393,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="425,47,393,43,394,37,426,42"/>
+<area shape="rect" id="Node000004" href="$dd/dcc/classLSM1x0A__Sigfox.html#a994893af03aa06862e7b1ad8ab7badc8" title="Constructs the Sigfox API submodule." alt="" coords="203,72,390,115"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="426,78,391,83,391,78,425,73"/>
+<area shape="rect" id="Node000003" href="$d8/d92/classLSM1x0A__Controller.html#abdd8a00eb5697bbd25cd0330c11c919e" title="Synchronizes the internal RAM cache by reading the key operational parameters from the module&#39;s firmw..." alt="" coords="5,5,153,48"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="185,29,153,29,153,24,185,24"/>
+</map>

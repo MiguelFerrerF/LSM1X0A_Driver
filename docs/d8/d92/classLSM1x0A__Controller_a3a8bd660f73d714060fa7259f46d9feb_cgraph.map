@@ -1,0 +1,13 @@
+<map id="LSM1x0A_Controller::wakeUp" name="LSM1x0A_Controller::wakeUp">
+<area shape="rect" id="Node000001" title="Wakes up the module and tries to synchronize its initial state. Sends basic AT commands or &#39;Wake&#45;Up&#39; ..." alt="" coords="5,23,147,65"/>
+<area shape="rect" id="Node000002" href="$d6/d3c/classLSM1x0A__AtParser.html#aa8806eeffdfb50c84daff85cefab497b" title="Performs a &quot;Ping&quot; activation by sending AT commands until OK is received. Handles the module&#39;s low&#45;po..." alt="" coords="195,31,387,57"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="147,41,179,41,179,47,147,47"/>
+<area shape="rect" id="Node000003" href="$d5/d8b/classUartDriver.html#ae036ce1f4cf836ed976a876fc3e584f8" title="Empties the hardware RX buffer and any queued events, discarding all obsolete received data." alt="" coords="484,5,618,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="387,32,468,24,469,29,388,37"/>
+<area shape="rect" id="Node000004" href="$d6/d3c/classLSM1x0A__AtParser.html#a29b53c521974387ba6c03afadfaffa4a" title="Sends a simple command and waits for OK/ERROR. Example: sendCommand(&quot;AT+JOIN&quot;);." alt="" coords="435,56,667,83"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="388,51,420,54,419,59,387,56"/>
+<area shape="rect" id="Node000005" href="$d6/d3c/classLSM1x0A__AtParser.html#a0ba6f927c54fceece22c17773d3f2600" title="Sends a command and extracts a value from the response." alt="" coords="715,48,948,91"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="668,67,700,67,700,72,668,72"/>
+<area shape="rect" id="Node000006" href="$d5/d8b/classUartDriver.html#a5d0f22e8867eebe99273078bb19bd23d" title="Sends data through UART." alt="" coords="996,56,1141,83"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="948,67,980,67,980,72,948,72"/>
+</map>

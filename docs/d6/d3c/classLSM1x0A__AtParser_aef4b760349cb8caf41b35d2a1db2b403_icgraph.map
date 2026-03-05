@@ -1,0 +1,9 @@
+<map id="LSM1x0A_AtParser::getDeviceType" name="LSM1x0A_AtParser::getDeviceType">
+<area shape="rect" id="Node000001" title="Obtain the module type detected during boot. This is useful to adapt the controller&#39;s behavior to dif..." alt="" coords="458,31,689,57"/>
+<area shape="rect" id="Node000002" href="$d8/d92/classLSM1x0A__Controller.html#a1f754d4f43c5fa4dbb7de1713953f531" title="Gets the detected device type (e.g. LSM100A)." alt="" coords="269,23,410,65"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="442,47,410,47,410,41,442,41"/>
+<area shape="rect" id="Node000003" href="$d2/d4d/classLSM1x0A__Client.html#a6c5e3431ace966ed92a337bbf3d4b30d" title="Gets the detected hardware module type." alt="" coords="5,5,221,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="253,37,221,33,221,28,254,32"/>
+<area shape="rect" id="Node000004" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="90,56,136,83"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="254,56,136,70,136,64,253,51"/>
+</map>

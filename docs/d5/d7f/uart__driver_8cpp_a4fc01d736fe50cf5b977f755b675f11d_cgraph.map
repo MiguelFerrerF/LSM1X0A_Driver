@@ -1,0 +1,15 @@
+<map id="setup" name="setup">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,81,59,108"/>
+<area shape="rect" id="Node000002" href="$d5/d8b/classUartDriver.html#ae036ce1f4cf836ed976a876fc3e584f8" title="Empties the hardware RX buffer and any queued events, discarding all obsolete received data." alt="" coords="112,5,246,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="49,79,105,42,118,36,120,41,108,46,52,83"/>
+<area shape="rect" id="Node000003" href="$d5/d8b/classUartDriver.html#ac95973d50b6a97fe7fead711078fc69b" title="Initializes the UART driver." alt="" coords="126,56,232,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="59,88,111,78,112,84,60,93"/>
+<area shape="rect" id="Node000006" href="$d5/d7f/uart__driver_8cpp.html#ad07b07bdaafa77e873982e5a84a66cbc" title=" " alt="" coords="120,107,238,133"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="60,97,105,105,104,110,59,102"/>
+<area shape="rect" id="Node000007" href="$d5/d8b/classUartDriver.html#a5d0f22e8867eebe99273078bb19bd23d" title="Sends data through UART." alt="" coords="107,157,252,184"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="52,106,108,143,120,149,118,154,105,148,49,111"/>
+<area shape="rect" id="Node000004" href="$d5/d8b/classUartDriver.html#a0ab6c7583bd57f582467107c5aef3ed6" title=" " alt="" coords="300,48,432,91"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="233,67,284,67,284,72,233,72"/>
+<area shape="rect" id="Node000005" href="$d5/d8b/classUartDriver.html#a4e5edbea6eb7ac2fe190ffe91f3c2099" title=" " alt="" coords="480,56,644,83"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="433,67,465,67,465,72,433,72"/>
+</map>

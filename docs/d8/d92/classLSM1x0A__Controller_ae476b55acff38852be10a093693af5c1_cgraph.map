@@ -1,0 +1,5 @@
+<map id="LSM1x0A_Controller::end" name="LSM1x0A_Controller::end">
+<area shape="rect" id="Node000001" title="Stops the hardware and unbinds event listeners." alt="" coords="5,5,176,32"/>
+<area shape="rect" id="Node000002" href="$d5/d8b/classUartDriver.html#a7367acbb666bbbe910e81bce2bf7ecfd" title="Uninstalls the UART driver." alt="" coords="224,5,344,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="176,16,208,16,208,21,176,21"/>
+</map>

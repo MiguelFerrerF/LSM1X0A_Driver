@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Client::joinNetwork" name="LSM1x0A_Client::joinNetwork">
+<area shape="rect" id="Node000001" title="Executes the connection procedure to the network. For LoRaWAN: Executes OTAA Join procedure or applie..." alt="" coords="107,31,303,57"/>
+<area shape="rect" id="Node000002" href="$d8/db3/client__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="9,5,55,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="95,31,54,25,55,19,95,25"/>
+<area shape="rect" id="Node000003" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,56,59,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="95,63,60,68,59,63,94,58"/>
+</map>

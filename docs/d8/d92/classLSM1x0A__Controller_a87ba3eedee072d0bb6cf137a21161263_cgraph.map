@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Controller::setLogCallback" name="LSM1x0A_Controller::setLogCallback">
+<area shape="rect" id="Node000001" title="Configures the callback and level for the external logger system." alt="" coords="5,23,147,65"/>
+<area shape="rect" id="Node000002" href="$dc/ddf/namespaceLsmLogger.html#a7a192841f99929991c226779636797be" title="Sets the global callback to receive log messages." alt="" coords="195,5,357,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="147,32,179,28,179,34,147,38"/>
+<area shape="rect" id="Node000003" href="$dc/ddf/namespaceLsmLogger.html#ab1ba8db907a414a964b009b950bee70f" title="Sets the maximum log level to be emitted at runtime. Messages with a level higher than this will be i..." alt="" coords="205,56,347,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="147,50,189,56,189,61,147,56"/>
+</map>

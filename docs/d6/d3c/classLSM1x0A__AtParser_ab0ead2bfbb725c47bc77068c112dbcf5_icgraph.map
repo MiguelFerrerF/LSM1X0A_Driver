@@ -1,0 +1,15 @@
+<map id="LSM1x0A_AtParser::getDetectedMode" name="LSM1x0A_AtParser::getDetectedMode">
+<area shape="rect" id="Node000001" title="Obtains the operating mode detected during boot. This is useful to adapt the controller&#39;s behavior to..." alt="" coords="540,97,788,124"/>
+<area shape="rect" id="Node000002" href="$d8/d92/classLSM1x0A__Controller.html#a350b739638df96920ab8fc89be96a512" title="Sets the communication mode." alt="" coords="351,89,492,132"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="525,113,493,113,493,108,525,108"/>
+<area shape="rect" id="Node000003" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="182,5,228,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="373,83,302,46,263,34,227,25,228,20,264,28,304,42,376,79"/>
+<area shape="rect" id="Node000004" href="$d2/d4d/classLSM1x0A__Client.html#a61f769fc32638d50735e6af6258d00e0" title="Configures the module for LoRaWAN using ABP (Activation By Personalization). Note: This only sets the..." alt="" coords="110,56,300,99"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="335,100,300,95,301,89,336,95"/>
+<area shape="rect" id="Node000005" href="$d2/d4d/classLSM1x0A__Client.html#a2a7ddc841d10088471d589fb6615e750" title="Configures the module for LoRaWAN using OTAA (Over The Air Activation). Note: This only sets the para..." alt="" coords="110,123,300,165"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="336,126,301,132,300,127,335,121"/>
+<area shape="rect" id="Node000007" href="$d2/d4d/classLSM1x0A__Client.html#ade781f753dfbc0f4702a4df209bcc2ba" title="Configures the module for Sigfox." alt="" coords="107,189,303,216"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="376,143,304,180,270,191,268,186,302,175,373,138"/>
+<area shape="rect" id="Node000006" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,131,59,157"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="94,147,59,147,59,141,94,141"/>
+</map>

@@ -1,0 +1,27 @@
+<map id="LSM1x0A_Sigfox::parseSigfoxDownlink" name="LSM1x0A_Sigfox::parseSigfoxDownlink">
+<area shape="rect" id="Node000001" title=" " alt="" coords="855,111,1054,153"/>
+<area shape="rect" id="Node000002" href="$dd/dcc/classLSM1x0A__Sigfox.html#a546c3192cb1b7a02f0d6bdf0679672d7" title="Sends a single bit of information. Frame Type 0." alt="" coords="617,56,791,83"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="851,109,760,86,761,81,852,104"/>
+<area shape="rect" id="Node000008" href="$dd/dcc/classLSM1x0A__Sigfox.html#af3b4759bda104e800186031f1d24706d" title="Sends raw hex payload bytes." alt="" coords="601,119,807,145"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="839,135,807,135,807,129,839,129"/>
+<area shape="rect" id="Node000010" href="$dd/dcc/classLSM1x0A__Sigfox.html#aa1b5f4d37f7cfe26c15d774d2afeb8ee" title="Sends standard ASCII string literal." alt="" coords="356,208,548,235"/>
+<area shape="poly" id="edge11_Node000001_Node000010" title=" " alt="" coords="840,155,532,210,531,205,839,150"/>
+<area shape="rect" id="Node000003" href="$dd/dcc/classLSM1x0A__Sigfox.html#a7cf8db8f728466740a53a882be09dd58" title="Simulates a join request via Sigfox network by sending a 1&#45;bit frame with downlink expected." alt="" coords="377,5,527,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="619,55,521,35,523,30,620,50"/>
+<area shape="rect" id="Node000007" href="$d0/df5/sigfox__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="182,81,228,108"/>
+<area shape="poly" id="edge7_Node000002_Node000007" title=" " alt="" coords="601,77,228,96,228,91,601,72"/>
+<area shape="rect" id="Node000004" href="$d2/d4d/classLSM1x0A__Client.html#a6c997880240f88a9c9d3c660c0d83991" title="Executes the connection procedure to the network. For LoRaWAN: Executes OTAA Join procedure or applie..." alt="" coords="107,19,303,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="362,26,304,29,303,24,362,21"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="392,40,229,90,227,85,391,35"/>
+<area shape="rect" id="Node000005" href="$d8/db3/client__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="9,95,55,121"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="152,54,108,72,56,98,54,93,106,67,149,49"/>
+<area shape="rect" id="Node000006" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,19,59,45"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="91,35,59,35,59,29,91,29"/>
+<area shape="poly" id="edge9_Node000008_Node000007" title=" " alt="" coords="586,126,228,99,228,94,586,121"/>
+<area shape="rect" id="Node000009" href="$d2/d4d/classLSM1x0A__Client.html#a44af5182d8b70d47369b96662270292c" title="Sends maximum length data payload to the currently configured network. Routing (LoRaWAN vs Sigfox) is..." alt="" coords="351,157,553,184"/>
+<area shape="poly" id="edge10_Node000008_Node000009" title=" " alt="" coords="598,151,544,159,543,154,597,146"/>
+<area shape="poly" id="edge12_Node000010_Node000007" title=" " alt="" coords="361,204,350,198,334,186,324,173,315,161,301,147,263,123,227,106,229,101,266,119,305,143,319,157,328,170,338,182,352,194,364,200"/>
+<area shape="rect" id="Node000011" href="$d2/d4d/classLSM1x0A__Client.html#adf13ef78c2a22ec9fdae194f29bedde1" title="Sends an ASCII string to the currently configured network." alt="" coords="110,157,300,184"/>
+<area shape="poly" id="edge13_Node000010_Node000011" title=" " alt="" coords="368,207,273,187,274,182,369,202"/>
+<area shape="poly" id="edge14_Node000011_Node000005" title=" " alt="" coords="151,154,54,118,56,113,152,149"/>
+</map>

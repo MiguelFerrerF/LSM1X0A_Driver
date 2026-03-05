@@ -1,0 +1,9 @@
+<map id="LSM1x0A_Controller::wakeUp" name="LSM1x0A_Controller::wakeUp">
+<area shape="rect" id="Node000001" title="Wakes up the module and tries to synchronize its initial state. Sends basic AT commands or &#39;Wake&#45;Up&#39; ..." alt="" coords="282,48,423,91"/>
+<area shape="rect" id="Node000002" href="$d2/d4d/classLSM1x0A__Client.html#ac6db3250b50d7a4b8c010e4a9f19dc06" title="Sets the runtime log level for the internal controller&#39;s logger. Messages with a level higher than th..." alt="" coords="40,5,199,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="266,53,184,35,185,30,267,48"/>
+<area shape="rect" id="Node000003" href="$d2/d4d/classLSM1x0A__Client.html#adc07c393edeed2e5d16cec9211fa34aa" title="Pings the module or checks the battery to verify communication is still active." alt="" coords="5,56,234,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="266,72,234,72,234,67,266,67"/>
+<area shape="rect" id="Node000004" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="97,107,142,133"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="267,91,143,118,142,113,266,85"/>
+</map>

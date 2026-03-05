@@ -1,0 +1,6 @@
+<map id="LSM1x0A_Client::begin" name="LSM1x0A_Client::begin">
+<area shape="rect" id="Node000001" title="Initializes the client and underlying controller, starting the UART and AT parser." alt="" coords="107,29,265,56"/>
+<area shape="poly" id="edge1_Node000001_Node000001" title=" " alt="" coords="212,16,203,10,186,8,170,10,162,14,160,20,164,28,159,30,154,21,158,11,168,5,186,3,205,5,215,12"/>
+<area shape="rect" id="Node000002" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,29,59,56"/>
+<area shape="poly" id="edge2_Node000001_Node000002" title=" " alt="" coords="91,45,59,45,59,40,91,40"/>
+</map>

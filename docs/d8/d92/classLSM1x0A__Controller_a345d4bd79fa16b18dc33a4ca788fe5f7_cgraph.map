@@ -1,0 +1,5 @@
+<map id="LSM1x0A_Controller::hardwareReset" name="LSM1x0A_Controller::hardwareReset">
+<area shape="rect" id="Node000001" title="Performs a hardware reset using the reset pin." alt="" coords="5,5,147,48"/>
+<area shape="rect" id="Node000002" href="$d6/d3c/classLSM1x0A__AtParser.html#ad2839120da13e56132b95019419be1e5" title="Waits for an event (like BOOTALERT) without sending any command. Useful for hardware reset where the ..." alt="" coords="195,5,382,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="147,24,179,24,179,29,147,29"/>
+</map>

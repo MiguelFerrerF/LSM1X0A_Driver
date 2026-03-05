@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Client::_onRxData" name="LSM1x0A_Client::_onRxData">
+<area shape="rect" id="Node000001" title=" " alt="" coords="354,13,547,40"/>
+<area shape="rect" id="Node000002" href="$d2/d4d/classLSM1x0A__Client.html#a31eba65598240f3499da9014b2ddc15b" title="Configures the callback for receiving downlinks (RX_DATA)." alt="" coords="107,5,306,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="338,29,307,29,307,24,338,24"/>
+<area shape="rect" id="Node000003" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,13,59,40"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="91,29,59,29,59,24,91,24"/>
+</map>

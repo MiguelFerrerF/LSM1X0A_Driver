@@ -1,0 +1,16 @@
+<map id="LSM1x0A_Client" name="LSM1x0A_Client">
+<area shape="rect" id="Node000001" title="High&#45;level orchestration client for the LSM100A/LSM110A module." alt="" coords="5,1792,173,2160"/>
+<area shape="rect" id="Node000002" href="$d8/d92/classLSM1x0A__Controller.html" title="Main class for coordinating the LSM100A/LSM110A module." alt="" coords="184,1040,390,1664"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="186,1560,160,1624,139,1689,117,1776,112,1775,133,1687,155,1623,181,1558"/>
+<area shape="rect" id="Node000003" href="$d5/d72/classLSM1x0A__LoRaWAN.html" title="Submódulo de configuración y operación LoRaWAN del LSM1x0A." alt="" coords="202,1728,360,2224"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="211,1663,213,1704,214,1711,209,1711,208,1704,205,1664"/>
+<area shape="rect" id="Node000004" href="$dd/dcc/classLSM1x0A__Sigfox.html" title="Submodule handling all Sigfox&#45;specific AT commands and operations." alt="" coords="388,1728,548,2224"/>
+<area shape="poly" id="edge5_Node000004_Node000002" title=" " alt="" coords="362,1663,373,1703,386,1743,381,1745,368,1705,356,1664"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="281,1728,281,1681,287,1681,286,1728"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="451,1729,441,1689,420,1623,394,1558,399,1556,425,1621,447,1687,456,1728"/>
+<area shape="rect" id="Node000005" href="$d5/d8b/classUartDriver.html" title="Simple UART hardware driver for Espressif chips using ESP&#45;IDF. It provides asynchronous receive capab..." alt="" coords="222,5,351,309"/>
+<area shape="poly" id="edge6_Node000002_Node000005" title=" " alt="" coords="283,309,281,373,278,675,281,976,282,1023,276,1023,276,976,273,675,276,373,277,309"/>
+<area shape="rect" id="Node000006" href="$d6/d3c/classLSM1x0A__AtParser.html" title="Thread&#45;safe AT Command Parser for the LSM100A/LSM110A modules. Handles UART communication,..." alt="" coords="337,373,543,976"/>
+<area shape="poly" id="edge8_Node000006_Node000005" title=" " alt="" coords="334,308,348,356,343,358,329,310"/>
+<area shape="poly" id="edge7_Node000002_Node000006" title=" " alt="" coords="374,976,364,1024,358,1023,369,975"/>
+</map>

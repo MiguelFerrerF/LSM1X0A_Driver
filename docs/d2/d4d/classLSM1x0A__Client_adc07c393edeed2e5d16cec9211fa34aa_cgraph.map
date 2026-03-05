@@ -1,0 +1,15 @@
+<map id="LSM1x0A_Client::checkConnection" name="LSM1x0A_Client::checkConnection">
+<area shape="rect" id="Node000001" title="Pings the module or checks the battery to verify communication is still active." alt="" coords="5,31,234,57"/>
+<area shape="rect" id="Node000002" href="$d8/d92/classLSM1x0A__Controller.html#a3a8bd660f73d714060fa7259f46d9feb" title="Wakes up the module and tries to synchronize its initial state. Sends basic AT commands or &#39;Wake&#45;Up&#39; ..." alt="" coords="282,23,423,65"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="234,41,266,41,266,47,234,47"/>
+<area shape="rect" id="Node000003" href="$d6/d3c/classLSM1x0A__AtParser.html#aa8806eeffdfb50c84daff85cefab497b" title="Performs a &quot;Ping&quot; activation by sending AT commands until OK is received. Handles the module&#39;s low&#45;po..." alt="" coords="471,31,663,57"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="423,41,455,41,455,47,423,47"/>
+<area shape="rect" id="Node000004" href="$d5/d8b/classUartDriver.html#ae036ce1f4cf836ed976a876fc3e584f8" title="Empties the hardware RX buffer and any queued events, discarding all obsolete received data." alt="" coords="760,5,895,32"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="663,32,744,24,745,29,664,37"/>
+<area shape="rect" id="Node000005" href="$d6/d3c/classLSM1x0A__AtParser.html#a29b53c521974387ba6c03afadfaffa4a" title="Sends a simple command and waits for OK/ERROR. Example: sendCommand(&quot;AT+JOIN&quot;);." alt="" coords="711,56,944,83"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="664,51,696,54,695,59,663,56"/>
+<area shape="rect" id="Node000006" href="$d6/d3c/classLSM1x0A__AtParser.html#a0ba6f927c54fceece22c17773d3f2600" title="Sends a command and extracts a value from the response." alt="" coords="992,48,1224,91"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="944,67,976,67,976,72,944,72"/>
+<area shape="rect" id="Node000007" href="$d5/d8b/classUartDriver.html#a5d0f22e8867eebe99273078bb19bd23d" title="Sends data through UART." alt="" coords="1272,56,1417,83"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="1225,67,1257,67,1257,72,1225,72"/>
+</map>

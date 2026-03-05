@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Client::getLastRssi" name="LSM1x0A_Client::getLastRssi">
+<area shape="rect" id="Node000001" title="Gets the last RSSI (Received Signal Strength Indicator)." alt="" coords="5,43,203,69"/>
+<area shape="rect" id="Node000002" href="$d8/d92/classLSM1x0A__Controller.html#a93d2e7ae38f3a4af4dcfb699003256b3" title="Getters para los últimos metadatos de radio recibidos." alt="" coords="291,5,432,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="203,42,275,34,276,39,204,47"/>
+<area shape="rect" id="Node000003" href="$dd/dcc/classLSM1x0A__Sigfox.html#a1493f175685b27ab9f93d4243ab39314" title="Gets the last RSSI received by the module from a Sigfox Downlink." alt="" coords="251,72,473,99"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="204,65,235,68,235,74,203,70"/>
+</map>

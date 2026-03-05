@@ -1,0 +1,31 @@
+<map id="setup" name="setup">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,164,59,191"/>
+<area shape="rect" id="Node000002" href="$d6/d3c/classLSM1x0A__AtParser.html#a5e946f904e7712e2c08cf933db0c474a" title="Converts an AtError enum value into a readable string." alt="" coords="111,13,294,56"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="37,162,62,115,81,89,105,66,111,62,114,66,108,70,85,92,66,118,41,165"/>
+<area shape="rect" id="Node000003" href="$d6/d3c/classLSM1x0A__AtParser.html#a6a46441d480f9beec79a6e5f484e51aa" title="Initializes the AT Parser with a UART driver and an optional asynchronous event callback." alt="" coords="122,80,284,107"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="49,161,105,124,139,110,141,115,108,129,52,166"/>
+<area shape="rect" id="Node000008" href="$d8/db0/parser__example_8cpp.html#a6096be55ef86392c2f497ad41cc599fb" title=" " alt="" coords="153,139,253,165"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="59,171,137,159,137,164,60,176"/>
+<area shape="rect" id="Node000010" href="$d6/d3c/classLSM1x0A__AtParser.html#a29b53c521974387ba6c03afadfaffa4a" title="Sends a simple command and waits for OK/ERROR. Example: sendCommand(&quot;AT+JOIN&quot;);." alt="" coords="347,197,579,224"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="59,177,331,198,331,203,59,182"/>
+<area shape="rect" id="Node000011" href="$d6/d3c/classLSM1x0A__AtParser.html#a0ba6f927c54fceece22c17773d3f2600" title="Sends a command and extracts a value from the response." alt="" coords="627,240,860,283"/>
+<area shape="poly" id="edge12_Node000001_Node000011" title=" " alt="" coords="41,190,65,235,84,258,108,276,178,305,252,323,328,330,404,330,477,323,546,312,661,285,662,290,547,317,478,328,404,335,327,335,251,328,176,310,105,281,80,262,61,238,36,193"/>
+<area shape="rect" id="Node000013" href="$d6/d3c/classLSM1x0A__AtParser.html#aa8806eeffdfb50c84daff85cefab497b" title="Performs a &quot;Ping&quot; activation by sending AT commands until OK is received. Handles the module&#39;s low&#45;po..." alt="" coords="107,240,299,267"/>
+<area shape="poly" id="edge13_Node000001_Node000013" title=" " alt="" coords="55,189,108,219,140,232,138,237,106,224,53,194"/>
+<area shape="rect" id="Node000004" href="$d5/d8b/classUartDriver.html#ac95973d50b6a97fe7fead711078fc69b" title="Initializes the UART driver." alt="" coords="410,13,516,40"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="258,77,298,65,346,49,394,38,395,43,348,55,300,71,259,82"/>
+<area shape="rect" id="Node000007" href="$d6/d3c/classLSM1x0A__AtParser.html#ac6af52d8872a88ac0a7725fd437449c4" title=" " alt="" coords="375,64,551,107"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="284,88,359,86,359,91,284,94"/>
+<area shape="rect" id="Node000005" href="$d5/d8b/classUartDriver.html#a0ab6c7583bd57f582467107c5aef3ed6" title=" " alt="" coords="677,5,810,48"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="517,24,662,24,662,29,517,29"/>
+<area shape="rect" id="Node000006" href="$d5/d8b/classUartDriver.html#a4e5edbea6eb7ac2fe190ffe91f3c2099" title=" " alt="" coords="908,13,1071,40"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="810,24,892,24,892,29,810,29"/>
+<area shape="rect" id="Node000009" href="$d6/d3c/classLSM1x0A__AtParser.html#a73de1e403c724bebefe4e54f84747bb8" title="Static helper to convert the metadata string into a usable struct. Parses: &quot;+EVT:RX_1,..." alt="" coords="366,131,560,173"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="253,149,351,149,351,155,253,155"/>
+<area shape="poly" id="edge10_Node000010_Node000011" title=" " alt="" coords="542,222,612,235,611,240,541,227"/>
+<area shape="rect" id="Node000012" href="$d5/d8b/classUartDriver.html#a5d0f22e8867eebe99273078bb19bd23d" title="Sends data through UART." alt="" coords="917,248,1062,275"/>
+<area shape="poly" id="edge11_Node000011_Node000012" title=" " alt="" coords="860,259,901,259,901,264,860,264"/>
+<area shape="poly" id="edge15_Node000013_Node000010" title=" " alt="" coords="288,237,362,224,363,230,289,242"/>
+<area shape="rect" id="Node000014" href="$d5/d8b/classUartDriver.html#ae036ce1f4cf836ed976a876fc3e584f8" title="Empties the hardware RX buffer and any queued events, discarding all obsolete received data." alt="" coords="396,248,530,275"/>
+<area shape="poly" id="edge14_Node000013_Node000014" title=" " alt="" coords="299,254,380,256,380,261,299,259"/>
+</map>

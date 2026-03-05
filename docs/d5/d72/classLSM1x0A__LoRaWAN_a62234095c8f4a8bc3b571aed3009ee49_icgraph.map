@@ -1,0 +1,9 @@
+<map id="LSM1x0A_LoRaWAN::getRx2Frequency" name="LSM1x0A_LoRaWAN::getRx2Frequency">
+<area shape="rect" id="Node000001" title="Retrieves the Frequency configured for the RX2 window." alt="" coords="466,43,724,69"/>
+<area shape="rect" id="Node000002" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a034f8c2d6cae9d8ae231adca4d02b527" title="Polls the module for all its properties and populates the internal RAM cache. Recommended after wakin..." alt="" coords="201,5,418,48"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="450,44,418,41,419,35,451,38"/>
+<area shape="rect" id="Node000004" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="287,72,332,99"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="451,73,333,86,332,80,450,68"/>
+<area shape="rect" id="Node000003" href="$d8/d92/classLSM1x0A__Controller.html#abdd8a00eb5697bbd25cd0330c11c919e" title="Synchronizes the internal RAM cache by reading the key operational parameters from the module&#39;s firmw..." alt="" coords="5,5,153,48"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="185,29,153,29,153,24,185,24"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="LSM1x0A_Client::setDownlinkCallback" name="LSM1x0A_Client::setDownlinkCallback">
+<area shape="rect" id="Node000001" title="Configures the callback for receiving downlinks (RX_DATA)." alt="" coords="5,35,205,77"/>
+<area shape="rect" id="Node000002" href="$d2/d4d/classLSM1x0A__Client.html#aa7f14a7cb6a6f6aa0985f1db78667699" title=" " alt="" coords="253,13,446,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="205,41,237,37,238,43,206,47"/>
+<area shape="rect" id="Node000004" href="$d8/d92/classLSM1x0A__Controller.html#a3433ab4f8c6c5c12277d703214c74e40" title="Configures a dedicated callback for receiving downlink data (RX_DATA)." alt="" coords="279,64,420,107"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="206,65,264,72,263,78,205,71"/>
+<area shape="rect" id="Node000003" href="$d2/d4d/classLSM1x0A__Client.html#a0c25d0bd31c5d86253c372d6d76c592d" title=" " alt="" coords="494,5,674,48"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="446,24,479,24,479,29,446,29"/>
+</map>

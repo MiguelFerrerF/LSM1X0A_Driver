@@ -1,0 +1,95 @@
+<map id="LSM1x0A_LoRaWAN::resetDevNonce" name="LSM1x0A_LoRaWAN::resetDevNonce">
+<area shape="rect" id="Node000001" title="Resets the DevNonce counter to zero." alt="" coords="5,857,214,900"/>
+<area shape="rect" id="Node000002" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a4b2f31cd283658680d4e5d3588f27a37" title="Sets the DevNonce manually." alt="" coords="262,865,497,892"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="214,876,246,876,246,881,214,881"/>
+<area shape="rect" id="Node000003" href="$d8/d92/classLSM1x0A__Controller.html#afd7d92e60ed6fdae696a955cdbe0ed8c" title="Sends any AT command to the module, returning error if it fails. Internally uses the LsmAtParser logi..." alt="" coords="545,857,686,900"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="498,876,530,876,530,881,498,881"/>
+<area shape="rect" id="Node000004" href="$d8/d92/classLSM1x0A__Controller.html#abb0eb380daa3dfb7acffb483c5db8e2b" title="Executes the recovery protocol. First Soft&#45;Reset (ATZ), then Hard&#45;Reset if there is a pin." alt="" coords="734,276,876,318"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="619,856,660,684,692,565,732,445,757,384,783,331,788,333,762,386,737,447,698,567,665,685,624,857"/>
+<area shape="rect" id="Node000033" href="$d6/d3c/classLSM1x0A__AtParser.html#a29b53c521974387ba6c03afadfaffa4a" title="Sends a simple command and waits for OK/ERROR. Example: sendCommand(&quot;AT+JOIN&quot;);." alt="" coords="1196,28,1428,54"/>
+<area shape="poly" id="edge58_Node000003_Node000033" title=" " alt="" coords="615,856,619,759,636,609,651,523,671,434,698,346,732,262,769,185,803,125,824,100,850,77,882,55,923,34,963,19,1006,9,1050,4,1093,3,1176,9,1245,21,1244,26,1175,14,1093,8,1050,9,1007,14,965,24,925,39,885,60,853,81,828,104,808,128,773,187,737,265,703,348,676,436,656,524,641,610,625,759,620,856"/>
+<area shape="rect" id="Node000005" href="$d8/d92/classLSM1x0A__Controller.html#a3f6f25b843fe4fb7042c544deae2ab16" title="Manually clears bits from the internal EventGroup." alt="" coords="1545,305,1687,348"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="876,297,1530,320,1530,326,876,302"/>
+<area shape="rect" id="Node000006" href="$d8/d92/classLSM1x0A__Controller.html#a345d4bd79fa16b18dc33a4ca788fe5f7" title="Performs a hardware reset using the reset pin." alt="" coords="959,166,1100,209"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="839,273,922,225,951,212,953,217,925,230,841,277"/>
+<area shape="rect" id="Node000008" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a1892801e37c8cd67d37c76108d6f7d49" title="Validates if the device is currently Joined to the network. (Either confirmed by OTAA or statically a..." alt="" coords="1791,450,1994,477"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="876,286,1070,269,1323,254,1451,252,1569,257,1670,269,1710,278,1744,290,1790,320,1828,359,1858,400,1880,435,1875,438,1854,403,1824,363,1786,324,1741,295,1709,283,1669,274,1569,262,1451,258,1323,259,1070,274,876,292"/>
+<area shape="rect" id="Node000009" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a83e11c0e74ff9e0757db616ab1163424" title="Attempts to recover a lost connection (re&#45;executes OTAA Join if dropped)." alt="" coords="930,334,1128,377"/>
+<area shape="poly" id="edge8_Node000004_Node000009" title=" " alt="" coords="877,313,931,327,930,332,875,318"/>
+<area shape="rect" id="Node000013" href="$d5/d72/classLSM1x0A__LoRaWAN.html#ae3be4ce59dfa200369733317df356e97" title="Pushes the RAM&#45;cached variables back down into the hardware module. Restores the operational state af..." alt="" coords="932,857,1127,900"/>
+<area shape="poly" id="edge17_Node000004_Node000013" title=" " alt="" coords="817,318,1017,842,1012,844,812,320"/>
+<area shape="rect" id="Node000031" href="$d5/d72/classLSM1x0A__LoRaWAN.html#ace4b04396f1de1f4a54f513f5f378db7" title="Manually overrides the internal joined state tracker." alt="" coords="924,116,1135,142"/>
+<area shape="poly" id="edge53_Node000004_Node000031" title=" " alt="" coords="816,274,857,213,887,180,922,152,932,147,935,151,925,156,891,184,861,216,820,277"/>
+<area shape="rect" id="Node000032" href="$d8/d92/classLSM1x0A__Controller.html#a11ad21cb5ca33ec51346764a23bd485e" title="Performs a software reset (ATZ Command)." alt="" coords="959,49,1100,92"/>
+<area shape="poly" id="edge54_Node000004_Node000032" title=" " alt="" coords="811,274,826,237,850,191,881,143,922,101,943,88,946,93,925,106,886,146,854,193,831,239,816,276"/>
+<area shape="rect" id="Node000007" href="$d6/d3c/classLSM1x0A__AtParser.html#ad2839120da13e56132b95019419be1e5" title="Waits for an event (like BOOTALERT) without sending any command. Useful for hardware reset where the ..." alt="" coords="1218,166,1406,209"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="1101,185,1203,185,1203,190,1101,190"/>
+<area shape="rect" id="Node000010" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a59f781f3cfd30c11cd3973bcb10a7baa" title="Initiates a LoRaWAN Network Join procedure. This is a blocking function until the module fires an eve..." alt="" coords="1224,401,1400,428"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="1130,373,1230,395,1229,400,1129,379"/>
+<area shape="poly" id="edge12_Node000010_Node000003" title=" " alt="" coords="1224,430,1097,452,952,484,883,503,821,525,771,548,736,572,710,603,688,637,655,711,635,783,624,842,619,841,629,782,650,709,683,634,706,599,733,568,768,543,819,520,881,498,951,479,1096,447,1223,424"/>
+<area shape="poly" id="edge11_Node000010_Node000004" title=" " alt="" coords="1224,425,1157,427,1080,424,1000,413,923,391,874,364,835,331,838,327,877,360,925,386,1001,408,1081,419,1157,422,1224,420"/>
+<area shape="poly" id="edge10_Node000010_Node000005" title=" " alt="" coords="1360,398,1529,348,1531,353,1362,403"/>
+<area shape="rect" id="Node000011" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a3fdd1ac318a5ad2559323e5d57e36a5e" title="Enables or disables specific sub&#45;bands for regions supporting Channel Masks (e.g.,..." alt="" coords="1489,666,1743,693"/>
+<area shape="poly" id="edge13_Node000010_Node000011" title=" " alt="" coords="1402,422,1443,440,1473,462,1500,489,1546,547,1581,604,1605,651,1600,653,1577,607,1542,550,1496,492,1469,466,1440,444,1399,427"/>
+<area shape="rect" id="Node000012" href="$d8/d92/classLSM1x0A__Controller.html#a62476e30e50c7fe120aeb8df4b828675" title="Synchronously/blockingly waits for an asynchronous event to occur. Useful for wrapping commands like ..." alt="" coords="1545,393,1687,436"/>
+<area shape="poly" id="edge16_Node000010_Node000012" title=" " alt="" coords="1400,412,1530,412,1530,417,1400,417"/>
+<area shape="poly" id="edge15_Node000011_Node000003" title=" " alt="" coords="1616,694,1598,810,1563,991,1539,1085,1511,1171,1479,1240,1462,1266,1443,1284,1425,1293,1396,1300,1313,1309,1206,1312,1087,1311,968,1305,861,1295,779,1281,750,1272,733,1263,697,1225,669,1182,648,1134,633,1085,617,990,613,915,619,915,623,989,639,1083,653,1132,674,1179,701,1222,736,1259,753,1267,780,1276,862,1290,968,1300,1087,1306,1206,1307,1313,1303,1395,1294,1423,1288,1440,1280,1458,1262,1475,1237,1506,1169,1534,1084,1558,990,1593,809,1610,693"/>
+<area shape="poly" id="edge14_Node000011_Node000008" title=" " alt="" coords="1633,664,1860,485,1863,489,1637,668"/>
+<area shape="poly" id="edge22_Node000013_Node000011" title=" " alt="" coords="1128,891,1199,896,1279,895,1362,884,1402,873,1440,858,1492,826,1536,785,1571,741,1597,704,1601,707,1576,745,1540,788,1495,831,1443,863,1404,878,1363,889,1280,900,1199,902,1127,896"/>
+<area shape="rect" id="Node000014" href="$d5/d72/classLSM1x0A__LoRaWAN.html#af0baa3db4c7fab580d6b19a9e92472f6" title="Enables or disables Adaptive Data Rate (ADR)." alt="" coords="1211,454,1413,481"/>
+<area shape="poly" id="edge18_Node000013_Node000014" title=" " alt="" coords="1030,856,1039,785,1063,686,1083,632,1109,580,1141,532,1181,491,1196,481,1199,486,1185,495,1145,535,1113,583,1088,635,1069,687,1044,786,1035,857"/>
+<area shape="rect" id="Node000015" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a5365ed1596eb84ebf1e3b33b4a10c788" title="Sets the LoRaWAN operational frequency band." alt="" coords="1210,505,1414,532"/>
+<area shape="poly" id="edge20_Node000013_Node000015" title=" " alt="" coords="1031,856,1044,793,1070,707,1090,662,1115,617,1145,576,1181,541,1195,532,1198,537,1185,546,1149,580,1119,620,1095,664,1075,709,1049,794,1036,857"/>
+<area shape="rect" id="Node000016" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a9d9285c43414337a0ccb3a6cd7ca06e6" title="Configures the number of retries for Confirmed uplinks." alt="" coords="1202,556,1422,598"/>
+<area shape="poly" id="edge23_Node000013_Node000016" title=" " alt="" coords="1034,855,1051,804,1081,737,1124,668,1151,636,1181,608,1187,604,1190,608,1185,612,1155,639,1128,671,1086,740,1056,806,1039,857"/>
+<area shape="rect" id="Node000017" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a56345ceeafa0b9059d6de4e69eddc82e" title="Sets the Data Rate (DR) of the module." alt="" coords="1198,622,1427,649"/>
+<area shape="poly" id="edge25_Node000013_Node000017" title=" " alt="" coords="1037,855,1057,813,1087,759,1129,704,1154,680,1182,659,1190,653,1193,658,1184,663,1158,684,1133,708,1092,762,1061,815,1042,858"/>
+<area shape="rect" id="Node000018" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a8494083816ab885cb07fc3b08de029f4" title="Sets the LoRaWAN Device Address (DevAddr) for ABP mode." alt="" coords="1200,1396,1424,1422"/>
+<area shape="poly" id="edge27_Node000013_Node000018" title=" " alt="" coords="1033,900,1035,990,1042,1052,1053,1120,1072,1192,1099,1261,1136,1326,1159,1355,1185,1382,1189,1385,1185,1389,1181,1385,1155,1359,1132,1329,1094,1264,1067,1193,1048,1122,1036,1052,1030,990,1027,900"/>
+<area shape="rect" id="Node000020" href="$d5/d72/classLSM1x0A__LoRaWAN.html#ad320634e52d7ea907043cc50dd37c5b0" title="Sets the LoRaWAN Device EUI (DevEUI)." alt="" coords="1202,1345,1422,1372"/>
+<area shape="poly" id="edge30_Node000013_Node000020" title=" " alt="" coords="1036,900,1050,970,1077,1069,1096,1124,1121,1179,1150,1232,1185,1280,1221,1312,1262,1336,1259,1340,1218,1317,1181,1284,1146,1235,1116,1182,1091,1126,1071,1071,1044,971,1031,900"/>
+<area shape="rect" id="Node000021" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a031023b0d2dd5db3c51c2db6ae7801cc" title="Enables or disables the Duty Cycle limitation (EU regions mostly)." alt="" coords="1212,673,1413,716"/>
+<area shape="poly" id="edge33_Node000013_Node000021" title=" " alt="" coords="1044,855,1100,790,1139,755,1182,725,1196,718,1198,723,1184,730,1142,759,1104,794,1048,858"/>
+<area shape="rect" id="Node000022" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a6b179d5825c49af0f391dfc539912f64" title="Sets the delay for the Join1 receive window." alt="" coords="1210,740,1414,782"/>
+<area shape="poly" id="edge35_Node000013_Node000022" title=" " alt="" coords="1063,854,1118,822,1182,792,1200,785,1202,790,1184,797,1120,827,1066,859"/>
+<area shape="rect" id="Node000023" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a4545d0caad41558cdb9bae8286b104d8" title="Sets the delay for the Join2 receive window." alt="" coords="1210,806,1414,849"/>
+<area shape="poly" id="edge37_Node000013_Node000023" title=" " alt="" coords="1127,858,1195,846,1196,851,1128,863"/>
+<area shape="rect" id="Node000024" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a06bd50723ec1eb7e144c9141b2ec86fc" title="Sets the LoRaWAN Network ID (NetID)." alt="" coords="1205,924,1419,950"/>
+<area shape="poly" id="edge39_Node000013_Node000024" title=" " alt="" coords="1128,896,1230,917,1229,922,1127,901"/>
+<area shape="rect" id="Node000025" href="$d5/d72/classLSM1x0A__LoRaWAN.html#aa70ada64d28ecca216bb62268e502adf" title="Sets the delay for the RX1 receive window." alt="" coords="1196,974,1428,1001"/>
+<area shape="poly" id="edge41_Node000013_Node000025" title=" " alt="" coords="1064,898,1119,930,1184,960,1208,967,1206,972,1182,965,1117,935,1062,902"/>
+<area shape="rect" id="Node000026" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a2cf4eff0181b6107d082bccefa24217b" title="Sets the Data Rate (DR) specifically for the RX2 window." alt="" coords="1186,1025,1439,1052"/>
+<area shape="poly" id="edge43_Node000013_Node000026" title=" " alt="" coords="1050,898,1106,955,1143,985,1184,1010,1199,1017,1197,1022,1182,1015,1140,990,1102,959,1046,902"/>
+<area shape="rect" id="Node000027" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a42d2137b475b57e19d891a5f1ac93221" title="Sets the delay for the RX2 receive window." alt="" coords="1196,1076,1428,1102"/>
+<area shape="poly" id="edge45_Node000013_Node000027" title=" " alt="" coords="1044,899,1066,935,1097,980,1137,1024,1184,1061,1195,1067,1192,1071,1182,1066,1133,1028,1093,983,1061,938,1040,901"/>
+<area shape="rect" id="Node000028" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a689f7dfda1dfeae11ea397c2ddf2ad37" title="Sets the precise frequency for the RX2 window." alt="" coords="1183,1126,1441,1153"/>
+<area shape="poly" id="edge47_Node000013_Node000028" title=" " alt="" coords="1040,899,1059,945,1089,1003,1131,1063,1156,1089,1185,1112,1193,1117,1190,1121,1181,1116,1153,1093,1127,1066,1085,1006,1054,947,1036,901"/>
+<area shape="rect" id="Node000029" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a1df10d7ae6bf45b537d28d3d5c4b88d7" title="Sets the transmission power index." alt="" coords="1200,1177,1425,1204"/>
+<area shape="poly" id="edge49_Node000013_Node000029" title=" " alt="" coords="1038,899,1054,954,1082,1026,1101,1064,1125,1101,1153,1134,1185,1163,1191,1167,1188,1172,1181,1167,1149,1138,1121,1104,1097,1066,1077,1028,1049,955,1033,901"/>
+<area shape="rect" id="Node000030" href="$d5/d72/classLSM1x0A__LoRaWAN.html#a059fd6a9356c4ecadd5a98294da5952d" title="Configures the number of repetitions for Unconfirmed uplinks." alt="" coords="1196,1228,1429,1270"/>
+<area shape="poly" id="edge51_Node000013_Node000030" title=" " alt="" coords="1036,899,1050,962,1076,1047,1096,1092,1120,1137,1150,1178,1185,1214,1189,1217,1186,1221,1181,1217,1146,1181,1116,1140,1091,1095,1071,1049,1044,963,1031,900"/>
+<area shape="poly" id="edge19_Node000014_Node000003" title=" " alt="" coords="1219,484,1092,507,949,538,881,557,820,578,771,600,736,623,713,647,693,675,662,734,640,793,627,842,622,841,635,792,657,732,689,672,709,644,733,619,768,595,818,573,879,552,948,533,1091,501,1218,479"/>
+<area shape="poly" id="edge21_Node000015_Node000003" title=" " alt="" coords="1223,535,1098,558,954,590,823,629,772,650,736,672,699,712,669,757,646,803,631,843,626,841,641,801,664,755,694,708,733,668,770,645,821,624,953,585,1097,553,1222,530"/>
+<area shape="poly" id="edge24_Node000016_Node000003" title=" " alt="" coords="1203,595,1078,617,942,646,819,680,771,699,736,719,704,748,677,781,636,845,632,842,672,778,700,744,733,715,768,694,817,675,940,640,1077,612,1202,590"/>
+<area shape="poly" id="edge26_Node000017_Node000003" title=" " alt="" coords="1197,644,1094,656,975,679,913,695,852,715,792,740,736,768,686,806,646,847,642,843,682,802,733,764,790,735,850,710,912,690,974,674,1093,651,1197,639"/>
+<area shape="poly" id="edge29_Node000018_Node000003" title=" " alt="" coords="1263,1425,1156,1447,1088,1456,1015,1459,940,1455,865,1441,795,1414,763,1396,732,1373,707,1340,686,1291,667,1229,652,1160,630,1022,618,915,623,914,635,1021,657,1159,672,1228,691,1289,712,1338,736,1370,766,1391,798,1410,867,1435,940,1449,1015,1454,1087,1450,1155,1442,1262,1420"/>
+<area shape="rect" id="Node000019" href="$d4/d86/LSM1x0A__LoRaWAN__Setters_8cpp.html#a2a9e90c1088253bf5bb39a23532b63e0" title=" " alt="" coords="1541,1370,1691,1397"/>
+<area shape="poly" id="edge28_Node000018_Node000019" title=" " alt="" coords="1425,1397,1525,1388,1526,1394,1425,1402"/>
+<area shape="poly" id="edge32_Node000020_Node000003" title=" " alt="" coords="1202,1369,1076,1375,939,1374,873,1369,815,1360,767,1347,733,1328,709,1299,689,1254,671,1199,655,1138,632,1013,618,915,624,914,637,1012,660,1137,676,1198,694,1252,714,1296,736,1324,769,1342,816,1355,874,1364,939,1368,1076,1370,1201,1364"/>
+<area shape="poly" id="edge31_Node000020_Node000019" title=" " alt="" coords="1423,1365,1526,1373,1525,1379,1422,1370"/>
+<area shape="poly" id="edge34_Node000021_Node000003" title=" " alt="" coords="1211,705,1110,718,989,738,861,768,735,809,695,828,659,850,656,846,693,823,733,804,859,763,988,733,1109,713,1211,700"/>
+<area shape="poly" id="edge36_Node000022_Node000003" title=" " alt="" coords="1210,771,990,795,862,815,735,841,689,854,687,849,734,836,861,810,990,790,1209,766"/>
+<area shape="poly" id="edge38_Node000023_Node000003" title=" " alt="" coords="1210,833,924,848,702,870,702,865,923,842,1210,828"/>
+<area shape="poly" id="edge40_Node000024_Node000003" title=" " alt="" coords="1204,934,923,914,702,891,702,886,924,909,1205,928"/>
+<area shape="poly" id="edge42_Node000025_Node000003" title=" " alt="" coords="1196,980,981,955,857,937,734,914,701,906,702,901,735,909,857,931,981,950,1197,975"/>
+<area shape="poly" id="edge44_Node000026_Node000003" title=" " alt="" coords="1185,1032,1085,1021,971,1003,851,978,733,943,697,928,663,910,665,905,699,923,735,938,852,973,972,998,1086,1015,1186,1027"/>
+<area shape="poly" id="edge46_Node000027_Node000003" title=" " alt="" coords="1196,1090,1093,1083,974,1065,912,1051,851,1034,790,1012,733,986,683,951,643,913,647,909,687,947,736,981,792,1007,852,1029,914,1046,975,1060,1094,1077,1196,1085"/>
+<area shape="poly" id="edge48_Node000028_Node000003" title=" " alt="" coords="1183,1150,1079,1147,961,1133,901,1119,842,1101,786,1076,733,1046,699,1017,670,982,630,914,635,912,674,979,703,1013,736,1041,788,1072,844,1096,903,1114,962,1127,1079,1142,1183,1145"/>
+<area shape="poly" id="edge50_Node000029_Node000003" title=" " alt="" coords="1216,1207,1108,1213,1045,1212,980,1206,915,1194,850,1176,789,1149,733,1114,710,1093,690,1068,658,1015,636,961,622,915,627,914,641,959,663,1013,694,1065,714,1089,736,1109,791,1145,852,1171,916,1189,981,1201,1046,1206,1108,1208,1215,1201"/>
+<area shape="poly" id="edge52_Node000030_Node000003" title=" " alt="" coords="1196,1273,1088,1281,1028,1281,966,1276,903,1266,842,1248,785,1223,733,1188,703,1159,679,1126,660,1089,645,1050,626,976,617,915,622,915,631,975,650,1049,665,1086,684,1123,707,1156,736,1184,788,1218,844,1243,904,1261,966,1271,1028,1276,1088,1276,1195,1267"/>
+<area shape="poly" id="edge55_Node000032_Node000033" title=" " alt="" coords="1100,60,1180,52,1181,57,1101,66"/>
+<area shape="rect" id="Node000034" href="$d6/d3c/classLSM1x0A__AtParser.html#a0ba6f927c54fceece22c17773d3f2600" title="Sends a command and extracts a value from the response." alt="" coords="1500,20,1732,62"/>
+<area shape="poly" id="edge56_Node000033_Node000034" title=" " alt="" coords="1429,38,1485,38,1485,44,1429,44"/>
+<area shape="rect" id="Node000035" href="$d5/d8b/classUartDriver.html#a5d0f22e8867eebe99273078bb19bd23d" title="Sends data through UART." alt="" coords="1820,28,1965,54"/>
+<area shape="poly" id="edge57_Node000034_Node000035" title=" " alt="" coords="1733,38,1804,38,1804,44,1733,44"/>
+</map>

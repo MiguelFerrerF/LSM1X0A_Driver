@@ -1,0 +1,11 @@
+<map id="LSM1x0A_LoRaWAN::sendData" name="LSM1x0A_LoRaWAN::sendData">
+<area shape="rect" id="Node000001" title="Transmits a payload through the LoRaWAN network. Blocks until the MAC layer confirms transmission (or..." alt="" coords="349,56,560,83"/>
+<area shape="rect" id="Node000002" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="177,5,222,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="368,55,223,26,224,20,369,50"/>
+<area shape="rect" id="Node000003" href="$d2/d4d/classLSM1x0A__Client.html#a44af5182d8b70d47369b96662270292c" title="Sends maximum length data payload to the currently configured network. Routing (LoRaWAN vs Sigfox) is..." alt="" coords="99,56,301,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="334,72,302,72,302,67,334,67"/>
+<area shape="rect" id="Node000004" href="$d2/d4d/classLSM1x0A__Client.html#adf13ef78c2a22ec9fdae194f29bedde1" title="Sends an ASCII string to the currently configured network." alt="" coords="105,107,294,133"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="369,89,271,109,270,103,368,84"/>
+<area shape="rect" id="Node000005" href="$d8/db3/client__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="5,107,51,133"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="89,123,51,123,51,117,89,117"/>
+</map>

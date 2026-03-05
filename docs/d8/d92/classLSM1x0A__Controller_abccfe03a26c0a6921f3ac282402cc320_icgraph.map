@@ -1,0 +1,7 @@
+<map id="LSM1x0A_Controller::getLastSnr" name="LSM1x0A_Controller::getLastSnr">
+<area shape="rect" id="Node000001" title="Gets the last SNR received by the module." alt="" coords="244,23,385,65"/>
+<area shape="rect" id="Node000002" href="$d2/d4d/classLSM1x0A__Client.html#a5d2f6f02ac5a92ee023bfa2214ba7c32" title="Gets the last SNR (Signal&#45;to&#45;Noise Ratio)." alt="" coords="5,5,196,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="228,36,196,33,196,27,228,31"/>
+<area shape="rect" id="Node000003" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="78,56,123,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="229,57,124,69,123,64,228,52"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="LSM1x0A_LoRaWAN::setClass" name="LSM1x0A_LoRaWAN::setClass">
+<area shape="rect" id="Node000001" title="Sets the LoRaWAN device Class (A or C)." alt="" coords="345,64,552,91"/>
+<area shape="rect" id="Node000002" href="$de/d2a/lorawan__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="179,5,224,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="374,62,224,27,226,21,375,57"/>
+<area shape="rect" id="Node000003" href="$d2/d4d/classLSM1x0A__Client.html#a61f769fc32638d50735e6af6258d00e0" title="Configures the module for LoRaWAN using ABP (Activation By Personalization). Note: This only sets the..." alt="" coords="107,56,297,99"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="329,80,297,80,297,75,329,75"/>
+<area shape="rect" id="Node000004" href="$d2/d4d/classLSM1x0A__Client.html#a2a7ddc841d10088471d589fb6615e750" title="Configures the module for LoRaWAN using OTAA (Over The Air Activation). Note: This only sets the para..." alt="" coords="107,123,297,165"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="382,98,284,125,283,119,381,93"/>
+<area shape="rect" id="Node000005" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,131,59,157"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="91,147,59,147,59,141,91,141"/>
+</map>

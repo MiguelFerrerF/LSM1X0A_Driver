@@ -1,0 +1,9 @@
+<map id="LSM1x0A_Sigfox::setRcChannel" name="LSM1x0A_Sigfox::setRcChannel">
+<area shape="rect" id="Node000001" title="Configures the Regional Macro&#45;Channel (RC)." alt="" coords="262,56,475,83"/>
+<area shape="rect" id="Node000002" href="$d0/df5/sigfox__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="87,5,132,32"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="281,55,132,26,133,20,282,50"/>
+<area shape="rect" id="Node000003" href="$dd/dcc/classLSM1x0A__Sigfox.html#a5b2511322c80ef7ae07c3260fcf9ef06" title="Uploads locally defined cache (e.g. from user code) to the hardware." alt="" coords="5,56,214,83"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="246,72,214,72,214,67,246,67"/>
+<area shape="rect" id="Node000004" href="$d2/d4d/classLSM1x0A__Client.html#ade781f753dfbc0f4702a4df209bcc2ba" title="Configures the module for Sigfox." alt="" coords="11,107,208,133"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="282,89,182,109,181,103,281,84"/>
+</map>

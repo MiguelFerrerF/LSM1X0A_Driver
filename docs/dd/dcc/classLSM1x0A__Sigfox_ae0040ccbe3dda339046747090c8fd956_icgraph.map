@@ -1,0 +1,11 @@
+<map id="LSM1x0A_Sigfox::isValidAscii" name="LSM1x0A_Sigfox::isValidAscii">
+<area shape="rect" id="Node000001" title=" " alt="" coords="576,31,774,57"/>
+<area shape="rect" id="Node000002" href="$dd/dcc/classLSM1x0A__Sigfox.html#aa1b5f4d37f7cfe26c15d774d2afeb8ee" title="Sends standard ASCII string literal." alt="" coords="336,31,528,57"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="561,47,529,47,529,41,561,41"/>
+<area shape="rect" id="Node000003" href="$d0/df5/sigfox__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="171,5,216,32"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="320,35,216,24,217,18,321,30"/>
+<area shape="rect" id="Node000004" href="$d2/d4d/classLSM1x0A__Client.html#adf13ef78c2a22ec9fdae194f29bedde1" title="Sends an ASCII string to the currently configured network." alt="" coords="99,56,288,83"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="321,58,289,62,288,57,320,53"/>
+<area shape="rect" id="Node000005" href="$d8/db3/client__example_8cpp.html#afe461d27b9c48d5921c00d521181f12f" title=" " alt="" coords="5,56,51,83"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="83,72,51,72,51,67,83,67"/>
+</map>

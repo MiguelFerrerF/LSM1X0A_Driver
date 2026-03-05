@@ -1,0 +1,5 @@
+<map id="LSM1x0A_Client::getFirmwareVersion" name="LSM1x0A_Client::getFirmwareVersion">
+<area shape="rect" id="Node000001" title="Retrieves the firmware version of the module." alt="" coords="107,5,306,48"/>
+<area shape="rect" id="Node000002" href="$d8/db3/client__example_8cpp.html#a4fc01d736fe50cf5b977f755b675f11d" title=" " alt="" coords="5,13,59,40"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,29,59,29,59,24,91,24"/>
+</map>
