@@ -4,7 +4,6 @@
 #include <string.h>
 #include <sys/time.h>
 
-
 LSM1x0A_Sigfox::LSM1x0A_Sigfox(LSM1x0A_Controller* controller) : _controller(controller)
 {
   clearCache();
@@ -63,9 +62,9 @@ bool LSM1x0A_Sigfox::sendBit(bool bit, bool downlink, uint8_t txRepeat)
   }
 
   if (downlink) {
-    char    rxBuffer[32] = {0};
+    char rxBuffer[32] = {0};
     LSM_LOG_INFO("SIGFOX", "Sending Bit (%d) w/ Downlink requested", bit);
-    AtError err          = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
+    AtError err = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
     if (err == AtError::OK) {
       parseSigfoxDownlink(rxBuffer);
       LSM_LOG_INFO("SIGFOX", "Bit TX Success - Downlink received and parsed.");
@@ -81,7 +80,7 @@ bool LSM1x0A_Sigfox::sendBit(bool bit, bool downlink, uint8_t txRepeat)
   LSM_LOG_INFO("SIGFOX", "Sending Bit (%d) without Downlink", bit);
   bool success = _controller->sendCommand(cmd, 30000) == AtError::OK;
   if (!success) {
-      LSM_LOG_ERROR("SIGFOX", "Failed to send Bit.");
+    LSM_LOG_ERROR("SIGFOX", "Failed to send Bit.");
   }
   return success;
 }
@@ -101,9 +100,9 @@ bool LSM1x0A_Sigfox::sendString(const char* text, bool downlink, uint8_t txRepea
   }
 
   if (downlink) {
-    char    rxBuffer[32] = {0};
+    char rxBuffer[32] = {0};
     LSM_LOG_INFO("SIGFOX", "Sending String (%s) w/ Downlink requested", text);
-    AtError err          = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
+    AtError err = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
     if (err == AtError::OK) {
       parseSigfoxDownlink(rxBuffer);
       LSM_LOG_INFO("SIGFOX", "String TX Success - Downlink received.");
@@ -116,7 +115,7 @@ bool LSM1x0A_Sigfox::sendString(const char* text, bool downlink, uint8_t txRepea
   LSM_LOG_INFO("SIGFOX", "Sending String (%s) without Downlink", text);
   bool success = _controller->sendCommand(cmd, 30000) == AtError::OK;
   if (!success) {
-      LSM_LOG_ERROR("SIGFOX", "Failed to send String.");
+    LSM_LOG_ERROR("SIGFOX", "Failed to send String.");
   }
   return success;
 }
@@ -140,9 +139,9 @@ bool LSM1x0A_Sigfox::sendPayload(const uint8_t* payload, size_t len, bool downli
   }
 
   if (downlink) {
-    char    rxBuffer[32] = {0};
+    char rxBuffer[32] = {0};
     LSM_LOG_INFO("SIGFOX", "Sending Hex Payload (%s) w/ Downlink requested", hexStr);
-    AtError err          = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
+    AtError err = _controller->sendCommandWithResponse(cmd, rxBuffer, sizeof(rxBuffer), "+RX_H=", 60000);
     if (err == AtError::OK) {
       parseSigfoxDownlink(rxBuffer);
       LSM_LOG_INFO("SIGFOX", "Payload TX Success - Downlink received.");
@@ -155,7 +154,7 @@ bool LSM1x0A_Sigfox::sendPayload(const uint8_t* payload, size_t len, bool downli
   LSM_LOG_INFO("SIGFOX", "Sending Hex Payload (%s) without Downlink", hexStr);
   bool success = _controller->sendCommand(cmd, 30000) == AtError::OK;
   if (!success) {
-      LSM_LOG_ERROR("SIGFOX", "Failed to send Payload.");
+    LSM_LOG_ERROR("SIGFOX", "Failed to send Payload.");
   }
   return success;
 }
@@ -191,7 +190,12 @@ bool LSM1x0A_Sigfox::parseSigfoxDownlink(const char* rxBuffer)
   uint32_t rawRssi = strtoul(rssiTemp, NULL, 16);
   _lastRxRSSI      = (int16_t)rawRssi;
 
-  LSM_LOG_VERBOSE("SIGFOX", "Parsed Downlink - TS: %u, RSSI: %d", (unsigned int)ts, _lastRxRSSI);
+  // Log the parsed downlink information
+  struct tm* timeInfo;
+  timeInfo = gmtime(&rawTime);
+
+  LSM_LOG_VERBOSE("SIGFOX", "Parsed Downlink - TS: %04d-%02d-%02d %02d:%02d:%02d, RSSI: %d", timeInfo->tm_year + 1900, timeInfo->tm_mon + 1,
+                  timeInfo->tm_mday, timeInfo->tm_hour, timeInfo->tm_min, timeInfo->tm_sec, _lastRxRSSI);
 
   return true;
 }

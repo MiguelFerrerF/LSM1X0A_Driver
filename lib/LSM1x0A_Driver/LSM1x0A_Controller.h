@@ -171,7 +171,7 @@ public:
    * @param callback Function to be called with log events
    * @param runtimeLevel The maximum severity level that will trigger the callback (e.g. VERBOSE, INFO).
    */
-  void setLogCallback(LsmLogCallback callback, LsmLogLevel runtimeLevel = LsmLogLevel::INFO);
+  void setLogCallback(LsmLogCallback callback, LsmLogLevel runtimeLevel = LsmLogLevel::VERBOSE);
 
   // =========================================================================
   // NATIVE STATE AND SYNCHRONIZATION

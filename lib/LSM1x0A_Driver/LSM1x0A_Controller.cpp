@@ -94,7 +94,7 @@ AtError LSM1x0A_Controller::sendCommand(const char* cmd, uint32_t timeoutMs, int
 
     // If not the last attempt, make a brief pause
     if (i < retries - 1) {
-      LSM_LOG_WARN("CTRL", "sendCommand retrying (%d/%d)", i+1, retries);
+      LSM_LOG_WARN("CTRL", "sendCommand retrying (%d/%d)", i + 1, retries);
       vTaskDelay(pdMS_TO_TICKS(200));
     }
   }
@@ -130,7 +130,7 @@ AtError LSM1x0A_Controller::sendCommandWithResponse(const char* cmd, char* outBu
     }
 
     if (i < retries - 1) {
-      LSM_LOG_WARN("CTRL", "sendCommandWithResponse retrying (%d/%d)", i+1, retries);
+      LSM_LOG_WARN("CTRL", "sendCommandWithResponse retrying (%d/%d)", i + 1, retries);
       vTaskDelay(pdMS_TO_TICKS(200));
     }
   }
@@ -371,6 +371,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
     if (strstr(payload, "SUCCESS")) {
       if (_syncEventGroup)
         xEventGroupSetBits(_syncEventGroup, LSM_EVT_TX_SUCCESS);
+      lorawan.setJoined(true);
     }
     else if (strstr(payload, "FAILED") || strstr(payload, "TIMEOUT")) {
       if (_syncEventGroup)
@@ -380,6 +381,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
   else if (strcmp(type, LsmEvent::RX_DATA) == 0) {
     if (_syncEventGroup)
       xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_DATA);
+    lorawan.setJoined(true);
   }
   else if (strcmp(type, LsmEvent::RX_META) == 0) {
     uint32_t bitsToSet = LSM_EVT_TX_SUCCESS;

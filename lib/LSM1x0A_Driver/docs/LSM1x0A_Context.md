@@ -72,7 +72,11 @@ The driver is divided into three foundational layers to maintain structural main
 - **Responsibility:** Orchestrate the dynamic creation and destruction of `UartDriver` and `LSM1x0A_AtParser`.
 - **Current Paradigm (Intuitive Controller):** Exposes getters (`getBattery`, `getBaudrate`, `getVersion`) and direct native setters (e.g., `setDevEUI()`, `setClass()`) implemented through direct calls to `sendCommand()` hiding the underlying buffers and formatting.
 
-4. **Definitions (`LSM1x0A_Types.h`):**
+4. **Client Layer (`LSM1x0A_Client`):**
+- **Responsibility:** Act as the final highest-level API intended for end-users, hiding complex state transitions, synchronization procedures, and recoveries.
+- **Features:** Exposes a drastically simplified set of operations (`setupLoRaWAN_OTAA`, `joinNetwork`, `sendPayload`) while transparently managing the `LSM1x0A_Controller` underneath.
+
+5. **Definitions (`LSM1x0A_Types.h`):**
 - Strictly maintains shared enums (e.g., `AtError`, `LsmBand`, `LsmClass`) and AT command dictionaries (`LsmAtCommand::...`) to avoid the use of scattered *magic strings* in the source code.
 
 ### Visual Architecture Diagram
@@ -90,6 +94,7 @@ graph TD
 
    subgraph Driver ["LSM1x0A Driver"]
       direction TB
+      Client["LSM1x0A_Client<br/>Simplified App Layer"]:::api
       API["LSM1x0A_Controller<br/>High level get/set"]:::api
       Parser["LSM1x0A_AtParser<br/>Logic & Synchronization"]:::parser
       Physical["UartDriver<br/>RTOS Queues & ISR"]:::physical
@@ -99,8 +104,10 @@ graph TD
    Hardware[("LSM1x0A Module<br/>STM32WL")]:::external
 
    %% Conexiones (Corregidas flechas dobles <-->)
-   User <--> API
+   User <--> Client
+   Client <--> API
    User -- "Subscribes & Listens" --> Logger
+   Client -- "Subscribes & Routes Payload" --> Logger
    API -- "Logs native events" --> Logger
    API -- "Synchronous Tx Commands" --> Parser
    Parser -- "Asynchronous +EVT" --> API
@@ -132,6 +139,7 @@ This section serves as context for compiling, flashing, and monitoring the proje
 - **Controllers:**
 - `UartDriver`: Dedicated asynchronous serial interaction physical layer. Manages FreeRTOS queues to isolate RX interrupts.
 - `LSM1x0A_Controller`: Main API and logic orchestrator of the dual-stack module.
+- `LSM1x0A_Client`: Ultra-high-level wrapper hiding complexity for the final developer.
 - **Logging:** Native logger (`LSM1x0A_Logger`) with adjustable verbosity levels at compile-time and runtime.
 - **Tests:** Unity framework integrated with PlatformIO (`test_uartDriver`, etc.)
 - **Libraries/Test:** `throwtheswitch/Unity` for asynchronous UART tests.
