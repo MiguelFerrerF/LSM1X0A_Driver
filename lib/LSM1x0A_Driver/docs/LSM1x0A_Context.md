@@ -125,7 +125,29 @@ To consult specific commands, formats, and parameters during development, see:
 
 ---
 
-# 7. PlatformIO Project Context
+## 7. Available Examples
+The library provides 4 key examples located in the `examples/` folder which demonstrate different layers of the driver architecture working on practice:
+
+1. **`client_example.cpp`**: 
+   - Uses the highly-abstracted `LSM1x0A_Client` layer for both LoRaWAN and Sigfox modes.
+   - Shows how to easily join a network, transmit a payload/string with robust retry logic, and register an asynchronous **downlink callback** to receive data from the server.
+   
+2. **`lorawan_example.cpp`**:
+   - Uses the core `LSM1x0A_Controller` API.
+   - Designed to exhaustively test all internal LoRaWAN Setters/Getters (`setADR`, `setClass`, `getDevEUI`, etc.).
+   - Useful for debugging or learning exact controller operations.
+   
+3. **`sigfox_example.cpp`**:
+   - Uses the core `LSM1x0A_Controller` layer API focused on Sigfox capabilities.
+   - Tests Sigfox-specific setters/getters and transmission methods (`sendBit`, `sendPayload`, `sendString`).
+   
+4. **`parser_example.cpp`**:
+   - Uses the lowest level `LSM1x0A_AtParser` abstraction.
+   - Useful for sending raw AT commands manually that are not fully abstracted by the controller API yet or to manually intercept asynchronous text-string URC events.
+
+---
+
+# 8. PlatformIO Project Context
 This section serves as context for compiling, flashing, and monitoring the project. It includes specific commands and environment details adapted to this machine.
 
 ## Environment Details

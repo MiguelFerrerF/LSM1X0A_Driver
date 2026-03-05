@@ -23,6 +23,7 @@
  * Explore the documentation using the tabs above or the tree-view on the side. 
  * The documentation is logically divided into these core modules:
  *
+ * - **`LSM1x0A_Client`** : The high-level abstraction layer resolving network complexity for simple end-user applications.
  * - @ref Hardware_Controller : The `LSM1x0A_Controller` class. Handles UART, AT commands, hardware resets, and the generic event loop.
  * - @ref LoRaWAN_API : The `LSM1x0A_LoRaWAN` API class. Handles OTAA/ABP Joins, Channels, Port routing, Confirmed/Unconfirmed payloads.
  * - @ref Sigfox_API : The `LSM1x0A_Sigfox` API class. Handles Sigfox Network Joins, Send Bits/Frames, OOB, and RF Tests.
@@ -35,6 +36,16 @@
  * - \subpage lsm1x0a_sigfox_api_page "Sigfox Concept Guide"
  * - \subpage lsm1x0a_lorawan_responses_page "AT Responses: LoRaWAN"
  * - \subpage lsm1x0a_sigfox_responses_page "AT Responses: Sigfox"
+ *
+ * ---
+ *
+ * @section examples_sec Available Examples
+ *
+ * The driver includes several practical examples to help you get started quickly:
+ * - **`client_example.cpp`**: Demonstrates the easiest way to use the library via the `LSM1x0A_Client` layer. Shows how to join a network, send data, and register a downlink callback.
+ * - **`parser_example.cpp`**: Demonstrates how to use the low-level `LSM1x0A_AtParser` directly to send raw AT commands and parse custom events.
+ * - **`lorawan_example.cpp`**: A comprehensive test suite that interacts with the `LSM1x0A_Controller` directly to test all LoRaWAN getters, setters, and operational state machines.
+ * - **`sigfox_example.cpp`**: A comprehensive test suite specifically designed for testing Sigfox specific operations like bits, frames, and out-of-band messages.
  *
  * ---
  *
