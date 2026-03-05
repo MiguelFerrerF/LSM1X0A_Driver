@@ -47,7 +47,7 @@ void setup()
   Serial.println("\n--- LSM1x0A Client High-Level Example ---");
 
   // 1. Initialize the client (starts Uart and checks connection)
-  if (!lsmClient.begin(globalLogCallback)) {
+  if (!lsmClient.begin(globalLogCallback, LsmLogLevel::DEBUG)) {
     Serial.println("Error: Could not communicate with LSM1x0A module.");
     while (true) {
       delay(1000);

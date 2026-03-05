@@ -424,7 +424,7 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
   }
 
   // 2. Log the event locally
-  LSM_LOG_INFO("EVENT", "Type: %s | Payload: %s", type, payload ? payload : "N/A");
+  LSM_LOG_DEBUG("EVENT", "Type: %s | Payload: %s", type, payload ? payload : "N/A");
 }
 
 bool LSM1x0A_Controller::syncConfigToCache()

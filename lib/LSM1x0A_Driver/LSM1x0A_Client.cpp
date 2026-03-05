@@ -16,8 +16,13 @@ LSM1x0A_Client::~LSM1x0A_Client()
 
 bool LSM1x0A_Client::begin(LsmLogCallback logCb)
 {
+  return begin(logCb, LsmLogLevel::INFO);
+}
+
+bool LSM1x0A_Client::begin(LsmLogCallback logCb, LsmLogLevel runtimeLevel)
+{
   if (logCb) {
-    _controller->setLogCallback(logCb);
+    _controller->setLogCallback(logCb, runtimeLevel);
   }
 
   if (!_controller->begin()) {
@@ -135,7 +140,7 @@ bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool req
     return false;
 
   uint8_t attempts = enableRetries ? (maxRetries + 1) : 1;
-  bool success = false;
+  bool    success  = false;
 
   if (_configuredMode == LsmMode::LORAWAN) {
     // Convert to hex string
@@ -149,23 +154,26 @@ bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool req
     hexString[safeLength * 2] = '\0';
 
     for (uint8_t i = 0; i < attempts; i++) {
-        success = _controller->lorawan.sendData(port, hexString, requestAck);
-        if (success) return true;
-        
-        if (requestAck && enableRetries && i == attempts - 1) {
-            _controller->recoverModule();
-        } else if (!success && i < attempts - 1) {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
+      success = _controller->lorawan.sendData(port, hexString, requestAck);
+      if (success)
+        return true;
+
+      if (requestAck && enableRetries && i == attempts - 1) {
+        _controller->recoverModule();
+      }
+      else if (!success && i < attempts - 1) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+      }
     }
   }
   else if (_configuredMode == LsmMode::SIGFOX) {
     for (uint8_t i = 0; i < attempts; i++) {
-        success = _controller->sigfox.sendPayload(payload, length, requestAck, 2);
-        if (success) return true;
-        if (!success && i < attempts - 1) {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
+      success = _controller->sigfox.sendPayload(payload, length, requestAck, 2);
+      if (success)
+        return true;
+      if (!success && i < attempts - 1) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+      }
     }
   }
 
@@ -178,7 +186,7 @@ bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port,
     return false;
 
   uint8_t attempts = enableRetries ? (maxRetries + 1) : 1;
-  bool success = false;
+  bool    success  = false;
 
   if (_configuredMode == LsmMode::LORAWAN) {
     size_t length = strlen(text);
@@ -191,23 +199,26 @@ bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port,
     hexString[length * 2] = '\0';
 
     for (uint8_t i = 0; i < attempts; i++) {
-        success = _controller->lorawan.sendData(port, hexString, requestAck);
-        if (success) return true;
-        
-        if (requestAck && enableRetries && i == attempts - 1) {
-            _controller->recoverModule();
-        } else if (!success && i < attempts - 1) {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
+      success = _controller->lorawan.sendData(port, hexString, requestAck);
+      if (success)
+        return true;
+
+      if (requestAck && enableRetries && i == attempts - 1) {
+        _controller->recoverModule();
+      }
+      else if (!success && i < attempts - 1) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+      }
     }
   }
   else if (_configuredMode == LsmMode::SIGFOX) {
     for (uint8_t i = 0; i < attempts; i++) {
-        success = _controller->sigfox.sendString(text, requestAck, 2);
-        if (success) return true;
-        if (!success && i < attempts - 1) {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
+      success = _controller->sigfox.sendString(text, requestAck, 2);
+      if (success)
+        return true;
+      if (!success && i < attempts - 1) {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+      }
     }
   }
   return false;
@@ -276,7 +287,8 @@ void LSM1x0A_Client::setDownlinkCallback(LsmDownlinkCallback callback)
   _downlinkCallback = callback;
   if (_downlinkCallback) {
     _controller->setRxCallback(_onRxData, this);
-  } else {
+  }
+  else {
     _controller->setRxCallback(nullptr, nullptr);
   }
 }
@@ -284,7 +296,8 @@ void LSM1x0A_Client::setDownlinkCallback(LsmDownlinkCallback callback)
 void LSM1x0A_Client::_onRxData(void* ctx, const char* payload)
 {
   LSM1x0A_Client* self = static_cast<LSM1x0A_Client*>(ctx);
-  if (!self || !self->_downlinkCallback || !payload) return;
+  if (!self || !self->_downlinkCallback || !payload)
+    return;
 
   char temp[256];
   strncpy(temp, payload, sizeof(temp) - 1);
@@ -294,13 +307,15 @@ void LSM1x0A_Client::_onRxData(void* ctx, const char* payload)
   char* sizeStr = strtok(NULL, ":");
   char* dataStr = strtok(NULL, ":");
 
-  if (!portStr || !sizeStr || !dataStr) return;
+  if (!portStr || !sizeStr || !dataStr)
+    return;
 
   uint8_t port = (uint8_t)strtol(portStr, NULL, 10);
-  size_t size = (size_t)strtol(sizeStr, NULL, 16);
+  size_t  size = (size_t)strtol(sizeStr, NULL, 16);
 
   uint8_t binPayload[128];
-  if (size > sizeof(binPayload)) size = sizeof(binPayload);
+  if (size > sizeof(binPayload))
+    size = sizeof(binPayload);
 
   if (self->_charsToBytes(dataStr, binPayload, size)) {
     self->_downlinkCallback(port, binPayload, size);

@@ -43,11 +43,19 @@ public:
   // =========================================================================
 
   /**
-   * @brief Initializes the driver, AT parser, and attempts to wake up the module.
-   * @param logCb Optional callback to receive driver log messages.
-   * @return true if communication and initialization were successful.
+   * @brief Initializes the client and underlying controller, starting the UART and AT parser.
+   * @param logCb Optional callback for receiving log messages from the controller. Set to nullptr to disable.
+   * @return true if initialization was successful and the module is responsive.
    */
   bool begin(LsmLogCallback logCb = nullptr);
+
+  /**
+   * @brief Sets the runtime log level for the internal controller's logger.
+   * Messages with a level higher than this will be ignored, even if compiled.
+   * @param runtimeLevel The maximum LsmLogLevel to emit at runtime.
+   * Note: The compile-time log level (LSM_MAX_COMPILE_LOG_LEVEL) must also be >= runtimeLevel for messages to be emitted.
+   */
+  bool begin(LsmLogCallback logCb, LsmLogLevel runtimeLevel);
 
   /**
    * @brief Pings the module or checks the battery to verify communication is still active.
@@ -123,7 +131,8 @@ public:
    * @param maxRetries Number of retries to attempt. If LoRaWAN and confirmed, maxing this out triggers a module recovery.
    * @return true if the transmission was successful.
    */
-  bool sendPayload(const uint8_t* payload, size_t length, bool requestAck = false, uint8_t port = 33, bool enableRetries = false, uint8_t maxRetries = 3);
+  bool sendPayload(const uint8_t* payload, size_t length, bool requestAck = false, uint8_t port = 33, bool enableRetries = false,
+                   uint8_t maxRetries = 3);
 
   /**
    * @brief Sends an ASCII string to the currently configured network.
@@ -190,7 +199,7 @@ private:
   bool                _abpConfigured;
 
   LsmDownlinkCallback _downlinkCallback = nullptr;
-  static void _onRxData(void* ctx, const char* payload);
+  static void         _onRxData(void* ctx, const char* payload);
 
   // Internal helper to abstract string formatting
   bool _charsToBytes(const char* hexString, uint8_t* outputBuffer, size_t maxLen);
