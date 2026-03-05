@@ -110,18 +110,22 @@ public:
    * @param length Number of bytes to send.
    * @param requestAck Request confirmation/downlink from the network.
    * @param port LoRaWAN application port number (default 33).
+   * @param enableRetries Enable application-level retries if transmission fails.
+   * @param maxRetries Number of retries to attempt. If LoRaWAN and confirmed, maxing this out triggers a module recovery.
    * @return true if the transmission was successful.
    */
-  bool sendPayload(const uint8_t* payload, size_t length, bool requestAck = false, uint8_t port = 33);
+  bool sendPayload(const uint8_t* payload, size_t length, bool requestAck = false, uint8_t port = 33, bool enableRetries = false, uint8_t maxRetries = 3);
 
   /**
    * @brief Sends an ASCII string to the currently configured network.
    * @param text Null terminated string to send.
    * @param requestAck Request confirmation/downlink from the network.
    * @param port LoRaWAN application port number (default 33).
+   * @param enableRetries Enable application-level retries if transmission fails.
+   * @param maxRetries Number of retries to attempt. If LoRaWAN and confirmed, maxing this out triggers a module recovery.
    * @return true if the transmission was successful.
    */
-  bool sendString(const char* text, bool requestAck = false, uint8_t port = 33);
+  bool sendString(const char* text, bool requestAck = false, uint8_t port = 33, bool enableRetries = false, uint8_t maxRetries = 3);
 
   // =========================================================================
   // INFORMATION RETRIEVAL

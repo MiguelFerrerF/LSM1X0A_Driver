@@ -45,10 +45,14 @@ bool LSM1x0A_Client::setupLoRaWAN_OTAA(LsmBand band, const char* appEui, const c
   int devNonce = _controller->lorawan.getDevNonce();
 
   bool ok = true;
-  ok &= _controller->lorawan.setBand(band);
-  ok &= _controller->lorawan.setAppEUI(appEui);
-  ok &= _controller->lorawan.setAppKey(appKey);
-  ok &= _controller->lorawan.setNwkKey(appKey); // For OTAA 1.0.4, AppKey and NwkKey are the same
+  if (band != LsmBand::BAND_UNKNOWN)
+    ok &= _controller->lorawan.setBand(band);
+  if (appEui)
+    ok &= _controller->lorawan.setAppEUI(appEui);
+  if (appKey) {
+    ok &= _controller->lorawan.setAppKey(appKey);
+    ok &= _controller->lorawan.setNwkKey(appKey); // For OTAA 1.0.4, AppKey and NwkKey are the same
+  }
   ok &= _controller->lorawan.setClass(devClass);
 
   if (devNonce >= 0)
@@ -125,33 +129,56 @@ bool LSM1x0A_Client::isJoined()
   return true; // Sigfox is considered "ready/joined" if configured
 }
 
-bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool requestAck, uint8_t port)
+bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool requestAck, uint8_t port, bool enableRetries, uint8_t maxRetries)
 {
   if (!payload || length == 0)
     return false;
 
+  uint8_t attempts = enableRetries ? (maxRetries + 1) : 1;
+  bool success = false;
+
   if (_configuredMode == LsmMode::LORAWAN) {
     // Convert to hex string
-    if (length > 242)
-      length = 242; // Prevent overflow on 512 byte buffer (max LoRaWAN payload is 242 anyways)
+    size_t safeLength = length;
+    if (safeLength > 242)
+      safeLength = 242; // Prevent overflow on 512 byte buffer (max LoRaWAN payload is 242 anyways)
     char hexString[512];
-    for (size_t i = 0; i < length; i++) {
-      sprintf(&hexString[i * 2], "%02X", payload[i]);
+    for (size_t j = 0; j < safeLength; j++) {
+      sprintf(&hexString[j * 2], "%02X", payload[j]);
     }
-    hexString[length * 2] = '\0';
-    return _controller->lorawan.sendData(port, hexString, requestAck);
+    hexString[safeLength * 2] = '\0';
+
+    for (uint8_t i = 0; i < attempts; i++) {
+        success = _controller->lorawan.sendData(port, hexString, requestAck);
+        if (success) return true;
+        
+        if (requestAck && enableRetries && i == attempts - 1) {
+            _controller->recoverModule();
+        } else if (!success && i < attempts - 1) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
   }
   else if (_configuredMode == LsmMode::SIGFOX) {
-    return _controller->sigfox.sendPayload(payload, length, requestAck, 2);
+    for (uint8_t i = 0; i < attempts; i++) {
+        success = _controller->sigfox.sendPayload(payload, length, requestAck, 2);
+        if (success) return true;
+        if (!success && i < attempts - 1) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
   }
 
   return false;
 }
 
-bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port)
+bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port, bool enableRetries, uint8_t maxRetries)
 {
   if (!text)
     return false;
+
+  uint8_t attempts = enableRetries ? (maxRetries + 1) : 1;
+  bool success = false;
 
   if (_configuredMode == LsmMode::LORAWAN) {
     size_t length = strlen(text);
@@ -162,10 +189,26 @@ bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port)
       sprintf(&hexString[i * 2], "%02X", (uint8_t)text[i]);
     }
     hexString[length * 2] = '\0';
-    return _controller->lorawan.sendData(port, hexString, requestAck);
+
+    for (uint8_t i = 0; i < attempts; i++) {
+        success = _controller->lorawan.sendData(port, hexString, requestAck);
+        if (success) return true;
+        
+        if (requestAck && enableRetries && i == attempts - 1) {
+            _controller->recoverModule();
+        } else if (!success && i < attempts - 1) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
   }
   else if (_configuredMode == LsmMode::SIGFOX) {
-    return _controller->sigfox.sendString(text, requestAck, 2);
+    for (uint8_t i = 0; i < attempts; i++) {
+        success = _controller->sigfox.sendString(text, requestAck, 2);
+        if (success) return true;
+        if (!success && i < attempts - 1) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
   }
   return false;
 }

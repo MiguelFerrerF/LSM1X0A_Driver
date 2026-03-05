@@ -50,19 +50,28 @@ void setup()
   }
   Serial.printf("Battery: %d mV\n", lsmClient.getBatteryVoltage());
 
+  // Get somo LoRaWAN info
+  char devEui[32];
+  if (lsmClient.getController().lorawan.getDevEUI(devEui, sizeof(devEui)))
+    Serial.printf("DevEUI: %s\n", devEui);
+  char appEui[32];
+  if (lsmClient.getController().lorawan.getAppEUI(appEui, sizeof(appEui)))
+    Serial.printf("AppEUI: %s\n", appEui);
+  char appKey[64];
+  if (lsmClient.getController().lorawan.getAppKey(appKey, sizeof(appKey)))
+    Serial.printf("AppKey: %s\n", appKey);
+  char nwkSKey[64];
+  if (lsmClient.getController().lorawan.getNwkSKey(nwkSKey, sizeof(nwkSKey)))
+    Serial.printf("NwkSKey: %s\n", nwkSKey);
+
   // 2. Setup Network
   // --- For LoRaWAN OTAA ---
-  /*
-  const char* devEui = "1122334455667788";
-  const char* appEui = "0000000000000000";
-  const char* appKey = "0102030405060708090A0B0C0D0E0F10";
   Serial.println("Setting up LoRaWAN OTAA (EU868)...");
-  lsmClient.setupLoRaWAN_OTAA(LsmBand::EU868, devEui, appEui, appKey);
-  */
+  lsmClient.setupLoRaWAN_OTAA(LsmBand::EU868, appEui, appKey);
 
   // --- For Sigfox ---
-  Serial.println("Setting up Sigfox (RC1 - Europe)...");
-  lsmClient.setupSigfox(LsmRCChannel::RC1);
+  // Serial.println("Setting up Sigfox (RC1 - Europe)...");
+  // lsmClient.setupSigfox(LsmRCChannel::RC1);
 
   // 3. Join the Network
   Serial.println("Joining network...");
@@ -81,7 +90,8 @@ void loop()
     Serial.println("\nSending 'Hello' payload...");
 
     // 4. Send Data - The Client automatically routes to LoRaWAN or Sigfox!
-    bool success = lsmClient.sendString("Hello", false); // false = unconfirmed/no downlink
+    bool success = lsmClient.sendString("Hello", true, 33, true, 4); // Request ACK, use port 33, enable retries with max 3 attempts
+    vTaskDelay(pdMS_TO_TICKS(200));                                  // Short delay to allow events to process
 
     if (success) {
       Serial.println("Payload sent successfully!");
