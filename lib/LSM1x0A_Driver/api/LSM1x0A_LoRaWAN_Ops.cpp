@@ -1,7 +1,6 @@
 #include "../LSM1x0A_Controller.h"
 #include "esp_timer.h"
 
-
 // =========================================================================
 // NETWORK LORAWAN OPERATIONS (JOIN, SEND, LINKCHECK)
 // =========================================================================
@@ -28,7 +27,7 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
     LSM_LOG_ERROR("LORA", "Failed to dispatch Join request.");
     return false;
   }
-  
+
   LSM_LOG_INFO("LORA", "Join request dispatched successfully.");
 
   // Now wait asynchronously for the URC event
@@ -38,6 +37,7 @@ bool LSM1x0A_LoRaWAN::join(LsmJoinMode joinMode, uint32_t timeoutMs)
     if (_pendingChannelMask) {
       setChannelMask(_cachedBand, _cachedSubBandMask);
     }
+    vTaskDelay(pdMS_TO_TICKS(500));
     LSM_LOG_INFO("LORA", "Join SUCCESS.");
     return true; // Complete success
   }

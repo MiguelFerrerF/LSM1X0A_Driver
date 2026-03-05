@@ -35,6 +35,7 @@ public:
   /**
    * @brief Sets the LoRaWAN Device EUI (DevEUI).
    * @param devEui A 16-character hex string representing the 8-byte Device EUI.
+   *               Can be formatted with or without colons (e.g., "00112233..." or "00:11:22:33...").
    * @return true if the command was accepted by the hardware, false otherwise.
    */
   bool setDevEUI(const char* devEui);
@@ -42,6 +43,7 @@ public:
   /**
    * @brief Sets the LoRaWAN Application EUI (JoinEUI).
    * @param appEui A 16-character hex string representing the 8-byte Application EUI.
+   *               Can be formatted with or without colons.
    * @return true if successful.
    */
   bool setAppEUI(const char* appEui);
@@ -49,6 +51,7 @@ public:
   /**
    * @brief Sets the LoRaWAN Application Key (AppKey).
    * @param appKey A 32-character hex string representing the 16-byte AppKey.
+   *               Can be formatted with or without colons.
    * @return true if successful.
    */
   bool setAppKey(const char* appKey);
@@ -56,6 +59,7 @@ public:
   /**
    * @brief Sets the LoRaWAN Network Key (NwkKey).
    * @param nwkKey A 32-character hex string representing the 16-byte NwkKey.
+   *               Can be formatted with or without colons.
    * @return true if successful.
    */
   bool setNwkKey(const char* nwkKey);
@@ -63,6 +67,7 @@ public:
   /**
    * @brief Sets the LoRaWAN Device Address (DevAddr) for ABP mode.
    * @param devAddr An 8-character hex string representing the 4-byte DevAddr.
+   *                Can be formatted with or without colons.
    * @return true if successful.
    */
   bool setDevAddr(const char* devAddr);
@@ -70,6 +75,7 @@ public:
   /**
    * @brief Sets the Application Session Key (AppSKey) for ABP mode.
    * @param appSKey A 32-character hex string representing the 16-byte AppSKey.
+   *                Can be formatted with or without colons.
    * @return true if successful.
    */
   bool setAppSKey(const char* appSKey);
@@ -77,6 +83,7 @@ public:
   /**
    * @brief Sets the Network Session Key (NwkSKey) for ABP mode.
    * @param nwkSKey A 32-character hex string representing the 16-byte NwkSKey.
+   *                Can be formatted with or without colons.
    * @return true if successful.
    */
   bool setNwkSKey(const char* nwkSKey);
