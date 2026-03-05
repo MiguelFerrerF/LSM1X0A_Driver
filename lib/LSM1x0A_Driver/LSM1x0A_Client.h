@@ -17,6 +17,14 @@
  * an ultra-simplified interface for setting up and sending data via LoRaWAN or Sigfox,
  * managing all the required initialization, recovery, and synchronization routines internally.
  */
+/**
+ * @brief Downlink callback definition.
+ * @param port Application port (for LoRaWAN).
+ * @param payload Binary payload received.
+ * @param size Size in bytes.
+ */
+typedef void (*LsmDownlinkCallback)(uint8_t port, const uint8_t* payload, size_t size);
+
 class LSM1x0A_Client
 {
 public:
@@ -60,7 +68,8 @@ public:
    * @param devClass Device Class (default CLASS_A).
    * @return true if all parameters were set successfully.
    */
-  bool setupLoRaWAN_OTAA(LsmBand band, const char* appEui, const char* appKey, LsmClass devClass = LsmClass::CLASS_A);
+  bool setupLoRaWAN_OTAA(LsmBand band = LsmBand::BAND_UNKNOWN, const char* appEui = nullptr, const char* appKey = nullptr,
+                         LsmClass devClass = LsmClass::CLASS_A);
 
   /**
    * @brief Configures the module for LoRaWAN using ABP (Activation By Personalization).
@@ -138,6 +147,12 @@ public:
   int getBatteryVoltage();
 
   /**
+   * @brief Configures the callback for receiving downlinks (RX_DATA).
+   * @param callback Function called when downlink data is received.
+   */
+  void setDownlinkCallback(LsmDownlinkCallback callback);
+
+  /**
    * @brief Gets the detected hardware module type.
    * @return LsmModuleType enum.
    */
@@ -173,6 +188,9 @@ private:
   LSM1x0A_Controller* _controller;
   LsmMode             _configuredMode;
   bool                _abpConfigured;
+
+  LsmDownlinkCallback _downlinkCallback = nullptr;
+  static void _onRxData(void* ctx, const char* payload);
 
   // Internal helper to abstract string formatting
   bool _charsToBytes(const char* hexString, uint8_t* outputBuffer, size_t maxLen);

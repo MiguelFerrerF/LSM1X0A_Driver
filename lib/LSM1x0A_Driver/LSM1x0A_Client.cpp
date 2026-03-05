@@ -270,3 +270,39 @@ bool LSM1x0A_Client::_charsToBytes(const char* hexString, uint8_t* outputBuffer,
   }
   return true;
 }
+
+void LSM1x0A_Client::setDownlinkCallback(LsmDownlinkCallback callback)
+{
+  _downlinkCallback = callback;
+  if (_downlinkCallback) {
+    _controller->setRxCallback(_onRxData, this);
+  } else {
+    _controller->setRxCallback(nullptr, nullptr);
+  }
+}
+
+void LSM1x0A_Client::_onRxData(void* ctx, const char* payload)
+{
+  LSM1x0A_Client* self = static_cast<LSM1x0A_Client*>(ctx);
+  if (!self || !self->_downlinkCallback || !payload) return;
+
+  char temp[256];
+  strncpy(temp, payload, sizeof(temp) - 1);
+  temp[sizeof(temp) - 1] = '\0';
+
+  char* portStr = strtok(temp, ":");
+  char* sizeStr = strtok(NULL, ":");
+  char* dataStr = strtok(NULL, ":");
+
+  if (!portStr || !sizeStr || !dataStr) return;
+
+  uint8_t port = (uint8_t)strtol(portStr, NULL, 10);
+  size_t size = (size_t)strtol(sizeStr, NULL, 16);
+
+  uint8_t binPayload[128];
+  if (size > sizeof(binPayload)) size = sizeof(binPayload);
+
+  if (self->_charsToBytes(dataStr, binPayload, size)) {
+    self->_downlinkCallback(port, binPayload, size);
+  }
+}

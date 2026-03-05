@@ -247,6 +247,12 @@ void LSM1x0A_Controller::setLogCallback(LsmLogCallback callback, LsmLogLevel run
   LSM_LOG_DEBUG("CTRL", "Logger callback registered, level: %d", (int)runtimeLevel);
 }
 
+void LSM1x0A_Controller::setRxCallback(LsmRxCallback callback, void* ctx)
+{
+  _rxCallback = callback;
+  _rxCtx      = ctx;
+}
+
 bool LSM1x0A_Controller::softwareReset()
 {
   if (!_initialized || !_parser)
@@ -382,6 +388,9 @@ void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
     if (_syncEventGroup)
       xEventGroupSetBits(_syncEventGroup, LSM_EVT_RX_DATA);
     lorawan.setJoined(true);
+    if (_rxCallback) {
+      _rxCallback(_rxCtx, payload);
+    }
   }
   else if (strcmp(type, LsmEvent::RX_META) == 0) {
     uint32_t bitsToSet = LSM_EVT_TX_SUCCESS;

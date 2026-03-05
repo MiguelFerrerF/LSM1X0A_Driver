@@ -28,6 +28,18 @@ void globalLogCallback(LsmLogLevel level, const char* component, const char* mes
   Serial.printf("[%s][%s] %s\n", levelStr, component, message);
 }
 
+void myRxCallback(uint8_t port, const uint8_t* payload, size_t size)
+{
+  Serial.printf("\n--- DOWNLINK RECEIVED ---\n");
+  Serial.printf("Port: %d\n", port);
+  Serial.printf("Size: %d\n", size);
+  Serial.print("Data (Hex): ");
+  for (size_t i = 0; i < size; i++) {
+    Serial.printf("%02X ", payload[i]);
+  }
+  Serial.println("\n-------------------------");
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -42,6 +54,8 @@ void setup()
     }
   }
   Serial.println("Module detected and responding.");
+
+  lsmClient.setDownlinkCallback(myRxCallback);
 
   // Get some Info
   char version[32];

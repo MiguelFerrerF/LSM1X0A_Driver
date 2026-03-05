@@ -31,6 +31,8 @@
  * communication, managing event callbacks, and sending general commands
  * obtaining their responses easily.
  */
+typedef void (*LsmRxCallback)(void* ctx, const char* payload);
+
 class LSM1x0A_Controller
 {
 public:
@@ -173,6 +175,13 @@ public:
    */
   void setLogCallback(LsmLogCallback callback, LsmLogLevel runtimeLevel = LsmLogLevel::VERBOSE);
 
+  /**
+   * @brief Configures a dedicated callback for receiving downlink data (RX_DATA).
+   * @param callback Function to be called when payload is received.
+   * @param ctx Optional context pointer passed to the callback.
+   */
+  void setRxCallback(LsmRxCallback callback, void* ctx = nullptr);
+
   // =========================================================================
   // NATIVE STATE AND SYNCHRONIZATION
   // =========================================================================
@@ -281,6 +290,9 @@ private:
   LSM1x0A_AtParser* _parser      = nullptr;
   bool              _initialized = false;
   LsmMode           _currentMode = LsmMode::LORAWAN;
+
+  LsmRxCallback _rxCallback = nullptr;
+  void*         _rxCtx      = nullptr;
 
   int _resetPin   = LSM1X0A_RESET_PIN;
   int _maxRetries = DEFAULT_MAX_RETRIES;
