@@ -102,36 +102,50 @@ bool LSM1x0A_Client::setupSigfox(LsmRCChannel rcZone)
 
 bool LSM1x0A_Client::joinNetwork()
 {
+  _joinStatus = LsmJoinStatus::JOIN_IN_PROCESS;
+
   if (_configuredMode == LsmMode::LORAWAN) {
     if (_abpConfigured) {
-      return _controller->lorawan.join(LsmJoinMode::ABP);
+      if (_controller->lorawan.join(LsmJoinMode::ABP)) {
+        _joinStatus = LsmJoinStatus::JOINED;
+        return true;
+      }
     }
     else {
       for (uint8_t i = 0; i < 5; i++) {
-        if (_controller->lorawan.join(LsmJoinMode::OTAA))
+        if (_controller->lorawan.join(LsmJoinMode::OTAA)) {
+          _joinStatus = LsmJoinStatus::JOINED;
           return true;
+        }
         vTaskDelay(pdMS_TO_TICKS(1000));
       }
-      return false;
     }
   }
   else if (_configuredMode == LsmMode::SIGFOX) {
     for (uint8_t i = 0; i < 5; i++) {
-      if (_controller->sigfox.join())
+      if (_controller->sigfox.join()) {
+        _joinStatus = LsmJoinStatus::JOINED;
         return true;
+      }
       vTaskDelay(pdMS_TO_TICKS(1000));
     }
-    return false;
   }
+  
+  _joinStatus = LsmJoinStatus::NOT_JOINED;
   return false;
 }
 
-bool LSM1x0A_Client::isJoined()
+LsmJoinStatus LSM1x0A_Client::isJoined()
 {
-  if (_configuredMode == LsmMode::LORAWAN) {
-    return _controller->lorawan.isJoined();
+  if (_joinStatus == LsmJoinStatus::JOIN_IN_PROCESS) {
+    return LsmJoinStatus::JOIN_IN_PROCESS;
   }
-  return true; // Sigfox is considered "ready/joined" if configured
+
+  if (_configuredMode == LsmMode::LORAWAN) {
+    return _controller->lorawan.isJoined() ? LsmJoinStatus::JOINED : LsmJoinStatus::NOT_JOINED;
+  }
+  
+  return LsmJoinStatus::JOINED; // Sigfox is considered "ready/joined" if configured and not explicitly joining
 }
 
 bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool requestAck, uint8_t port, bool enableRetries, uint8_t maxRetries)

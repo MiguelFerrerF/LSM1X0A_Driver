@@ -112,9 +112,9 @@ public:
 
   /**
    * @brief Checks if the module is successfully joined to the LoRaWAN network.
-   * @return true if joined, false otherwise. (Always true for Sigfox once configured).
+   * @return LsmJoinStatus enum: NOT_JOINED (0), JOINED (1), JOIN_IN_PROCESS (2).
    */
-  bool isJoined();
+  LsmJoinStatus isJoined();
 
   // =========================================================================
   // DATA TRANSMISSION
@@ -197,6 +197,7 @@ private:
   LSM1x0A_Controller* _controller;
   LsmMode             _configuredMode;
   bool                _abpConfigured;
+  LsmJoinStatus       _joinStatus = LsmJoinStatus::NOT_JOINED;
 
   LsmDownlinkCallback _downlinkCallback = nullptr;
   static void         _onRxData(void* ctx, const char* payload);
