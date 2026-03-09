@@ -2,6 +2,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+// Local helper to parse a hex string with optional separators (like ':') into a byte array.
+static size_t parseHexStringToArray(const char* hexString, uint8_t* outArray, size_t arraySize)
+{
+  if (!hexString || !outArray || arraySize == 0)
+    return 0;
+
+  size_t count = 0;
+  const char* ptr = hexString;
+  while (*ptr && count < arraySize) {
+    if (*ptr == ':' || *ptr == '-' || *ptr == ' ') {
+      ptr++;
+      continue;
+    }
+    if (isxdigit((unsigned char)ptr[0]) && isxdigit((unsigned char)ptr[1])) {
+      char byteStr[3] = {ptr[0], ptr[1], '\0'};
+      outArray[count++] = (uint8_t)strtol(byteStr, NULL, 16);
+      ptr += 2;
+    } else {
+      break; 
+    }
+  }
+  return count;
+}
 
 // Local helper to extract a string after a certain prefix in a buffer, or if no prefix just copy it trimming newlines.
 static void extractString(const char* response, char* outBuffer, size_t size)
@@ -69,6 +94,15 @@ bool LSM1x0A_LoRaWAN::getDevEUI(char* outBuffer, size_t size)
   return false;
 }
 
+bool LSM1x0A_LoRaWAN::getDevEUI(uint8_t* outArray, size_t arraySize)
+{
+  char rx[64] = {0};
+  if (getDevEUI(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
+  }
+  return false;
+}
+
 bool LSM1x0A_LoRaWAN::getAppEUI(char* outBuffer, size_t size)
 {
   char rx[64]  = {0};
@@ -77,6 +111,15 @@ bool LSM1x0A_LoRaWAN::getAppEUI(char* outBuffer, size_t size)
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
     extractString(rx, outBuffer, size);
     return true;
+  }
+  return false;
+}
+
+bool LSM1x0A_LoRaWAN::getAppEUI(uint8_t* outArray, size_t arraySize)
+{
+  char rx[64] = {0};
+  if (getAppEUI(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
   }
   return false;
 }
@@ -93,6 +136,15 @@ bool LSM1x0A_LoRaWAN::getAppKey(char* outBuffer, size_t size)
   return false;
 }
 
+bool LSM1x0A_LoRaWAN::getAppKey(uint8_t* outArray, size_t arraySize)
+{
+  char rx[128] = {0};
+  if (getAppKey(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
+  }
+  return false;
+}
+
 bool LSM1x0A_LoRaWAN::getNwkKey(char* outBuffer, size_t size)
 {
   char rx[128] = {0};
@@ -101,6 +153,15 @@ bool LSM1x0A_LoRaWAN::getNwkKey(char* outBuffer, size_t size)
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
     extractString(rx, outBuffer, size);
     return true;
+  }
+  return false;
+}
+
+bool LSM1x0A_LoRaWAN::getNwkKey(uint8_t* outArray, size_t arraySize)
+{
+  char rx[128] = {0};
+  if (getNwkKey(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
   }
   return false;
 }
@@ -117,6 +178,15 @@ bool LSM1x0A_LoRaWAN::getDevAddr(char* outBuffer, size_t size)
   return false;
 }
 
+bool LSM1x0A_LoRaWAN::getDevAddr(uint8_t* outArray, size_t arraySize)
+{
+  char rx[64] = {0};
+  if (getDevAddr(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
+  }
+  return false;
+}
+
 bool LSM1x0A_LoRaWAN::getAppSKey(char* outBuffer, size_t size)
 {
   char rx[128] = {0};
@@ -129,6 +199,15 @@ bool LSM1x0A_LoRaWAN::getAppSKey(char* outBuffer, size_t size)
   return false;
 }
 
+bool LSM1x0A_LoRaWAN::getAppSKey(uint8_t* outArray, size_t arraySize)
+{
+  char rx[128] = {0};
+  if (getAppSKey(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
+  }
+  return false;
+}
+
 bool LSM1x0A_LoRaWAN::getNwkSKey(char* outBuffer, size_t size)
 {
   char rx[128] = {0};
@@ -137,6 +216,15 @@ bool LSM1x0A_LoRaWAN::getNwkSKey(char* outBuffer, size_t size)
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
     extractString(rx, outBuffer, size);
     return true;
+  }
+  return false;
+}
+
+bool LSM1x0A_LoRaWAN::getNwkSKey(uint8_t* outArray, size_t arraySize)
+{
+  char rx[128] = {0};
+  if (getNwkSKey(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
   }
   return false;
 }

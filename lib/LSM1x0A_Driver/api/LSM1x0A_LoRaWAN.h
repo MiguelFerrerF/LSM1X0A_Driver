@@ -412,12 +412,28 @@ public:
   bool getDevEUI(char* outBuffer, size_t size);
 
   /**
+   * @brief Retrieves the Device EUI and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 8 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getDevEUI(uint8_t* outArray, size_t arraySize);
+
+  /**
    * @brief Retrieves the Application EUI.
    * @param outBuffer Target character buffer.
    * @param size Maximum buffer size.
    * @return true if successfully extracted.
    */
   bool getAppEUI(char* outBuffer, size_t size);
+
+  /**
+   * @brief Retrieves the Application EUI and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 8 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getAppEUI(uint8_t* outArray, size_t arraySize);
 
   /**
    * @brief Retrieves the Application Key.
@@ -428,12 +444,28 @@ public:
   bool getAppKey(char* outBuffer, size_t size);
 
   /**
+   * @brief Retrieves the Application Key and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 16 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getAppKey(uint8_t* outArray, size_t arraySize);
+
+  /**
    * @brief Retrieves the Network Key.
    * @param outBuffer Target character buffer.
    * @param size Maximum buffer size.
    * @return true if successfully extracted.
    */
   bool getNwkKey(char* outBuffer, size_t size);
+
+  /**
+   * @brief Retrieves the Network Key and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 16 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getNwkKey(uint8_t* outArray, size_t arraySize);
 
   /**
    * @brief Retrieves the assigned DevAddr.
@@ -444,12 +476,29 @@ public:
   bool getDevAddr(char* outBuffer, size_t size);
 
   /**
+   * @brief Retrieves the assigned DevAddr and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 4 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getDevAddr(uint8_t* outArray, size_t arraySize);
+
+  /**
    * @brief Retrieves the Application Session Key (ABP).
    * @param outBuffer Target character buffer.
    * @param size Maximum buffer size.
    * @return true if successfully extracted.
    */
   bool getAppSKey(char* outBuffer, size_t size);
+
+  /**
+   * @brief Retrieves the Application Session Key (ABP) and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 16 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getAppSKey(uint8_t* outArray, size_t arraySize);
+
   /**
    * @brief Retrieves the Network Session Key.
    * @param outBuffer Target character buffer.
@@ -457,6 +506,14 @@ public:
    * @return true if successfully extracted.
    */
   bool getNwkSKey(char* outBuffer, size_t size);
+
+  /**
+   * @brief Retrieves the Network Session Key and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 16 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getNwkSKey(uint8_t* outArray, size_t arraySize);
 
   /**
    * @brief Retrieves the current Network ID.
