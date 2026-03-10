@@ -30,7 +30,7 @@ bool LSM1x0A_Client::begin(LsmLogCallback logCb, LsmLogLevel runtimeLevel)
   }
 
   // Attempt to wake up and sync
-  return _controller->wakeUp();
+  return checkConnection();
 }
 
 bool LSM1x0A_Client::checkConnection()
@@ -104,7 +104,6 @@ bool LSM1x0A_Client::setupSigfox(LsmRCChannel rcZone)
   return true;
 }
 
-
 bool LSM1x0A_Client::joinNetwork()
 {
   _joinStatus = LsmJoinStatus::JOIN_IN_PROCESS;
@@ -135,7 +134,7 @@ bool LSM1x0A_Client::joinNetwork()
       vTaskDelay(pdMS_TO_TICKS(1000));
     }
   }
-  
+
   _joinStatus = LsmJoinStatus::NOT_JOINED;
   return false;
 }
@@ -149,7 +148,7 @@ LsmJoinStatus LSM1x0A_Client::isJoined()
   if (_configuredMode == LsmMode::LORAWAN) {
     return _controller->lorawan.isJoined() ? LsmJoinStatus::JOINED : LsmJoinStatus::NOT_JOINED;
   }
-  
+
   return LsmJoinStatus::JOINED; // Sigfox is considered "ready/joined" if configured and not explicitly joining
 }
 
@@ -235,7 +234,7 @@ bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port,
       success = _controller->sigfox.sendString(text, requestAck, 2);
       if (success)
         return true;
-      if (!success && i < attempts - 1) {
+      if (!success && i < attempts - 1) {       
         vTaskDelay(pdMS_TO_TICKS(1000));
       }
     }

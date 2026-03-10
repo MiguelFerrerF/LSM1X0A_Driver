@@ -280,14 +280,11 @@ bool LSM1x0A_Sigfox::isValidHex(const char* str, size_t maxLen)
   size_t length = 0;
   while (*str && length < maxLen) {
     if (!((*str >= '0' && *str <= '9') || (*str >= 'A' && *str <= 'F') || (*str >= 'a' && *str <= 'f'))) {
+      LSM_LOG_ERROR("SIGFOX", "Invalid hex character detected: '%c' at position %zu", *str, length);
       return false; // Non-hexadecimal character detected
     }
     str++;
     length++;
-  }
-
-  if (length >= maxLen && *str != '\0') {
-    return false;
   }
   return true;
 }
@@ -302,6 +299,7 @@ bool LSM1x0A_Sigfox::isValidAscii(const char* str, size_t maxLen)
   while (*str && length < maxLen) {
     // Acceptable range of printable ASCII characters (including space)
     if (*str < 32 || *str > 126) {
+      LSM_LOG_ERROR("SIGFOX", "Invalid ASCII character detected: 0x%02X at position %zu", static_cast<unsigned char>(*str), length);
       return false; // Control or non-standard character detected
     }
     str++;
@@ -309,6 +307,7 @@ bool LSM1x0A_Sigfox::isValidAscii(const char* str, size_t maxLen)
   }
 
   if (length >= maxLen && *str != '\0') {
+    LSM_LOG_ERROR("SIGFOX", "Input string exceeds maximum length of %zu characters", maxLen);
     return false;
   }
   return true;

@@ -147,8 +147,8 @@ enum class LsmJoinMode
 /** @brief Network Join Status */
 enum class LsmJoinStatus
 {
-  NOT_JOINED = 0,
-  JOINED = 1,
+  NOT_JOINED      = 0,
+  JOINED          = 1,
   JOIN_IN_PROCESS = 2
 };
 
