@@ -100,7 +100,7 @@ void setup()
 
 void loop()
 {
-  if (lsmClient.isJoined()) {
+  if (lsmClient.isJoined() == LsmJoinStatus::JOINED) {
     Serial.println("\nSending 'Hello' payload...");
 
     // 4. Send Data - The Client automatically routes to LoRaWAN or Sigfox!

@@ -39,12 +39,28 @@ public:
   bool getDeviceID(char* outBuffer, size_t maxLen);
 
   /**
+   * @brief Reads the Sigfox Device ID and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 4 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getDeviceID(uint8_t* outArray, size_t arraySize);
+
+  /**
    * @brief Reads the Sigfox Initial Porting Authorization Code (PAC).
    * @param outBuffer A character array to hold the PAC string.
    * @param maxLen Maximum size of the buffer (should be at least 20).
    * @return true if successfully extracted.
    */
   bool getInitialPAC(char* outBuffer, size_t maxLen);
+
+  /**
+   * @brief Reads the Sigfox Initial Porting Authorization Code (PAC) and parses it into a byte array.
+   * @param outArray Target byte array.
+   * @param arraySize Maximum array size (expected 8 bytes).
+   * @return true if successfully extracted and parsed.
+   */
+  bool getInitialPAC(uint8_t* outArray, size_t arraySize);
 
   /**
    * @brief Checks the currently active Regional Macro-Channel (RC).

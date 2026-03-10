@@ -2,6 +2,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+// Local helper to parse a hex string with optional separators (like ':') into a byte array.
+static size_t parseHexStringToArray(const char* hexString, uint8_t* outArray, size_t arraySize)
+{
+  if (!hexString || !outArray || arraySize == 0)
+    return 0;
+
+  size_t count = 0;
+  const char* ptr = hexString;
+  while (*ptr && count < arraySize) {
+    if (*ptr == ':' || *ptr == '-' || *ptr == ' ') {
+      ptr++;
+      continue;
+    }
+    if (isxdigit((unsigned char)ptr[0]) && isxdigit((unsigned char)ptr[1])) {
+      char byteStr[3] = {ptr[0], ptr[1], '\0'};
+      outArray[count++] = (uint8_t)strtol(byteStr, NULL, 16);
+      ptr += 2;
+    } else {
+      break; 
+    }
+  }
+  return count;
+}
 
 bool LSM1x0A_Sigfox::getDeviceID(char* outBuffer, size_t maxLen)
 {
@@ -28,6 +53,15 @@ bool LSM1x0A_Sigfox::getDeviceID(char* outBuffer, size_t maxLen)
   return false;
 }
 
+bool LSM1x0A_Sigfox::getDeviceID(uint8_t* outArray, size_t arraySize)
+{
+  char rx[32] = {0};
+  if (getDeviceID(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
+  }
+  return false;
+}
+
 bool LSM1x0A_Sigfox::getInitialPAC(char* outBuffer, size_t maxLen)
 {
   if (!outBuffer || maxLen < 1)
@@ -49,6 +83,15 @@ bool LSM1x0A_Sigfox::getInitialPAC(char* outBuffer, size_t maxLen)
     strncpy(outBuffer, _cachedPAC, maxLen - 1);
     outBuffer[maxLen - 1] = '\0';
     return true;
+  }
+  return false;
+}
+
+bool LSM1x0A_Sigfox::getInitialPAC(uint8_t* outArray, size_t arraySize)
+{
+  char rx[32] = {0};
+  if (getInitialPAC(rx, sizeof(rx))) {
+    return parseHexStringToArray(rx, outArray, arraySize) > 0;
   }
   return false;
 }
