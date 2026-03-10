@@ -96,7 +96,7 @@ public:
    * @param rcZone The Radio Configuration Zone (e.g. LsmRCChannel::RC1 for Europe).
    * @return true if configuration was successful.
    */
-  bool setupSigfox(LsmRCChannel rcZone);
+  bool setupSigfox(LsmRCChannel rcZone = LsmRCChannel::RC_UNKNOWN);
 
   // =========================================================================
   // NETWORK EXECUTION

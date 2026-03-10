@@ -97,8 +97,13 @@ bool LSM1x0A_Client::setupSigfox(LsmRCChannel rcZone)
   if (!_controller->setMode(LsmMode::SIGFOX))
     return false;
 
-  return _controller->sigfox.setRcChannel(rcZone);
+  if (rcZone != LsmRCChannel::RC_UNKNOWN) {
+    return _controller->sigfox.setRcChannel(rcZone);
+  }
+
+  return true;
 }
+
 
 bool LSM1x0A_Client::joinNetwork()
 {
