@@ -161,6 +161,14 @@ bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool req
   bool    success  = false;
 
   if (_configuredMode == LsmMode::LORAWAN) {
+    if (isJoined() == LsmJoinStatus::NOT_JOINED) {
+      LSM_LOG_WARN("CLIENT", "Not joined to LoRaWAN, attempting auto-reconnect...");
+      if (!joinNetwork()) {
+        LSM_LOG_ERROR("CLIENT", "Auto-reconnect failed, discarding payload.");
+        return false;
+      }
+    }
+
     // Convert to hex string
     size_t safeLength = length;
     if (safeLength > 242)
@@ -207,6 +215,14 @@ bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port,
   bool    success  = false;
 
   if (_configuredMode == LsmMode::LORAWAN) {
+    if (isJoined() == LsmJoinStatus::NOT_JOINED) {
+      LSM_LOG_WARN("CLIENT", "Not joined to LoRaWAN, attempting auto-reconnect...");
+      if (!joinNetwork()) {
+        LSM_LOG_ERROR("CLIENT", "Auto-reconnect failed, discarding string.");
+        return false;
+      }
+    }
+
     size_t length = strlen(text);
     if (length > 242)
       length = 242;

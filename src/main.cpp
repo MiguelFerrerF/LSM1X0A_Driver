@@ -1,9 +1,19 @@
-#include "LSM1x0A_Client.h"
+#include "LSM1x0A_Controller.h"
 #include <Arduino.h>
+#include <NeoPixelAnimator.h>
+#include <NeoPixelBus.h>
 
-LSM1x0A_Client lsmClient;
+const uint16_t PixelCount   = 10;   // make sure to set this to the number of pixels in your strip
+const uint16_t PixelPin     = 4;    // make sure to set this to the correct pin, ignored for Esp8266
+const uint16_t AnimCount    = 1;    // we only need one
+const uint16_t TailLength   = 5;    // length of the tail, must be shorter than PixelCount
+const float    MaxLightness = 0.4f; // max lightness at the head of the tail (0.5f is full bright)
 
-void globalLogCallback(LsmLogLevel level, const char* component, const char* message)
+NeoGamma<NeoGammaTableMethod>                colorGamma; // for any fade animations, best to correct gamma
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
+NeoPixelAnimator                             animations(AnimCount);
+
+void verboseEventCallback(LsmLogLevel level, const char* component, const char* message)
 {
   const char* levelStr = "UNK";
   switch (level) {
@@ -28,98 +38,94 @@ void globalLogCallback(LsmLogLevel level, const char* component, const char* mes
   Serial.printf("[%s][%s] %s\n", levelStr, component, message);
 }
 
-void myRxCallback(uint8_t port, const uint8_t* payload, size_t size)
+void LoopAnimUpdate(const AnimationParam& param)
 {
-  Serial.printf("\n--- DOWNLINK RECEIVED ---\n");
-  Serial.printf("Port: %d\n", port);
-  Serial.printf("Size: %d\n", size);
-  Serial.print("Data (Hex): ");
-  for (size_t i = 0; i < size; i++) {
-    Serial.printf("%02X ", payload[i]);
+  // wait for this animation to complete,
+  // we are using it as a timer of sorts
+  if (param.state == AnimationState_Completed) {
+    // done, time to restart this position tracking animation/timer
+    animations.RestartAnimation(param.index);
+
+    // rotate the complete strip one pixel to the right on every update
+    strip.RotateRight(1);
   }
-  Serial.println("\n-------------------------");
+}
+
+void DrawTailPixels(const RgbColor& baseColor)
+{
+  // Transición de brillo usando el color base
+  for (uint16_t index = 0; index < strip.PixelCount() && index <= TailLength; index++) {
+    float lightness = index * MaxLightness / TailLength;
+    // Escalar el color base según lightness
+    RgbColor color(uint8_t(baseColor.R * lightness), uint8_t(baseColor.G * lightness), uint8_t(baseColor.B * lightness));
+    strip.SetPixelColor(index, colorGamma.Correct(color));
+  }
+}
+
+void setupLed(bool success)
+{
+  strip.Begin();
+  strip.Show();
+
+  // Color base según estado
+  RgbColor baseColor = success ? RgbColor(0, 255, 0) : RgbColor(255, 0, 0);
+  strip.ClearTo(baseColor);
+
+  DrawTailPixels(baseColor);
+  animations.StartAnimation(0, 100, LoopAnimUpdate);
 }
 
 void setup()
 {
   Serial.begin(115200);
   delay(2000);
-  Serial.println("\n--- LSM1x0A Client High-Level Example ---");
+  Serial.println("\n--- Test: RX, TX, RESET PIN ---");
+  LSM1x0A_Controller* controller = new LSM1x0A_Controller();
+  controller->setLogCallback(verboseEventCallback, LsmLogLevel::VERBOSE);
+  controller->begin();
 
-  // 1. Initialize the client (starts Uart and checks connection)
-  if (!lsmClient.begin(globalLogCallback, LsmLogLevel::DEBUG)) {
-    Serial.println("Error: Could not communicate with LSM1x0A module.");
-    while (true) {
-      delay(1000);
+  for (int i = 0; i < 5; i++) {
+    if (controller->wakeUp()) {
+      Serial.println("[APP] WakeUp OK.");
+      break;
     }
+    else {
+      Serial.println("[APP] WakeUp falló.");
+
+      setupLed(false);
+      return;
+    }
+    delay(1000);
   }
-  Serial.println("Module detected and responding.");
 
-  lsmClient.setDownlinkCallback(myRxCallback);
-
-  // Get some Info
-  char version[32];
-  if (lsmClient.getFirmwareVersion(version, sizeof(version))) {
-    Serial.printf("Firmware Version: %s\n", version);
-  }
-  Serial.printf("Battery: %d mV\n", lsmClient.getBatteryVoltage());
-
-  // Get somo LoRaWAN info
-  char devEui[32];
-  if (lsmClient.getController().lorawan.getDevEUI(devEui, sizeof(devEui)))
-    Serial.printf("DevEUI: %s\n", devEui);
-  char appEui[32];
-  if (lsmClient.getController().lorawan.getAppEUI(appEui, sizeof(appEui)))
-    Serial.printf("AppEUI: %s\n", appEui);
-  char appKey[64];
-  if (lsmClient.getController().lorawan.getAppKey(appKey, sizeof(appKey)))
-    Serial.printf("AppKey: %s\n", appKey);
-  char nwkSKey[64];
-  if (lsmClient.getController().lorawan.getNwkSKey(nwkSKey, sizeof(nwkSKey)))
-    Serial.printf("NwkSKey: %s\n", nwkSKey);
-
-  // 2. Setup Network
-  // --- For LoRaWAN OTAA ---
-  Serial.println("Setting up LoRaWAN OTAA (EU868)...");
-  lsmClient.setupLoRaWAN_OTAA(LsmBand::EU868, appEui, appKey);
-
-  // --- For Sigfox ---
-  // Serial.println("Setting up Sigfox (RC1 - Europe)...");
-  // lsmClient.setupSigfox(LsmRCChannel::RC1);
-
-  // 3. Join the Network
-  Serial.println("Joining network...");
-  if (lsmClient.joinNetwork()) {
-    Serial.println("Join procedure successful!");
+  // Test software reset
+  Serial.println("\n[APP] Probando Software Reset...");
+  if (controller->softwareReset()) {
+    Serial.println("[APP] Software Reset OK.");
   }
   else {
-    Serial.println("Join failed or timed out.");
-    // For Sigfox this might just mean setup failed, but usually returns true
+    Serial.println("[APP] Software Reset falló.");
+    setupLed(false);
+    return;
   }
+
+  // Test hardware reset
+  Serial.printf("\n[APP] Probando Hardware Reset en GPIO %d...\n", 15);
+  if (controller->hardwareReset()) {
+    Serial.println("[APP] Hardware Reset OK.");
+  }
+  else {
+    Serial.println("[APP] Hardware Reset falló.");
+    setupLed(false);
+    return;
+  }
+
+  Serial.println("\n[APP] Todos los tests pasaron correctamente.");
+  setupLed(true);
 }
 
 void loop()
 {
-  if (lsmClient.isJoined() == LsmJoinStatus::JOINED) {
-    Serial.println("\nSending 'Hello' payload...");
-
-    // 4. Send Data - The Client automatically routes to LoRaWAN or Sigfox!
-    bool success = lsmClient.sendString("Hello", true, 33, true, 4); // Request ACK, use port 33, enable retries with max 3 attempts
-    vTaskDelay(pdMS_TO_TICKS(200));                                  // Short delay to allow events to process
-
-    if (success) {
-      Serial.println("Payload sent successfully!");
-      Serial.printf("Last RSSI: %d dBm\n", lsmClient.getLastRssi());
-    }
-    else {
-      Serial.println("Failed to send payload.");
-    }
-  }
-  else {
-    Serial.println("\nNot joined. Re-trying join in 10s...");
-    lsmClient.joinNetwork();
-  }
-
-  // Wait 30 seconds before next transmission
-  delay(30000);
+  animations.UpdateAnimations();
+  strip.Show();
 }
