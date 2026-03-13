@@ -154,8 +154,10 @@ LsmJoinStatus LSM1x0A_Client::isJoined()
 
 bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool requestAck, uint8_t port, bool enableRetries, uint8_t maxRetries)
 {
-  if (!payload || length == 0)
+  if (!payload || length == 0) {
+    LSM_LOG_ERROR("CLIENT", "Payload is null or empty");
     return false;
+  }
 
   uint8_t attempts = enableRetries ? (maxRetries + 1) : 1;
   bool    success  = false;
@@ -165,6 +167,7 @@ bool LSM1x0A_Client::sendPayload(const uint8_t* payload, size_t length, bool req
       LSM_LOG_WARN("CLIENT", "Not joined to LoRaWAN, attempting auto-reconnect...");
       if (!joinNetwork()) {
         LSM_LOG_ERROR("CLIENT", "Auto-reconnect failed, discarding payload.");
+        _controller->recoverModule(true);
         return false;
       }
     }
@@ -218,7 +221,8 @@ bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port,
     if (isJoined() == LsmJoinStatus::NOT_JOINED) {
       LSM_LOG_WARN("CLIENT", "Not joined to LoRaWAN, attempting auto-reconnect...");
       if (!joinNetwork()) {
-        LSM_LOG_ERROR("CLIENT", "Auto-reconnect failed, discarding string.");
+        LSM_LOG_ERROR("CLIENT", "Auto-reconnect failed, discarding payload.");
+        _controller->recoverModule(true);
         return false;
       }
     }
@@ -250,7 +254,7 @@ bool LSM1x0A_Client::sendString(const char* text, bool requestAck, uint8_t port,
       success = _controller->sigfox.sendString(text, requestAck, 2);
       if (success)
         return true;
-      if (!success && i < attempts - 1) {       
+      if (!success && i < attempts - 1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
       }
     }

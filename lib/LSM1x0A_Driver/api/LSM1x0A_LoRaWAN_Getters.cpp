@@ -1,8 +1,8 @@
 #include "../LSM1x0A_Controller.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 // Local helper to parse a hex string with optional separators (like ':') into a byte array.
 static size_t parseHexStringToArray(const char* hexString, uint8_t* outArray, size_t arraySize)
@@ -10,20 +10,20 @@ static size_t parseHexStringToArray(const char* hexString, uint8_t* outArray, si
   if (!hexString || !outArray || arraySize == 0)
     return 0;
 
-  size_t count = 0;
-  const char* ptr = hexString;
+  size_t      count = 0;
+  const char* ptr   = hexString;
   while (*ptr && count < arraySize) {
     if (*ptr == ':' || *ptr == '-' || *ptr == ' ') {
       ptr++;
       continue;
     }
     if (isxdigit((unsigned char)ptr[0]) && isxdigit((unsigned char)ptr[1])) {
-      char byteStr[3] = {ptr[0], ptr[1], '\0'};
+      char byteStr[3]   = {ptr[0], ptr[1], '\0'};
       outArray[count++] = (uint8_t)strtol(byteStr, NULL, 16);
       ptr += 2;
-    } else {
-      break; 
     }
+    else
+      break;
   }
   return count;
 }

@@ -127,9 +127,12 @@ public:
 
   /**
    * @brief Executes the recovery protocol. First Soft-Reset (ATZ), then Hard-Reset if there is a pin.
+   * Optionally, it can attempt to re-join the network after recovery if it detects that it was previously joined.
+   * @param joinAfterRecovery If true, the procedure will attempt to re-join the network if it detects that it was joined before the recovery. This is
+   * useful in cases where the module is unresponsive but we want to restore connectivity as soon as possible.
    * @return true if the module was recovered and Boot Alert received.
    */
-  bool recoverModule();
+  bool recoverModule(bool joinAfterRecovery = false);
 
   /**
    * @brief Synchronizes the internal RAM cache by reading the key operational parameters from the module's firmware.

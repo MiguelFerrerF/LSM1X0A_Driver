@@ -5,43 +5,39 @@
 // Helper function to format hex strings with colons (e.g. "0011223344556677" or "00:11:22:33:44:55:66:77" -> "00:11:22:33:44:55:66:77")
 static bool formatHexWithColons(const char* in, char* out, size_t outSize, size_t expectedBytes)
 {
-  if (!in || !out) return false;
+  if (!in || !out)
+    return false;
 
-  char cleanHex[64]; // max 32 bytes * 2 = 64
+  char   cleanHex[64]; // max 32 bytes * 2 = 64
   size_t cleanIdx = 0;
 
   for (size_t i = 0; in[i] != '\0'; ++i) {
-    if (in[i] == ':') continue;
+    if (in[i] == ':')
+      continue;
 
     // Check if valid hex char
-    if ((in[i] >= '0' && in[i] <= '9') ||
-        (in[i] >= 'a' && in[i] <= 'f') ||
-        (in[i] >= 'A' && in[i] <= 'F')) {
-      if (cleanIdx < sizeof(cleanHex)) {
+    if ((in[i] >= '0' && in[i] <= '9') || (in[i] >= 'a' && in[i] <= 'f') || (in[i] >= 'A' && in[i] <= 'F')) {
+      if (cleanIdx < sizeof(cleanHex))
         cleanHex[cleanIdx++] = in[i];
-      } else {
+      else
         return false; // Too large
-      }
-    } else {
-      return false; // Invalid hex character
     }
+    else
+      return false; // Invalid hex character
   }
 
   // Check if the total hex characters match the expected length
-  if (cleanIdx != expectedBytes * 2) {
+  if (cleanIdx != expectedBytes * 2)
     return false;
-  }
 
   size_t outIdx = 0;
   for (size_t i = 0; i < expectedBytes; ++i) {
-    if (outIdx + 3 > outSize) {
+    if (outIdx + 3 > outSize)
       return false;
-    }
     out[outIdx++] = cleanHex[i * 2];
     out[outIdx++] = cleanHex[i * 2 + 1];
-    if (i < expectedBytes - 1) {
+    if (i < expectedBytes - 1)
       out[outIdx++] = ':';
-    }
   }
   out[outIdx] = '\0';
   return true;
@@ -53,9 +49,8 @@ LSM1x0A_LoRaWAN::LSM1x0A_LoRaWAN(LSM1x0A_Controller* controller) : _controller(c
 
 bool LSM1x0A_LoRaWAN::setBaudrate(uint32_t baudrate)
 {
-  if (baudrate != 9600 && baudrate != 115200) {
+  if (baudrate != 9600 && baudrate != 115200) 
     return false;
-  }
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::BAUDRATE, baudrate);
   return _controller->sendCommand(cmd, 1000) == AtError::OK;
