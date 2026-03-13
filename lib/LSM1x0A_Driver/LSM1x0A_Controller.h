@@ -4,8 +4,8 @@
 #include "LSM1x0A_AtParser.h"
 #include "api/LSM1x0A_LoRaWAN.h"
 #include "api/LSM1x0A_Sigfox.h"
-#include "freertos/event_groups.h"
 #include "driver/gpio.h"
+#include "freertos/event_groups.h"
 
 // Definition of bits for the internal EventGroup synchronization
 #define LSM_EVT_JOIN_SUCCESS (1 << 0)

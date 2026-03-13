@@ -87,9 +87,15 @@ AtError LSM1x0A_Controller::sendCommand(const char* cmd, uint32_t timeoutMs, int
     if (err == AtError::OK)
       return err;
 
-    // Errors that indicate no point in retrying (bad syntax, etc)
-    if (err == AtError::PARAM_ERROR || err == AtError::TEST_PARAM_OVERFLOW || err == AtError::NO_NET_JOINED) {
+    // Errors that indicate no point in retrying (bad syntax, regulatory limits, etc)
+    if (err == AtError::PARAM_ERROR || err == AtError::TEST_PARAM_OVERFLOW || err == AtError::NO_NET_JOINED || err == AtError::DUTY_CYCLE_RESTRICT) {
       return err;
+    }
+
+    if (err == AtError::BUSY) {
+      LSM_LOG_WARN("CTRL", "Module is busy, retrying command (%d/%d)", i + 1, retries);
+      vTaskDelay(pdMS_TO_TICKS(5000)); // Wait longer for busy state
+      continue;
     }
 
     // If not the last attempt, make a brief pause
@@ -125,8 +131,14 @@ AtError LSM1x0A_Controller::sendCommandWithResponse(const char* cmd, char* outBu
     if (err == AtError::OK)
       return err;
 
-    if (err == AtError::PARAM_ERROR || err == AtError::TEST_PARAM_OVERFLOW || err == AtError::NO_NET_JOINED) {
+    if (err == AtError::PARAM_ERROR || err == AtError::TEST_PARAM_OVERFLOW || err == AtError::NO_NET_JOINED || err == AtError::DUTY_CYCLE_RESTRICT) {
       return err;
+    }
+
+    if (err == AtError::BUSY) {
+      LSM_LOG_WARN("CTRL", "Module is busy, retrying command (%d/%d)", i + 1, retries);
+      vTaskDelay(pdMS_TO_TICKS(5000)); // Wait longer for busy state
+      continue;
     }
 
     if (i < retries - 1) {
@@ -282,14 +294,16 @@ bool LSM1x0A_Controller::hardwareReset()
   return false;
 }
 
-bool LSM1x0A_Controller::recoverModule()
+bool LSM1x0A_Controller::recoverModule(bool joinAfterRecovery)
 {
   LSM_LOG_WARN("CTRL", "Starting module recovery procedure...");
 
-  // 1. Software attempt (ATZ) with retries
-  bool wasJoined   = lorawan.isJoined();
+  bool wasJoined = false;
+  if (joinAfterRecovery || lorawan.isJoined())
+    wasJoined = true;
   bool isRecovered = false;
 
+  // 1. Software attempt (ATZ) with retries
   for (int i = 0; i < _maxRetries; i++) {
     if (softwareReset()) {
       isRecovered = true;

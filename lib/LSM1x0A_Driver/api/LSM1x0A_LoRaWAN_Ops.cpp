@@ -64,6 +64,23 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   if (data == nullptr)
     return false;
 
+  // Before sending the payload, we ensure we have the latest retry count for reliability.
+  int retries = -1;
+  if (confirmed) {
+    retries = getConfirmRetry();
+    if (retries <= 0 && setConfirmRetry(3))
+      retries = 3; // Fallback
+    else
+      return false;
+  }
+  else {
+    retries = getUnconfirmRetry();
+    if (retries <= 0 && setUnconfirmRetry(5))
+      retries = 5; // Fallback
+    else
+      return false;
+  }
+
   // AT+SEND=<Port>:<Ack>:<Payload>
   char cmd[256];
   snprintf(cmd, sizeof(cmd), "AT+SEND=%d:%d:%s", port, confirmed ? 1 : 0, data);
@@ -77,7 +94,16 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   // Send the payload (this responds OK quickly if well-formatted and not busy)
   AtError err = _controller->sendCommand(cmd, 3000, 1);
   if (err != AtError::OK) {
-    LSM_LOG_ERROR("LORA", "Failed to dispatch LoRaWAN transmission request.");
+    if (err == AtError::NO_NET_JOINED) {
+      LSM_LOG_ERROR("LORA", "Failed to send: Module is not joined.");
+      setJoined(false);
+    }
+    else if (err == AtError::DUTY_CYCLE_RESTRICT) {
+      LSM_LOG_ERROR("LORA", "Failed to send: Duty Cycle restricted.");
+    }
+    else {
+      LSM_LOG_ERROR("LORA", "Failed to dispatch LoRaWAN transmission request (Error: %d).", (int)err);
+    }
     return false;
   }
 
@@ -85,21 +111,13 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   uint32_t calcTimeoutMs = timeoutMs;
 
   if (confirmed) {
-    int retries = -1;
-    if (_cachedConfirmRetry >= 0)
-      retries = _cachedConfirmRetry;
-    else
-      retries = getConfirmRetry();
-    if (retries <= 0)
-      retries = 3; // Fallback
-
-    // Confirmed Retries = 1 initial + N retries. So total transmits = retries + 1.
-    // Each transmit yields 2 RX_TIMEOUTs if no ACK is received.
-    int expectedTimeouts = (retries + 1) * 2;
+    // Total transmits = retries (Parameter in module includes the first attempt).
+    // Each transmit yields up to 2 RX_TIMEOUTs if no ACK is received.
+    int expectedTimeouts = retries * 2;
     int receivedTimeouts = 0;
 
-    // Base safety 5s + each attempt takes ~4.5 seconds of radio (TX + Rx1 + Rx2 + MAC delay)
-    uint32_t dynamicTimeoutMs = 5000 + ((retries + 1) * 4500);
+    // Base safety 5s + each attempt takes ~6 seconds of radio (TX + Rx1 + Rx2 + MAC delay)
+    uint32_t dynamicTimeoutMs = 5000 + (retries * 6000);
     if (calcTimeoutMs == 0 || calcTimeoutMs < dynamicTimeoutMs) {
       calcTimeoutMs = dynamicTimeoutMs;
     }
@@ -139,26 +157,17 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     }
 
     // If we reach a total asynchronous timeout, it means the module hung (no output)
-    LSM_LOG_ERROR("LORA", "MAC transmission timeout: Module hung without outputting result.");
+    LSM_LOG_ERROR("LORA", "MAC transmission timeout: Module hung without outputting result (timeouts: %d/%d).", receivedTimeouts, expectedTimeouts);
     _controller->recoverModule();
     return false; // Real MAC layer error (no UART output)
   }
   else {
-    // For pure Unconfirmed, we wait for `MAC rxTimeOut` (2 per transmission attempt)
-    int retries = -1;
-    if (_cachedUnconfirmRetry >= 0)
-      retries = _cachedUnconfirmRetry;
-    else
-      retries = getUnconfirmRetry();
-    if (retries < 0)
-      retries = 5; // Fallback if error occurred
-
-    // (N retries) * 2 RX windows
+    // Total attempts = retries (including first) * 2 RX windows
     int expectedTimeouts = retries * 2;
     int receivedTimeouts = 0;
 
     // As retries can take time, extend the base timeout for dynamic safety
-    uint32_t dynamicTimeoutMs = 5000 + (retries * 3500);
+    uint32_t dynamicTimeoutMs = 5000 + (retries * 5000);
     if (calcTimeoutMs == 0 || calcTimeoutMs < dynamicTimeoutMs) {
       calcTimeoutMs = dynamicTimeoutMs;
     }
@@ -197,8 +206,14 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       }
     }
 
-    // If we reach a total asynchronous timeout, it means the module hung (no output)
-    LSM_LOG_ERROR("LORA", "MAC transmission timeout: Module hung without outputting result.");
+    // If we received some timeouts, we consider it sent even if UART didn't finish politely (it might have sent and then hung)
+    if (receivedTimeouts > 0) {
+      LSM_LOG_WARN("LORA", "Unconfirmed finished via partial timeout (sent or signal lost).");
+      return true;
+    }
+
+    // If we reach a total asynchronous timeout, it means the module hung (no output at all)
+    LSM_LOG_ERROR("LORA", "MAC transmission timeout: Module hung without outputting result (timeouts: %d/%d).", receivedTimeouts, expectedTimeouts);
     _controller->recoverModule();
     return false; // Global wait timeout
   }
