@@ -115,7 +115,7 @@ enum class LsmLogLevel
   /** @brief High-level application state (Join Success, Packet Sent) */
   INFO,
   /** @brief Complete AT command traffic and flow tracing (TX: AT+... / RX: OK) */
-  DEBUG,
+  LSM_DEBUG,
   /** @brief Absolutely everything, including internal module raw dumps if available */
   VERBOSE
 };

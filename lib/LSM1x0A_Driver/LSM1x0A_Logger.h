@@ -83,7 +83,7 @@ void internalLog(LsmLogLevel level, const char* module, const char* format, ...)
 
 // DEBUG Level (Level 4)
 #if LSM_MAX_COMPILE_LOG_LEVEL >= 4
-#define LSM_LOG_DEBUG(module, format, ...) LsmLogger::internalLog(LsmLogLevel::DEBUG, module, format, ##__VA_ARGS__)
+#define LSM_LOG_DEBUG(module, format, ...) LsmLogger::internalLog(LsmLogLevel::LSM_DEBUG, module, format, ##__VA_ARGS__)
 #else
 #define LSM_LOG_DEBUG(module, format, ...)                                                                                                           \
   do {                                                                                                                                               \
