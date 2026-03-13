@@ -301,7 +301,7 @@ LsmBand LSM1x0A_LoRaWAN::getBand()
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::BAND, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    int band = atoi(rx);
+    int band    = atoi(rx);
     _cachedBand = (LsmBand)band;
     return _cachedBand;
   }
@@ -326,7 +326,7 @@ LsmClass LSM1x0A_LoRaWAN::getClass()
 
 int LSM1x0A_LoRaWAN::getDutyCycle()
 {
-  if (_cachedDutyCycle != -1)
+  if (_cachedDutyCycle >= 0)
     return _cachedDutyCycle;
   char rx[32]  = {0};
   char cmd[16] = {0};
@@ -340,7 +340,7 @@ int LSM1x0A_LoRaWAN::getDutyCycle()
 
 int LSM1x0A_LoRaWAN::getJoin1Delay()
 {
-  if (_cachedJoin1Delay != -1)
+  if (_cachedJoin1Delay >= 0)
     return _cachedJoin1Delay;
   char rx[32]  = {0};
   char cmd[16] = {0};
@@ -368,7 +368,7 @@ int LSM1x0A_LoRaWAN::getJoin2Delay()
 
 int LSM1x0A_LoRaWAN::getRx1Delay()
 {
-  if (_cachedRx1Delay != -1)
+  if (_cachedRx1Delay >= 0)
     return _cachedRx1Delay;
   char rx[32]  = {0};
   char cmd[16] = {0};
@@ -382,7 +382,7 @@ int LSM1x0A_LoRaWAN::getRx1Delay()
 
 int LSM1x0A_LoRaWAN::getRx2Delay()
 {
-  if (_cachedRx2Delay != -1)
+  if (_cachedRx2Delay >= 0)
     return _cachedRx2Delay;
   char rx[32]  = {0};
   char cmd[16] = {0};
@@ -410,7 +410,7 @@ LsmDataRate LSM1x0A_LoRaWAN::getRx2DataRate()
 
 long LSM1x0A_LoRaWAN::getRx2Frequency()
 {
-  if (_cachedRx2Frequency != -1)
+  if (_cachedRx2Frequency > 0)
     return _cachedRx2Frequency;
   char rx[32]  = {0};
   char cmd[16] = {0};
@@ -435,8 +435,9 @@ LsmPingSlot LSM1x0A_LoRaWAN::getPingSlot()
 
 int LSM1x0A_LoRaWAN::getConfirmRetry()
 {
-  if (_cachedConfirmRetry != -1)
+  if (_cachedConfirmRetry >= 0)
     return _cachedConfirmRetry;
+
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CONFIRM_RETRY, "?");
@@ -449,7 +450,7 @@ int LSM1x0A_LoRaWAN::getConfirmRetry()
 
 int LSM1x0A_LoRaWAN::getUnconfirmRetry()
 {
-  if (_cachedUnconfirmRetry != -1)
+  if (_cachedUnconfirmRetry >= 0)
     return _cachedUnconfirmRetry;
   char rx[32]  = {0};
   char cmd[16] = {0};

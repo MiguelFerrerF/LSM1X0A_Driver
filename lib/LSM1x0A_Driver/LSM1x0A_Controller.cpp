@@ -373,7 +373,6 @@ void LSM1x0A_Controller::internalEventCallback(const char* type, const char* pay
 
 void LSM1x0A_Controller::handleEvent(const char* type, const char* payload)
 {
-  LSM_LOG_VERBOSE("CTRL", "Received internal event: %s -> %s", type, payload);
   // 1. Intercept to change internal state and release semaphores
   if (strcmp(type, LsmEvent::JOIN) == 0) {
     if (strstr(payload, "SUCCESS") || strstr(payload, "Network joined")) {

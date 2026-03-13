@@ -71,17 +71,19 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
 
   if (confirmed) {
     retries = getConfirmRetry();
-    if (retries <= 0 && setConfirmRetry(3))
-      retries = 3; // Fallback
-    else
-      return false;
+    if (retries <= 0)
+      if (setConfirmRetry(3))
+        retries = 3; // Fallback
+      else
+        return false;
   }
   else {
     retries = getUnconfirmRetry();
-    if (retries <= 0 && setUnconfirmRetry(5))
-      retries = 5; // Fallback
-    else
-      return false;
+    if (retries <= 0)
+      if (setUnconfirmRetry(5))
+        retries = 5; // Fallback
+      else
+        return false;
   }
 
   // Use the actual network delays in the timeout calculation later
@@ -106,12 +108,10 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
       LSM_LOG_ERROR("LORA", "Failed to send: Module is not joined.");
       setJoined(false);
     }
-    else if (err == AtError::DUTY_CYCLE_RESTRICT) {
+    else if (err == AtError::DUTY_CYCLE_RESTRICT)
       LSM_LOG_ERROR("LORA", "Failed to send: Duty Cycle restricted.");
-    }
-    else {
+    else
       LSM_LOG_ERROR("LORA", "Failed to dispatch LoRaWAN transmission request (Error: %d).", (int)err);
-    }
     return false;
   }
 
