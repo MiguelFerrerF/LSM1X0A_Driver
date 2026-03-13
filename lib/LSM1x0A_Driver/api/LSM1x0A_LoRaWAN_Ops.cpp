@@ -64,8 +64,11 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
   if (data == nullptr)
     return false;
 
-  // Before sending the payload, we ensure we have the latest retry count for reliability.
+  // Before sending the payload, we ensure we have the latest retry count and RX delays for reliability.
   int retries = -1;
+  int rx1dl   = getRx1Delay();
+  int rx2dl   = getRx2Delay();
+
   if (confirmed) {
     retries = getConfirmRetry();
     if (retries <= 0 && setConfirmRetry(3))
@@ -80,6 +83,11 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     else
       return false;
   }
+
+  // Use the actual network delays in the timeout calculation later
+  if (rx1dl < 1000) rx1dl = 1000;
+  if (rx2dl < 2000) rx2dl = 2000;
+  uint32_t maxDelay = (rx1dl > rx2dl) ? rx1dl : rx2dl;
 
   // AT+SEND=<Port>:<Ack>:<Payload>
   char cmd[256];
@@ -116,8 +124,9 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     int expectedTimeouts = retries * 2;
     int receivedTimeouts = 0;
 
-    // Base safety 5s + each attempt takes ~6 seconds of radio (TX + Rx1 + Rx2 + MAC delay)
-    uint32_t dynamicTimeoutMs = 5000 + (retries * 6000);
+    // Base safety 5s + each attempt takes (MaxDelay + TX time + Margin)
+    // We use a margin of 4s to account for long SF12 payloads and processing.
+    uint32_t dynamicTimeoutMs = 5000 + (retries * (maxDelay + 4000));
     if (calcTimeoutMs == 0 || calcTimeoutMs < dynamicTimeoutMs) {
       calcTimeoutMs = dynamicTimeoutMs;
     }
@@ -167,7 +176,7 @@ bool LSM1x0A_LoRaWAN::sendData(uint8_t port, const char* data, bool confirmed, u
     int receivedTimeouts = 0;
 
     // As retries can take time, extend the base timeout for dynamic safety
-    uint32_t dynamicTimeoutMs = 5000 + (retries * 5000);
+    uint32_t dynamicTimeoutMs = 5000 + (retries * (maxDelay + 4000));
     if (calcTimeoutMs == 0 || calcTimeoutMs < dynamicTimeoutMs) {
       calcTimeoutMs = dynamicTimeoutMs;
     }

@@ -253,45 +253,57 @@ int LSM1x0A_LoRaWAN::getDevNonce()
 
 int LSM1x0A_LoRaWAN::getADR()
 {
+  if (_cachedAdrEnabled != -1)
+    return _cachedAdrEnabled;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::ADAPTIVE_DR, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedAdrEnabled = atoi(rx);
+    return _cachedAdrEnabled;
   }
   return -1;
 }
 
 LsmDataRate LSM1x0A_LoRaWAN::getDataRate()
 {
+  if (_cachedDataRate != LsmDataRate::DR_UNKNOWN)
+    return _cachedDataRate;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::DR, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return (LsmDataRate)atoi(rx);
+    _cachedDataRate = (LsmDataRate)atoi(rx);
+    return _cachedDataRate;
   }
   return LsmDataRate::DR_UNKNOWN;
 }
 
 LsmTxPower LSM1x0A_LoRaWAN::getTxPower()
 {
+  if (_cachedTxPower != LsmTxPower::TP_UNKNOWN)
+    return _cachedTxPower;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::TX_POWER, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return (LsmTxPower)atoi(rx);
+    _cachedTxPower = (LsmTxPower)atoi(rx);
+    return _cachedTxPower;
   }
   return LsmTxPower::TP_UNKNOWN;
 }
 
 LsmBand LSM1x0A_LoRaWAN::getBand()
 {
+  if (_cachedBand != LsmBand::BAND_UNKNOWN)
+    return _cachedBand;
   char rx[64]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::BAND, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
     int band = atoi(rx);
-    return (LsmBand)band;
+    _cachedBand = (LsmBand)band;
+    return _cachedBand;
   }
   return LsmBand::BAND_UNKNOWN;
 }
@@ -314,77 +326,98 @@ LsmClass LSM1x0A_LoRaWAN::getClass()
 
 int LSM1x0A_LoRaWAN::getDutyCycle()
 {
+  if (_cachedDutyCycle != -1)
+    return _cachedDutyCycle;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::DUTY_CYCLE, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedDutyCycle = atoi(rx);
+    return _cachedDutyCycle;
   }
   return -1;
 }
 
 int LSM1x0A_LoRaWAN::getJoin1Delay()
 {
+  if (_cachedJoin1Delay != -1)
+    return _cachedJoin1Delay;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::JOIN_DELAY_1, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedJoin1Delay = atoi(rx);
+    return _cachedJoin1Delay;
   }
   return -1;
 }
 
 int LSM1x0A_LoRaWAN::getJoin2Delay()
 {
+  if (_cachedJoin2Delay != -1)
+    return _cachedJoin2Delay;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::JOIN_DELAY_2, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedJoin2Delay = atoi(rx);
+    return _cachedJoin2Delay;
   }
   return -1;
 }
 
 int LSM1x0A_LoRaWAN::getRx1Delay()
 {
+  if (_cachedRx1Delay != -1)
+    return _cachedRx1Delay;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::RX1_DELAY, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedRx1Delay = atoi(rx);
+    return _cachedRx1Delay;
   }
   return -1;
 }
 
 int LSM1x0A_LoRaWAN::getRx2Delay()
 {
+  if (_cachedRx2Delay != -1)
+    return _cachedRx2Delay;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::RX2_DELAY, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atoi(rx);
+    _cachedRx2Delay = atoi(rx);
+    return _cachedRx2Delay;
   }
   return -1;
 }
 
 LsmDataRate LSM1x0A_LoRaWAN::getRx2DataRate()
 {
+  if (_cachedRx2DataRate != LsmDataRate::DR_UNKNOWN)
+    return _cachedRx2DataRate;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::RX2_DR, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return (LsmDataRate)atoi(rx);
+    _cachedRx2DataRate = (LsmDataRate)atoi(rx);
+    return _cachedRx2DataRate;
   }
   return LsmDataRate::DR_UNKNOWN;
 }
 
 long LSM1x0A_LoRaWAN::getRx2Frequency()
 {
+  if (_cachedRx2Frequency != -1)
+    return _cachedRx2Frequency;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::RX2_FREQ, "?");
   if (_controller->sendCommandWithResponse(cmd, rx, sizeof(rx), nullptr, 1000) == AtError::OK) {
-    return atol(rx);
+    _cachedRx2Frequency = atol(rx);
+    return _cachedRx2Frequency;
   }
   return -1;
 }
@@ -402,6 +435,8 @@ LsmPingSlot LSM1x0A_LoRaWAN::getPingSlot()
 
 int LSM1x0A_LoRaWAN::getConfirmRetry()
 {
+  if (_cachedConfirmRetry != -1)
+    return _cachedConfirmRetry;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::CONFIRM_RETRY, "?");
@@ -414,6 +449,8 @@ int LSM1x0A_LoRaWAN::getConfirmRetry()
 
 int LSM1x0A_LoRaWAN::getUnconfirmRetry()
 {
+  if (_cachedUnconfirmRetry != -1)
+    return _cachedUnconfirmRetry;
   char rx[32]  = {0};
   char cmd[16] = {0};
   snprintf(cmd, sizeof(cmd), "%s%s", LsmAtCommand::UNCONFIRM_RETRY, "?");

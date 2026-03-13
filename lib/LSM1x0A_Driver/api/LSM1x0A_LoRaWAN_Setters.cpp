@@ -229,49 +229,77 @@ bool LSM1x0A_LoRaWAN::setRx1Delay(int delayMs)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX1_DELAY, delayMs);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedRx1Delay = delayMs;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setRx2Delay(int delayMs)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX2_DELAY, delayMs);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedRx2Delay = delayMs;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setRx2DataRate(LsmDataRate dr)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX2_DR, (int)dr);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedRx2DataRate = dr;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setRx2Frequency(int freqHz)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::RX2_FREQ, freqHz);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedRx2Frequency = freqHz;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setJoin1Delay(int delayMs)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN_DELAY_1, delayMs);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedJoin1Delay = delayMs;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setJoin2Delay(int delayMs)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::JOIN_DELAY_2, delayMs);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedJoin2Delay = delayMs;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setTxPower(LsmTxPower power)
 {
   char cmd[32];
   snprintf(cmd, sizeof(cmd), "%s%d", LsmAtCommand::TX_POWER, (int)power);
-  return _controller->sendCommand(cmd, 1000) == AtError::OK;
+  if (_controller->sendCommand(cmd, 1000) == AtError::OK) {
+    _cachedTxPower = power;
+    return true;
+  }
+  return false;
 }
 
 bool LSM1x0A_LoRaWAN::setPingSlot(LsmPingSlot slot)

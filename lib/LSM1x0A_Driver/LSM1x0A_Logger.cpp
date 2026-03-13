@@ -29,9 +29,9 @@ void internalLog(LsmLogLevel level, const char* module, const char* format, ...)
   if (level > _currentLevel)
     return; // Dynamic filter
 
-  // Use a single static buffer to avoid heap fragmentation and stack bloat.
+  // Use a local buffer to be thread-safe/reentrant.
   // 192 bytes is usually enough for a log message, but adjust if needed.
-  static char _logBuffer[192];
+  char _logBuffer[192];
 
   va_list args;
   va_start(args, format);
